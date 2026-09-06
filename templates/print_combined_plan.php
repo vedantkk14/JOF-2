@@ -1,12 +1,8 @@
 <?php
 // templates/print_combined_plan.php
-session_start();
-require '../config.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
+require_once __DIR__ . '/../config.php';
 
 if (!isset($_GET['id'])) {
     die("Error: No plan selected.");

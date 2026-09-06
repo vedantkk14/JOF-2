@@ -1,11 +1,6 @@
-﻿<?php
-session_start();
-
-// Security: Redirect if not logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
+<?php
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
 ?>
 
 <!DOCTYPE html>
@@ -19,7 +14,7 @@ if (!isset($_SESSION['user_id'])) {
     <link rel="stylesheet" href="../static/root.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        /* ── Add Event Modal (scoped to calendar page) ── */
+        /* -- Add Event Modal (scoped to calendar page) -- */
         .page-calendar .modal-overlay {
             position: fixed;
             inset: 0;

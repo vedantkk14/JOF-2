@@ -1,11 +1,25 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params(['lifetime'=>0,'path'=>'/','secure'=>isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']==='on','httponly'=>true,'samesite'=>'Strict']);
+    session_start();
+}
 require_once "../config.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    
-    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
-    $submitted_otp = $_POST['otp'];
+
+    // ── CSRF Validation ──────────────────────────────────────────
+    $submitted_csrf = $_POST['_csrf_token'] ?? '';
+    $stored_csrf    = $_SESSION['_csrf_token'] ?? '';
+    if (!$stored_csrf || !hash_equals($stored_csrf, $submitted_csrf)) {
+        $_SESSION['status_msg']  = 'Invalid security token. Please try again.';
+        $_SESSION['status_type'] = 'error';
+        header('Location: ../templates/forgot_password.php');
+        exit;
+    }
+    unset($_SESSION['_csrf_token']);
+
+    $email = trim(filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL));
+    $submitted_otp = trim($_POST['otp'] ?? '');
     
     // Server-side validation
     if (empty($email) || empty($submitted_otp) || strlen($submitted_otp) !== 6) {

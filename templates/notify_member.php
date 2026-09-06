@@ -1,11 +1,7 @@
 <?php
-session_start();
-require '../config.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit;
-}
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
+require_once __DIR__ . '/../config.php';
 
 // PHPMailer includes
 require __DIR__ . '/../auth/PHPMailer/Exception.php';
@@ -52,13 +48,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'info@jofindia.com';
+        $mail->Username = 'vedantkolhapure111@gmail.com';
         $mail->Password = 'tzhiwibunjrfgfjj';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
         $mail->CharSet = 'UTF-8';
 
-        $mail->setFrom('no-reply@jofindia.com', 'JOF INDIA');
+        $mail->setFrom('vedantkolhapure111@gmail.com', 'JOF INDIA');
         $mail->addAddress($member['email'], $member['full_name']);
         $mail->isHTML(true);
         $mail->Subject = $subject;
@@ -194,7 +190,7 @@ function generateEmailBody($member, $type, $custom_message, $payment_data)
                         </tr>
                         <tr>
                             <td class='footer'>
-                                <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ info@jofindia.com</p>
+                                <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vedantkolhapure111@gmail.com</p>
                                 <p class='footer-text'>© 2026 JOF INDIA. All rights reserved.</p>
                                 <p class='footer-text'>Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra</p>
                             </td>

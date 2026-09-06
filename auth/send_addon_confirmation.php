@@ -15,7 +15,7 @@ function sendAddonConfirmation($member_name, $member_email, $service_type, $sche
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'info@jofindia.com';
+        $mail->Username = 'vedantkolhapure111@gmail.com';
         $mail->Password = 'tzhiwibunjrfgfjj';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
@@ -24,7 +24,7 @@ function sendAddonConfirmation($member_name, $member_email, $service_type, $sche
 
 
 
-        $mail->setFrom('info@jofindia.com', 'JOF INDIA');
+        $mail->setFrom('vedantkolhapure111@gmail.com', 'JOF INDIA');
 
         $mail->addAddress($member_email, $member_name);
 
@@ -116,7 +116,7 @@ function sendAddonConfirmation($member_name, $member_email, $service_type, $sche
                             </tr>
                             <tr>
                                 <td class='footer'>
-                                    <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ info@jofindia.com</p>
+                                    <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vedantkolhapure111@gmail.com</p>
                                     <p class='footer-text'>© 2026 JOF INDIA. All rights reserved.</p>
                                     <p class='footer-text'>Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra</p>
                                 </td>

@@ -2,14 +2,9 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-session_start();
-require '../config.php';
-
-// 1. Security Check
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
+require_once __DIR__ . '/../config.php';
 
 // 2. Flow Check — ONLY accessible via activate_id from inactive members page
 if (!isset($_GET['activate_id']) && !isset($_SESSION['activate_member_id'])) {

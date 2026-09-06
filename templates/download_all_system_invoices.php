@@ -1,12 +1,8 @@
 <?php
-session_start();
-require '../config.php';
-require_once '../auth/invoice_helper.php';
-
-// Auth Check
-if (!isset($_SESSION['user_id'])) {
-    die("Error: Unauthorized access.");
-}
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/invoice_helper.php';
 
 // Fetch ALL Invoices (serial order)
 $sql = "SELECT 
@@ -213,7 +209,7 @@ $inst_stmt->close();
                         <img src="../icons/images/logo-invoice.jpeg" alt="JOF"
                             style="width:80px; height:auto; margin-bottom:8px;"><br>
                         <span style="font-size:11px; color:#555;">Aurelia, Pancard Road, Baner, Pune-411045,
-                            Maharashtra<br>info@jofindia.com</span>
+                            Maharashtra<br>vedantkolhapure111@gmail.com</span>
                     </td>
                     <td width="40%" align="right" valign="top">
                         <h2 style="color:#555; margin:0 0 5px 0;">INVOICE</h2>
@@ -336,7 +332,7 @@ $inst_stmt->close();
                         <img src="../icons/images/logo-invoice.jpeg" alt="JOF"
                             style="width:80px; height:auto; margin-bottom:8px;"><br>
                         <span style="font-size:11px; color:#555;">Aurelia, Pancard Road, Baner, Pune-411045,
-                            Maharashtra<br>info@jofindia.com</span>
+                            Maharashtra<br>vedantkolhapure111@gmail.com</span>
                     </td>
                     <td width="40%" align="right" valign="top">
                         <h2 style="color:#555; margin:0 0 5px 0;"><?= $title_text ?></h2>

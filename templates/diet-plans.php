@@ -1,12 +1,7 @@
-﻿<?php
-session_start();
-require '../config.php';
-
-// 1. Auth Check
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
+<?php
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
+require_once __DIR__ . '/../config.php';
 
 // 2. Handle Deletion (All phases for a specific client)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_client'])) {
@@ -332,7 +327,7 @@ if ($result && $result->num_rows > 0) {
                                 </p>
 
                                 <p class="desc" style="font-size:12px; margin-top:4px;">
-                                    Goal: <?= htmlspecialchars($row['goal']) ?> • Type: <?= ucfirst($row['diet_type']) ?>
+                                    Goal: <?= htmlspecialchars($row['goal']) ?> � Type: <?= ucfirst($row['diet_type']) ?>
                                 </p>
 
                                 <div class="diet-stats">

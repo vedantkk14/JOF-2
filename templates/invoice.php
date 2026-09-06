@@ -1,12 +1,8 @@
 <?php
-session_start();
-require '../config.php';
-require_once '../auth/invoice_helper.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/invoice_helper.php';
 
 // 1. Get Payment ID
 if (!isset($_GET['payment_id'])) {

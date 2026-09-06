@@ -1,12 +1,7 @@
 <?php
-session_start();
-require '../config.php';
-
-// Check login
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
+require_once __DIR__ . '/../config.php';
 
 // 1. Get Filter (Default to 30 days)
 $days_filter = isset($_GET['days']) ? intval($_GET['days']) : 30;

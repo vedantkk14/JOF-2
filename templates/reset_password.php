@@ -1,5 +1,8 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params(['lifetime'=>0,'path'=>'/','secure'=>isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']==='on','httponly'=>true,'samesite'=>'Strict']);
+    session_start();
+}
 
 // 1. Check if user successfully verified OTP
 if (!isset($_SESSION['otp_verified_for']) || !isset($_SESSION['otp_verified_time'])) {
@@ -21,8 +24,12 @@ if ($verification_age > 900) { // 900 seconds = 15 minutes
 
 $email = $_SESSION['otp_verified_for'];
 
-// We no longer need to verify the token hash on this page, because verify_otp_handler.php 
-// just did that, and it's the gatekeeper to this page.
+// CSRF token for reset form
+if (empty($_SESSION['_csrf_token'])) {
+    $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['_csrf_token'];
+
 $token_valid = true;
 
 $msg = ""; $msg_type = "";
@@ -63,16 +70,17 @@ if (isset($_SESSION['status_msg'])) {
 
                 <?php if ($token_valid): ?>
                     <form action="../handlers/process_reset_password.php" method="POST">
+                        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="email" value="<?php echo htmlspecialchars($email); ?>">
 
                         <div class="input-group">
                             <label style="display:block; margin-bottom:8px; font-weight:600; font-size:12px;">New Password</label>
-                            <input type="password" name="password" class="form-input" placeholder="New Password" required minlength="6">
+                            <input type="password" name="password" class="form-input" placeholder="New Password" required minlength="8">
                         </div>
 
                         <div class="input-group">
                             <label style="display:block; margin-bottom:8px; font-weight:600; font-size:12px;">Confirm Password</label>
-                            <input type="password" name="confirm_password" class="form-input" placeholder="Confirm Password" required minlength="6">
+                            <input type="password" name="confirm_password" class="form-input" placeholder="Confirm Password" required minlength="8">
                         </div>
 
                         <button type="submit" class="btn-primary">Update Password</button>

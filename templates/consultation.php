@@ -1,11 +1,7 @@
 <?php
-session_start();
-require '../config.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
+require_once __DIR__ . '/../config.php';
 
 // Fetch only members who opted for Personal Training AND do not already have an active/unexhausted PT package
 $members = [];

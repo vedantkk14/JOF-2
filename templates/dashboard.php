@@ -1,13 +1,9 @@
 <?php
-session_start();
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
 
 // Database connection
-require '../config.php';
+require_once __DIR__ . '/../config.php';
 
 // Fetch Total Members
 $total_members = 0;

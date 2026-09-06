@@ -18,7 +18,7 @@ require '../config.php';
 
 // ── IMAP Config ──────────────────────────────────────────────────────────────
 $imap_host = '{imap.gmail.com:993/imap/ssl}INBOX';
-$imap_user = 'info@jofindia.com';
+$imap_user = 'vedantkolhapure111@gmail.com';
 $imap_pass = 'tzhiwibunjrfgfjj';
 
 if (!function_exists('imap_open')) {
@@ -73,7 +73,7 @@ if ($emails) {
         $fromName = ($fromObj && isset($fromObj->personal)) ? imap_utf8($fromObj->personal) : $fromEmail;
 
         // Skip emails sent by your own system
-        if (strpos($fromEmail, 'info@jofindia.com') !== false || strpos($fromEmail, 'no-reply') !== false) {
+        if (strpos($fromEmail, 'vedantkolhapure111@gmail.com') !== false || strpos($fromEmail, 'no-reply') !== false) {
             continue;
         }
 

@@ -1,9 +1,9 @@
 <?php
-session_start();
-require '../config.php';
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
+require_once __DIR__ . '/../config.php';
 
-// 1. Check if admin is logged in (public users can also access this page)
-$is_admin = isset($_SESSION['user_id']);
+$is_admin = true; // enforced by require_role above
 
 // 2. Flow Check
 if (!isset($_SESSION['new_member_id'])) {

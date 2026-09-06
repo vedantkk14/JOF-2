@@ -1,5 +1,8 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params(['lifetime'=>0,'path'=>'/','secure'=>isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']==='on','httponly'=>true,'samesite'=>'Strict']);
+    session_start();
+}
 
 if (!isset($_SESSION['reset_email'])) {
     header("Location: ../templates/forgot_password.php");
@@ -14,9 +17,14 @@ $msg_type = "";
 if (isset($_SESSION['status_msg'])) {
     $msg = $_SESSION['status_msg'];
     $msg_type = $_SESSION['status_type'];
-    unset($_SESSION['status_msg']);
-    unset($_SESSION['status_type']);
+    unset($_SESSION['status_msg'], $_SESSION['status_type']);
 }
+
+// CSRF token
+if (empty($_SESSION['_csrf_token'])) {
+    $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['_csrf_token'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -79,6 +87,7 @@ if (isset($_SESSION['status_msg'])) {
                 <?php endif; ?>
 
                 <form action="../handlers/verify_otp_handler.php" method="POST" id="otpForm">
+                    <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8') ?>">
                     <input type="hidden" name="email" value="<?php echo htmlspecialchars($email); ?>">
                     
                     <div class="input-group">
@@ -99,13 +108,14 @@ if (isset($_SESSION['status_msg'])) {
                 <div class="switch-form" style="margin-top: 25px;">
                     Didn't receive the code? 
                     <form action="../handlers/send_reset_link.php" method="POST" style="display:inline;">
+                        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="email" value="<?php echo htmlspecialchars($email); ?>">
                         <button type="submit" style="background:none; border:none; color:#F25C2A; font-weight:600; cursor:pointer; padding:0; font-size:14px; text-decoration:underline;">Resend</button>
                     </form>
                 </div>
                 
                 <div class="switch-form" style="margin-top: 10px;">
-                    <a href="login_page.html">Back to Login</a>
+                    <a href="../index.php">Back to Login</a>
                 </div>
             </div>
         </div>

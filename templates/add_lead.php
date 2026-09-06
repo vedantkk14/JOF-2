@@ -1,12 +1,7 @@
 <?php
-session_start();
-require '../config.php';
-
-// 1. Security Check
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
+require_once __DIR__ . '/../config.php';
 
 $show_success_modal = false;
 $error_msg = '';

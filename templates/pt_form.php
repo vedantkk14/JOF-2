@@ -1,11 +1,7 @@
 <?php
-session_start();
-require '../config.php';
-
-if(!isset($_SESSION['user_id'])) {
-    header("Location: login_page.html");
-    exit;
-}
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
+require_once __DIR__ . '/../config.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 

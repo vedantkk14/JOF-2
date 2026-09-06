@@ -1,13 +1,8 @@
 <?php
-session_start();
-// Enable error reporting to debug issues
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-require '../config.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
+require_once __DIR__ . '/../config.php';
 
 // Auto-expire members whose membership end_date has passed (mirrors members.php logic)
 $conn->query("UPDATE members m

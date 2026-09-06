@@ -1,12 +1,7 @@
 <?php
-session_start();
-require '../config.php';
-
-// Check login
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
+require_once __DIR__ . '/../config.php';
 
 // --- 1. Date Filter Logic ---
 $filter = isset($_GET['filter']) ? $_GET['filter'] : 'this_month';

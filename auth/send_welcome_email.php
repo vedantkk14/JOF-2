@@ -23,13 +23,13 @@ function sendWelcomeEmail($member_name, $email, $payment_id, $payment_data)
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'info@jofindia.com';
+        $mail->Username = 'vedantkolhapure111@gmail.com';
         $mail->Password = 'tzhiwibunjrfgfjj';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
         $mail->CharSet = 'UTF-8';
 
-        $mail->setFrom('no-reply@jofindia.com', 'JOF India');
+        $mail->setFrom('vedantkolhapure111@gmail.com', 'JOF India');
         $mail->addAddress($email, $member_name);
         $mail->isHTML(true);
         $mail->Subject = 'Welcome to JOF India! Registration Complete';
@@ -174,7 +174,7 @@ function sendWelcomeEmail($member_name, $email, $payment_id, $payment_data)
                             </tr>
                             <tr>
                                 <td class='footer'>
-                                    <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ info@jofindia.com</p>
+                                    <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vedantkolhapure111@gmail.com</p>
                                     <p class='footer-text'>© 2026 JOF INDIA. All rights reserved.</p>
                                     <p class='footer-text'>Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra</p>
                                 </td>
@@ -303,7 +303,7 @@ function generateInvoicePDF($payment_id, $payment_data, $member_name, $email, $i
         $logoBottomY = $headerY + 26;
         $pdf->SetY($logoBottomY);
         $pdf->SetX(15);
-        $addressHtml = '<span style="font-size:9px; color:#555;">Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra<br>info@jofindia.com</span>';
+        $addressHtml = '<span style="font-size:9px; color:#555;">Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra<br>vedantkolhapure111@gmail.com</span>';
         $pdf->writeHTML($addressHtml, true, false, true, false, '');
 
         // Rest of the invoice body

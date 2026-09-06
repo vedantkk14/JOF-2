@@ -1,12 +1,8 @@
-﻿<?php
+<?php
 // templates/edit_membership.php
-session_start();
-require '../config.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
+require_once __DIR__ . '/../auth/auth_check.php';
+require_role(['admin', 'trainer']);
+require_once __DIR__ . '/../config.php';
 
 if (!isset($_GET['id'])) {
     die("ID not provided.");
@@ -113,7 +109,7 @@ if (!$plan) {
 
                         <div class="form-row">
                             <div class="input-group">
-                                <label>Price (₹)</label>
+                                <label>Price (?)</label>
                                 <div class="input-wrapper">
                                     <input type="number" name="price" class="form-input"
                                         value="<?= $plan['price'] ?>" step="0.01" required>

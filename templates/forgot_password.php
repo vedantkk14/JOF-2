@@ -1,14 +1,23 @@
-<?php 
-session_start(); 
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params(['lifetime'=>0,'path'=>'/','secure'=>isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']==='on','httponly'=>true,'samesite'=>'Strict']);
+    session_start();
+}
+
 // Display status messages if they exist in session
 $msg = "";
 $msg_type = "";
 if (isset($_SESSION['status_msg'])) {
     $msg = $_SESSION['status_msg'];
-    $msg_type = $_SESSION['status_type']; // 'success' or 'error'
-    unset($_SESSION['status_msg']);
-    unset($_SESSION['status_type']);
+    $msg_type = $_SESSION['status_type'];
+    unset($_SESSION['status_msg'], $_SESSION['status_type']);
 }
+
+// Generate CSRF token
+if (empty($_SESSION['_csrf_token'])) {
+    $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['_csrf_token'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -45,6 +54,7 @@ if (isset($_SESSION['status_msg'])) {
                 <?php endif; ?>
 
                 <form action="../handlers/send_reset_link.php" method="POST">
+                    <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8') ?>">
                     
                     <div class="input-group">
                         <label for="email">Email Address</label>
@@ -58,7 +68,7 @@ if (isset($_SESSION['status_msg'])) {
                 </form>
 
                 <div class="switch-form">
-                    Remember your password? <a href="login_page.html">Back to Login</a>
+                    Remember your password? <a href="../index.php">Back to Login</a>
                 </div>
             </div>
 

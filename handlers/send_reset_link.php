@@ -1,12 +1,26 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params(['lifetime'=>0,'path'=>'/','secure'=>isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']==='on','httponly'=>true,'samesite'=>'Strict']);
+    session_start();
+}
 
 // 1. Connect to Database
 require_once "../config.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+    // ── CSRF Validation ──────────────────────────────────────────
+    $submitted_csrf = $_POST['_csrf_token'] ?? '';
+    $stored_csrf    = $_SESSION['_csrf_token'] ?? '';
+    if (!$stored_csrf || !hash_equals($stored_csrf, $submitted_csrf)) {
+        $_SESSION['status_msg']  = 'Invalid security token. Please try again.';
+        $_SESSION['status_type'] = 'error';
+        header('Location: ../templates/forgot_password.php');
+        exit;
+    }
+    unset($_SESSION['_csrf_token']);
+
+    $email = trim(filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL));
     $table_name = "user_data";
 
     // Check if table exists
@@ -26,8 +40,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user_row = $result->fetch_assoc();
         $member_name = $user_row['full_name'] ?? 'User';
 
-        // Generate 6-digit OTP
-        $otp = sprintf("%06d", mt_rand(100000, 999999));
+        // Generate cryptographically secure 6-digit OTP
+        $otp = sprintf('%06d', random_int(100000, 999999));
         $token_hash = hash('sha256', $otp); // Hash OTP for storage
 
         // Update DB: 15-minute expiry
@@ -50,14 +64,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $mail->isSMTP();
                 $mail->Host = 'smtp.gmail.com';
                 $mail->SMTPAuth = true;
-                $mail->Username = 'info@jofindia.com';
+                $mail->Username = 'vedantkolhapure111@gmail.com';
                 $mail->Password = 'tzhiwibunjrfgfjj'; // App Password
                 $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port = 587;
                 $mail->CharSet = 'UTF-8';
 
                 // Sender & Recipient
-                $mail->setFrom('no-reply@jofindia.com', 'JOF INDIA');
+                $mail->setFrom('vedantkolhapure111@gmail.com', 'JOF INDIA');
                 $mail->addAddress($email, $member_name);
 
                 // Content
@@ -129,7 +143,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </tr>
                                     <tr>
                                         <td class='footer'>
-                                            <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ info@jofindia.com</p>
+                                            <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vedantkolhapure111@gmail.com</p>
                                             <p class='footer-text'>© 2026 JOF INDIA. All rights reserved.</p>
                                             <p class='footer-text'>Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra</p>
                                         </td>
