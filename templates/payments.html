@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Received Payments | JoF Fitness</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../static/root.css">
+</head>
+
+<body class="page-received_payment">
+
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <button class="toggle-sidebar-btn" id="toggleBtn">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <div class="logo-area">
+                <img src="../icons/logo-light(1).png" alt="JOF Logo" class="brand-logo">
+            </div>
+
+            <div class="nav-label">MENU</div>
+            <nav class="navigation">
+                <a href="dashboard.php" class="nav-link">
+                    <img src="../icons/dashboard.png" alt="Dashboard" width="20">
+                    <span>Dashboard</span>
+                </a>
+                <a href="pt_session.php" class="nav-link">
+                    <img src="../icons/calendar.png" alt="PT Sessions" width="20">
+                    <span>PT Sessions</span>
+                </a>
+                <a href="consultation.php" class="nav-link">
+                    <img src="../icons/clipboard-user-solid-full.svg" alt="Consultation" width="20">
+                    <span>Consultation</span>
+                </a>
+                <div class="nav-item-dropdown">
+                    <a href="members.php" class="nav-link">
+                        <img src="../icons/users-solid-full.svg" alt="Members" width="20">
+                        <span>Members</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="members.php">View Members</a>
+                        <a href="add_member.php">Add Member</a>
+                        <a href="personal_training.php">Personal Training (PT)</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="diet-plans.php" class="nav-link">
+                        <img src="../icons/balanced-diet.png" alt="Diet Plans" width="20">
+                        <span>Diet Plans</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="create_diet_plan.php">Create Diet Plan</a>
+                        <a href="assign_diet_plan.php">Assign</a>
+                    </div>
+                </div>
+
+                <a href="membership.php" class="nav-link">
+                    <img src="../icons/credit-card-solid-full.svg" alt="Membership" width="20">
+                    <span>Membership</span>
+                </a>
+                <div class="nav-item-dropdown active">
+                    <a href="payments.html" class="nav-link active">
+                        <img src="../icons/indian-rupee-sign-solid-full.svg" alt="Payments" width="20">
+                        <span>Payments</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+
+                        <a href="payment_installments.php">Installment Payments</a>
+                        <a href="outstanding_dues.html">Outstanding Dues</a>
+                        <!-- <a href="payment_recovery_communication.html">Recovery Communication</a> -->
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="sales_leads.php" class="nav-link">
+                        <img src="../icons/trend.png" alt="Sales" width="20">
+                        <span>Sales Management</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="sales_leads.php">New Leads</a>
+                        <a href="sales_reports.php">Conversion Reports</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="reports_pg.php" class="nav-link">
+                        <img src="../icons/market-insights.png" alt="Reports" width="20">
+                        <span>Reports</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="reports/renewal_report.php">Renewal Report</a>
+                        <a href="reports/revenue_source.php">Revenue Report</a>
+                    </div>
+                </div>
+            </nav>
+
+        </aside>
+
+        <main class="main-content">
+
+            <div class="page-header">
+                <div class="header-text">
+                    <h1>Payment History</h1>
+                    <p>View all recent transactions and payment statuses.</p>
+                </div>
+
+                <div class="header-actions">
+                    <div class="search-box">
+                        <img src="../icons/magnifying-glass-solid-full.svg" alt="img" width="20">
+                        <input type="text" placeholder="Search transaction...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-panel">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Member Name</th>
+                                <th>Plan Details</th>
+                                <th>Date</th>
+                                <th>Payment Mode</th>
+                                <th class="right">Amount</th>
+                                <th class="right">Invoice</th>
+                                <th class="right">Notify</th>
+
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar">S</div>
+                                        <div>
+                                            <span class="bold">Sneha Reddy</span>
+                                            <span class="email-sub">sneha@example.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="plan-badge premium">Premium Plan</span></td>
+                                <td class="muted">Jan 05, 2025</td>
+                                <td><span class="pill upi"><img src="../icons/mobile-screen-solid-full.svg" alt="img"
+                                            width="20"> UPI</span></td>
+                                <td class="amount right">+₹79.00</td>
+                                <td class="right">
+                                    <button class="icon-btn" title="Download Invoice"><img
+                                            src="../icons/download-solid-full.svg" alt="img" width="20"></button>
+                                </td>
+                                <td class="right">
+                                    <a href="send_reminder.html?name=Sneha+Reddy&amount=79" class="icon-btn notify-btn"
+                                        title="Send Reminder">
+                                        <i class="fa-solid fa-bell"></i>
+                                    </a>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar blue">M</div>
+                                        <div>
+                                            <span class="bold">Ishita Patel</span>
+                                            <span class="email-sub">ishita@example.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="plan-badge standard">Standard Plan</span></td>
+                                <td class="muted">Jan 08, 2025</td>
+                                <td><span class="pill cash"><img src="../icons/money-bill-wave-solid-full.svg" alt="img"
+                                            width="20"> Cash</span></td>
+                                <td class="amount right">+₹49.00</td>
+                                <td class="right">
+                                    <button class="icon-btn" title="Download Invoice"><img
+                                            src="../icons/download-solid-full.svg" alt="img" width="20"></button>
+                                </td>
+                                <td class="right">
+                                    <a href="send_reminder.html?name=Ishita+Patel&amount=49" class="icon-btn notify-btn"
+                                        title="Send Reminder">
+                                        <i class="fa-solid fa-bell"></i>
+                                    </a>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar orange">E</div>
+                                        <div>
+                                            <span class="bold">Priya Nair</span>
+                                            <span class="email-sub">priya@example.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="plan-badge premium">Premium Plan</span></td>
+                                <td class="muted">Jan 10, 2025</td>
+                                <td><span class="pill card"><img src="../icons/credit-card-solid-full.svg" alt="img"
+                                            width="20"> Card</span></td>
+                                <td class="amount right">+₹79.00</td>
+                                <td class="right">
+                                    <button class="icon-btn" title="Download Invoice"><img
+                                            src="../icons/download-solid-full.svg" alt="img" width="20"></button>
+                                </td>
+                                <td class="right">
+                                    <a href="send_reminder.html?name=Priya+Nair&amount=79" class="icon-btn notify-btn"
+                                        title="Send Reminder">
+                                        <i class="fa-solid fa-bell"></i>
+                                    </a>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar">D</div>
+                                        <div>
+                                            <span class="bold">Vedant Sharma</span>
+                                            <span class="email-sub">vedant@example.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="plan-badge premium">Premium Plan</span></td>
+                                <td class="muted">Jan 12, 2025</td>
+                                <td><span class="pill upi"><img src="../icons/mobile-screen-solid-full.svg" alt="img"
+                                            width="20"> UPI</span></td>
+                                <td class="amount right">+₹79.00</td>
+                                <td class="right">
+                                    <button class="icon-btn" title="Download Invoice"><img
+                                            src="../icons/download-solid-full.svg" alt="img" width="20"></button>
+                                </td>
+                                <td class="right">
+                                    <a href="send_reminder.html?name=Vedant+Sharma&amount=79"
+                                        class="icon-btn notify-btn" title="Send Reminder">
+                                        <i class="fa-solid fa-bell"></i>
+                                    </a>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar blue">J</div>
+                                        <div>
+                                            <span class="bold">Kabir Naik</span>
+                                            <span class="email-sub">kabir@example.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="plan-badge standard">Standard Plan</span></td>
+                                <td class="muted">Jan 14, 2025</td>
+                                <td><span class="pill card"><img src="../icons/credit-card-solid-full.svg" alt="img"
+                                            width="20"> Card</span></td>
+                                <td class="amount right">+₹49.00</td>
+                                <td class="right">
+                                    <button class="icon-btn" title="Download Invoice"><img
+                                            src="../icons/download-solid-full.svg" alt="img" width="20"></button>
+                                </td>
+                                <td class="right">
+                                    <a href="send_reminder.html?name=Kabir+Naik&amount=49" class="icon-btn notify-btn"
+                                        title="Send Reminder">
+                                        <i class="fa-solid fa-bell"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    body.classList.toggle('collapsed');
+                });
+            }
+
+            if (mobileToggle) {
+                mobileToggle.addEventListener('click', function () {
+                    body.classList.toggle('sidebar-open');
+                });
+            }
+            document.addEventListener('click', function (event) {
+                const isClickInsideSidebar = sidebar.contains(event.target);
+                const isClickOnToggle = mobileToggle.contains(event.target);
+
+                if (!isClickInsideSidebar && !isClickOnToggle && body.classList.contains('sidebar-open') && window.innerWidth <= 992) {
+                    body.classList.remove('sidebar-open');
+                }
+            });
+
+            // Dropdown Logic
+            const dropdownItems = document.querySelectorAll('.nav-item-dropdown');
+
+            dropdownItems.forEach(item => {
+                const link = item.querySelector('.nav-link');
+                const arrow = link ? link.querySelector('.nav-arrow') : null;
+
+                if (arrow) {
+                    arrow.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropdownItems.forEach(otherItem => {
+                            if (otherItem !== item) {
+                                otherItem.classList.remove('active');
+                            }
+                        });
+
+                        item.classList.toggle('active');
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

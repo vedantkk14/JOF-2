@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Management | JoF Fitness</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <link rel="stylesheet" href="../static/root.css">
+</head>
+
+<body class="page-staff">
+
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <button class="toggle-sidebar-btn" id="toggleBtn">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <div class="logo-area">
+                <img src="../icons/logo-light(1).png" alt="JOF Logo" class="brand-logo">
+            </div>
+
+            <div class="nav-label">MENU</div>
+            <nav class="navigation">
+                <a href="dashboard.php" class="nav-link">
+                    <img src="../icons/dashboard.png" alt="Dashboard" width="20">
+                    <span>Dashboard</span>
+                </a>
+                <a href="pt_session.php" class="nav-link">
+                    <img src="../icons/calendar.png" alt="PT Sessions" width="20">
+                    <span>PT Sessions</span>
+                </a>
+                <a href="consultation.php" class="nav-link">
+                    <img src="../icons/clipboard-user-solid-full.svg" alt="Consultation" width="20">
+                    <span>Consultation</span>
+                </a>
+                <div class="nav-item-dropdown">
+                    <a href="members.php" class="nav-link">
+                        <img src="../icons/users-solid-full.svg" alt="Members" width="20">
+                        <span>Members</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="members.php">View Members</a>
+                        <a href="add_member.php">Add Member</a>
+                        <a href="personal_training.php">Personal Training (PT)</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="diet-plans.php" class="nav-link">
+                        <img src="../icons/balanced-diet.png" alt="Diet Plans" width="20">
+                        <span>Diet Plans</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="create_diet_plan.php">Create Diet Plan</a>
+                        <a href="assign_diet_plan.php">Assign</a>
+                    </div>
+                </div>
+                <a href="staff.html" class="nav-link active">
+                    <img src="../icons/clipboard-user-solid-full.svg" alt="Staff" width="20">
+                    <span>Staff</span>
+                </a>
+                <a href="membership.php" class="nav-link">
+                    <img src="../icons/credit-card-solid-full.svg" alt="Membership" width="20">
+                    <span>Membership</span>
+                </a>
+                <div class="nav-item-dropdown">
+                    <a href="payments.html" class="nav-link">
+                        <img src="../icons/indian-rupee-sign-solid-full.svg" alt="Payments" width="20">
+                        <span>Payments</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+
+                        <a href="payment_installments.html">Installment Payments</a>
+                        <a href="outstanding_dues.html">Outstanding Dues</a>
+                        <a href="payment_recovery_communication.html">Recovery Communication</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="sales_leads.php" class="nav-link">
+                        <img src="../icons/trend.png" alt="Sales" width="20">
+                        <span>Sales Management</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="sales_leads.php">New Leads</a>
+                        <a href="sales_reports.php">Conversion Reports</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="reports_pg.php" class="nav-link">
+                        <img src="../icons/market-insights.png" alt="Reports" width="20">
+                        <span>Reports</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="reports/renewal_report.php">Renewal Report</a>
+                        <a href="reports/revenue_source.php">Revenue Report</a>
+                    </div>
+                </div>
+            </nav>
+
+        </aside>
+
+        <main class="main-content">
+
+            <header class="page-header">
+                <div class="header-text">
+                    <h1>Staff Members</h1>
+                    <p>Manage your fitness studio instructors and schedule.</p>
+                </div>
+
+                <a href="add_staff.html" class="add-btn">
+                    <img src="../icons/plus-solid-full.svg" alt="img" width="20"> Add New Staff
+                </a>
+            </header>
+
+            <div class="filter-bar">
+                <div class="search-box">
+                    <img src="../icons/magnifying-glass-solid-full.svg" alt="img" width="20">
+                    <input type="text" placeholder="Search staff...">
+                </div>
+            </div>
+
+            <section class="card-grid">
+
+                <div class="staff-card">
+                    <div class="card-header-row">
+                        <div class="status-dot online"></div>
+                        <div class="menu-icon"><img src="../icons/ellipsis-solid-full.svg" alt="img" width="20"></div>
+                    </div>
+
+                    <div class="avatar-circle">SM</div>
+
+                    <div class="card-body">
+                        <h3>Snehil M</h3>
+                        <span class="designation">Senior Instructor</span>
+
+                        <div class="contact-info">
+                            <p><i class="fa-regular fa-envelope"></i> snehil.m@fitstudio.com</p>
+                            <p><i class="fa-solid fa-phone"></i> (555) 111-2222</p>
+                        </div>
+
+                        <div class="rating-box">
+                            <i class="fa-solid fa-star"></i> 4.9 <span class="muted">/ 5.0</span>
+                        </div>
+
+                        <div class="tags-container">
+                            <span class="tag">Yoga</span>
+                            <span class="tag">Meditation</span>
+                            <span class="tag">Flexibility</span>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="workload">
+                            <strong>12</strong> <small>Classes/wk</small>
+                        </div>
+                        <button class="view-btn">View Schedule</button>
+                    </div>
+                </div>
+
+                <div class="staff-card">
+                    <div class="card-header-row">
+                        <div class="status-dot online"></div>
+                        <div class="menu-icon"><img src="../icons/ellipsis-solid-full.svg" alt="img" width="20"></div>
+                    </div>
+
+                    <div class="avatar-circle color-2">MT</div>
+
+                    <div class="card-body">
+                        <h3>Mithali T</h3>
+                        <span class="designation">Fitness Instructor</span>
+
+                        <div class="contact-info">
+                            <p><i class="fa-regular fa-envelope"></i> mithali.t@fitstudio.com</p>
+                            <p><i class="fa-solid fa-phone"></i> (555) 222-3333</p>
+                        </div>
+
+                        <div class="rating-box">
+                            <i class="fa-solid fa-star"></i> 4.8 <span class="muted">/ 5.0</span>
+                        </div>
+
+                        <div class="tags-container">
+                            <span class="tag">HIIT</span>
+                            <span class="tag">Cardio</span>
+                            <span class="tag">Spin</span>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="workload">
+                            <strong>15</strong> <small>Classes/wk</small>
+                        </div>
+                        <button class="view-btn">View Schedule</button>
+                    </div>
+                </div>
+
+                <div class="staff-card">
+                    <div class="card-header-row">
+                        <div class="status-dot offline"></div>
+                        <div class="menu-icon"><img src="../icons/ellipsis-solid-full.svg" alt="img" width="20"></div>
+                    </div>
+
+                    <div class="avatar-circle color-3">DK</div>
+
+                    <div class="card-body">
+                        <h3>Devidas K</h3>
+                        <span class="designation">Strength Coach</span>
+
+                        <div class="contact-info">
+                            <p><i class="fa-regular fa-envelope"></i> devidas.k@fitstudio.com</p>
+                            <p><i class="fa-solid fa-phone"></i> (555) 333-4444</p>
+                        </div>
+
+                        <div class="rating-box">
+                            <i class="fa-solid fa-star"></i> 4.9 <span class="muted">/ 5.0</span>
+                        </div>
+
+                        <div class="tags-container">
+                            <span class="tag">Strength</span>
+                            <span class="tag">CrossFit</span>
+                            <span class="tag">Lifting</span>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="workload">
+                            <strong>10</strong> <small>Classes/wk</small>
+                        </div>
+                        <button class="view-btn">View Schedule</button>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Toggle Logic
+            const toggleBtn = document.getElementById('toggleBtn');
+            const mobileToggle = document.getElementById('mobileToggle');
+            const body = document.body;
+            const sidebar = document.querySelector('.sidebar');
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+
+                    body.classList.toggle('collapsed');
+                });
+            }
+
+            if (mobileToggle) {
+
+                mobileToggle.addEventListener('click', function () {
+                    body.classList.toggle('sidebar-open');
+                });
+            }
+
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function (event) {
+                const isClickInsideSidebar = sidebar.contains(event.target);
+                const isClickOnToggle = mobileToggle.contains(event.target);
+
+                if (!isClickInsideSidebar && !isClickOnToggle && body.classList.contains('sidebar-open') && window.innerWidth <= 992) {
+                    body.classList.remove('sidebar-open');
+                }
+            });
+
+            // Dropdown Logic
+            const dropdownItems = document.querySelectorAll('.nav-item-dropdown');
+
+            dropdownItems.forEach(item => {
+                const link = item.querySelector('.nav-link');
+                const arrow = link ? link.querySelector('.nav-arrow') : null;
+
+                if (arrow) {
+                    arrow.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        dropdownItems.forEach(otherItem => {
+                            if (otherItem !== item) {
+                                otherItem.classList.remove('active');
+                            }
+                        });
+
+                        item.classList.toggle('active');
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

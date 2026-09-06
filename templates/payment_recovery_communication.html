@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Recovery Communication | JoF Fitness</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../static/root.css">
+</head>
+
+<body class="page-payment_installments">
+
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <button class="toggle-sidebar-btn" id="toggleBtn">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <div class="logo-area">
+                <img src="../icons/logo-light(1).png" alt="JOF Logo" class="brand-logo">
+            </div>
+
+            <div class="nav-label">MENU</div>
+            <nav class="navigation">
+                <a href="dashboard.html" class="nav-link">
+                    <img src="../icons/dashboard.png" alt="Dashboard" width="20">
+                    <span>Dashboard</span>
+                </a>
+                <a href="pt_session.php" class="nav-link">
+                    <img src="../icons/calendar.png" alt="PT Sessions" width="20">
+                    <span>PT Sessions</span>
+                </a>
+                <a href="consultation.php" class="nav-link">
+                    <img src="../icons/clipboard-user-solid-full.svg" alt="Consultation" width="20">
+                    <span>Consultation</span>
+                </a>
+                <div class="nav-item-dropdown">
+                    <a href="members.html" class="nav-link">
+                        <img src="../icons/users-solid-full.svg" alt="Members" width="20">
+                        <span>Members</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="add_member.html">Add New Member</a>
+                        <a href="received_payments.html">Payment Details</a>
+                        <a href="progress_report.html">Member Progress</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="diet-plans.html" class="nav-link">
+                        <img src="../icons/balanced-diet.png" alt="Diet Plans" width="20">
+                        <span>Diet Plans</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="create_diet_plan.html">Create Diet Plan</a>
+                        <a href="assign_diet_plan.html">Assign</a>
+                    </div>
+                </div>
+                <a href="staff.html" class="nav-link">
+                    <img src="../icons/clipboard-user-solid-full.svg" alt="Staff" width="20">
+                    <span>Staff</span>
+                </a>
+                <a href="membership.html" class="nav-link">
+                    <img src="../icons/credit-card-solid-full.svg" alt="Membership" width="20">
+                    <span>Membership</span>
+                </a>
+                <div class="nav-item-dropdown active">
+                    <a href="payments.html" class="nav-link active">
+                        <img src="../icons/indian-rupee-sign-solid-full.svg" alt="Payments" width="20">
+                        <span>Payments</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+
+                        <a href="payment_installments.html">Installment Payments</a>
+                        <a href="outstanding_dues.html">Outstanding Dues</a>
+                        <!-- <a href="payment_recovery_communication.html" class="active">Recovery Communication</a> -->
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="sales_leads.php" class="nav-link">
+                        <img src="../icons/trend.png" alt="Sales" width="20">
+                        <span>Sales Management</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="sales_leads.php">New Leads</a>
+                        <a href="sales_reports.php">Conversion Reports</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="reports_pg.php" class="nav-link">
+                        <img src="../icons/market-insights.png" alt="Reports" width="20">
+                        <span>Reports</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="reports/renewal_report.php">Renewal Report</a>
+                        <a href="reports/revenue_source.php">Revenue Report</a>
+                    </div>
+                </div>
+            </nav>
+
+        </aside>
+
+        <main class="main-content">
+
+            <div class="page-header">
+                <div class="header-text">
+                    <h1>Payment Recovery Communication</h1>
+                    <p>Automated reminders and follow-up communication for outstanding dues</p>
+                </div>
+            </div>
+
+            <!-- Member Recovery List -->
+            <div class="table-panel">
+                <div class="panel-header">
+                    <h2>Member Recovery List</h2>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Member Name</th>
+                                <th>Outstanding Amount</th>
+                                <th>Exit Date</th>
+                                <th>Recovery Status</th>
+                                <th>Last Communication</th>
+                                <th class="right">Preferred Channel</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td data-label="Member Name">
+                                    <div class="user-info">
+                                        <div class="avatar">K</div>
+                                        <div>
+                                            <span class="bold">Karan Patel</span>
+                                            <span class="email-sub">karan.p@example.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td data-label="Outstanding Amount" class="amount-outstanding">₹4,000</td>
+                                <td data-label="Exit Date" class="muted">Dec 31, 2025</td>
+                                <td data-label="Recovery Status"><span class="status-badge recovery-not-contacted">Not
+                                        Contacted</span></td>
+                                <td data-label="Last Communication" class="muted">—</td>
+                                <td data-label="Preferred Channel" class="right">
+                                    <span class="channel-badge whatsapp">
+                                        <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td data-label="Member Name">
+                                    <div class="user-info">
+                                        <div class="avatar blue">S</div>
+                                        <div>
+                                            <span class="bold">Sanjay Kumar</span>
+                                            <span class="email-sub">sanjay.k@example.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td data-label="Outstanding Amount" class="amount-outstanding">₹5,000</td>
+                                <td data-label="Exit Date" class="muted">Jan 10, 2026</td>
+                                <td data-label="Recovery Status"><span
+                                        class="status-badge recovery-reminder-sent">Reminder Sent</span></td>
+                                <td data-label="Last Communication" class="muted">Jan 15, 2026</td>
+                                <td data-label="Preferred Channel" class="right">
+                                    <span class="channel-badge email">
+                                        <i class="fa-solid fa-envelope"></i> Email
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td data-label="Member Name">
+                                    <div class="user-info">
+                                        <div class="avatar orange">M</div>
+                                        <div>
+                                            <span class="bold">Maya Reddy</span>
+                                            <span class="email-sub">maya.r@example.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td data-label="Outstanding Amount" class="amount-outstanding">₹3,000</td>
+                                <td data-label="Exit Date" class="muted">Nov 30, 2025</td>
+                                <td data-label="Recovery Status"><span class="status-badge recovery-followup">Follow-up
+                                        Sent</span></td>
+                                <td data-label="Last Communication" class="muted">Jan 20, 2026</td>
+                                <td data-label="Preferred Channel" class="right">
+                                    <span class="channel-badge sms">
+                                        <i class="fa-solid fa-comment-sms"></i> SMS
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td data-label="Member Name">
+                                    <div class="user-info">
+                                        <div class="avatar purple">D</div>
+                                        <div>
+                                            <span class="bold">Deepak Verma</span>
+                                            <span class="email-sub">deepak.v@example.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td data-label="Outstanding Amount" class="amount-outstanding">₹3,000</td>
+                                <td data-label="Exit Date" class="muted">Jan 05, 2026</td>
+                                <td data-label="Recovery Status"><span class="status-badge recovery-final-notice">Final
+                                        Notice</span></td>
+                                <td data-label="Last Communication" class="muted">Jan 25, 2026</td>
+                                <td data-label="Preferred Channel" class="right">
+                                    <span class="channel-badge whatsapp">
+                                        <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td data-label="Member Name">
+                                    <div class="user-info">
+                                        <div class="avatar blue">A</div>
+                                        <div>
+                                            <span class="bold">Anjali Joshi</span>
+                                            <span class="email-sub">anjali.j@example.com</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td data-label="Outstanding Amount" class="amount-paid">₹0</td>
+                                <td data-label="Exit Date" class="muted">Dec 15, 2025</td>
+                                <td data-label="Recovery Status"><span
+                                        class="status-badge recovery-recovered">Recovered</span></td>
+                                <td data-label="Last Communication" class="muted">Jan 10, 2026</td>
+                                <td data-label="Preferred Channel" class="right">
+                                    <span class="channel-badge email">
+                                        <i class="fa-solid fa-envelope"></i> Email
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Communication Flow Timeline -->
+            <div class="communication-flow-panel">
+                <div class="panel-header">
+                    <h2>Recovery Communication Flow</h2>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-stage stage-1">
+                        <div class="stage-icon">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </div>
+                        <div class="stage-content">
+                            <h3>Polite Reminder</h3>
+                            <p class="stage-example">"Hello, this is a gentle reminder regarding your pending membership
+                                dues."</p>
+                            <span class="stage-timing">Day 7 after exit</span>
+                        </div>
+                        <a href="send_recovery_message.html?stage=1" class="btn-send-message">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Send Now</span>
+                        </a>
+                    </div>
+
+                    <div class="timeline-connector"></div>
+
+                    <div class="timeline-stage stage-2">
+                        <div class="stage-icon">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <div class="stage-content">
+                            <h3>Firm Follow-up</h3>
+                            <p class="stage-example">"This is a follow-up regarding your unpaid balance. Kindly settle
+                                at the earliest."</p>
+                            <span class="stage-timing">Day 14 after exit</span>
+                        </div>
+                        <a href="send_recovery_message.html?stage=2" class="btn-send-message">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Send Now</span>
+                        </a>
+                    </div>
+
+                    <div class="timeline-connector"></div>
+
+                    <div class="timeline-stage stage-3">
+                        <div class="stage-icon">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="stage-content">
+                            <h3>Final Notice</h3>
+                            <p class="stage-example">"This is the final reminder regarding your outstanding payment."
+                            </p>
+                            <span class="stage-timing">Day 21 after exit</span>
+                        </div>
+                        <a href="send_recovery_message.html?stage=3" class="btn-send-message btn-urgent">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Send Now</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Communication Channels -->
+            <div class="channels-panel">
+                <div class="panel-header">
+                    <h2>Communication Channels</h2>
+                </div>
+                <div class="channels-grid">
+                    <div class="channel-card whatsapp-channel">
+                        <div class="channel-icon">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </div>
+                        <h3>WhatsApp</h3>
+                        <span class="channel-status enabled">Enabled</span>
+                    </div>
+
+                    <div class="channel-card email-channel">
+                        <div class="channel-icon">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <h3>Email</h3>
+                        <span class="channel-status enabled">Enabled</span>
+                    </div>
+
+                    <div class="channel-card sms-channel">
+                        <div class="channel-icon">
+                            <i class="fa-solid fa-comment-sms"></i>
+                        </div>
+                        <h3>SMS</h3>
+                        <span class="channel-status preferred">Preferred</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recovery Status Note -->
+            <div class="info-note success-note">
+                <div class="note-icon">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div class="note-content">
+                    <p>Automated reminders stop once the recovery status is marked as <strong>Recovered</strong>.</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('toggleBtn');
+            const mobileToggle = document.getElementById('mobileToggle');
+            const body = document.body;
+            const sidebar = document.querySelector('.sidebar');
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    body.classList.toggle('collapsed');
+                });
+            }
+
+            if (mobileToggle) {
+                mobileToggle.addEventListener('click', function () {
+                    body.classList.toggle('sidebar-open');
+                });
+            }
+
+            document.addEventListener('click', function (event) {
+                const isClickInsideSidebar = sidebar.contains(event.target);
+                const isClickOnToggle = mobileToggle.contains(event.target);
+
+                if (!isClickInsideSidebar && !isClickOnToggle && body.classList.contains('sidebar-open') && window.innerWidth <= 992) {
+                    body.classList.remove('sidebar-open');
+                }
+            });
+
+            const dropdownItems = document.querySelectorAll('.nav-item-dropdown');
+
+            dropdownItems.forEach(item => {
+                const link = item.querySelector('.nav-link');
+                const arrow = link ? link.querySelector('.nav-arrow') : null;
+
+                if (arrow) {
+                    arrow.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        dropdownItems.forEach(otherItem => {
+                            if (otherItem !== item) {
+                                otherItem.classList.remove('active');
+                            }
+                        });
+
+                        item.classList.toggle('active');
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

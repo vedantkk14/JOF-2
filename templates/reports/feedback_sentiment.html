@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOF Fitness | Feedback & Sentiment</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="../../static/root.css">
+
+</head>
+
+<body class="page-dashboard page-received_payment page-feedback_sentiment">
+
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <button class="toggle-sidebar-btn" id="toggleBtn">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <div class="logo-area">
+                <img src="../../icons/logo-light(1).png" alt="JOF Logo" class="brand-logo">
+            </div>
+
+            <div class="nav-label">MENU</div>
+            <nav class="navigation">
+                <a href="../dashboard.php" class="nav-link">
+                    <img src="../../icons/dashboard.png" alt="Dashboard" width="20">
+                    <span>Dashboard</span>
+                </a>
+                <a href="../pt_session.php" class="nav-link">
+                    <img src="../../icons/calendar.png" alt="PT Sessions" width="20">
+                    <span>PT Sessions</span>
+                </a>
+                <a href="../consultation.php" class="nav-link">
+                    <img src="../../icons/clipboard-user-solid-full.svg" alt="Consultation" width="20">
+                    <span>Consultation</span>
+                </a>
+                <div class="nav-item-dropdown">
+                    <a href="../members.php" class="nav-link">
+                        <img src="../../icons/users-solid-full.svg" alt="Members" width="20">
+                        <span>Members</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a> 
+                    <div class="sidebar-submenu">
+                        <a href="../members.php">View Members</a>
+                        <a href="../add_member.php">Add Member</a>
+                        <a href="../personal_training.php">Personal Training (PT)</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="../diet-plans.php" class="nav-link">
+                        <img src="../../icons/balanced-diet.png" alt="Diet Plans" width="20">
+                        <span>Diet Plans</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="../create_diet_plan.php">Create Diet Plan</a>
+                        <a href="../assign_diet_plan.php">Assign</a>
+                    </div>
+                </div>
+
+                <a href="../membership.php" class="nav-link">
+                    <img src="../../icons/credit-card-regular-full.svg" alt="Membership" width="20">
+                    <span>Membership</span>
+                </a>
+                <div class="nav-item-dropdown">
+                    <a href="../payments.php" class="nav-link">
+                        <img src="../../icons/indian-rupee-sign-solid-full.svg" alt="Payments" width="20">
+                        <span>Payments</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+
+                        <a href="../payment_installments.php">Installment Payments</a>
+                        <a href="../outstanding_dues.php">Outstanding Dues</a>
+                        <a href="../payment_recovery_communication.php">Recovery Communication</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="../sales_leads.php" class="nav-link">
+                        <img src="../../icons/trend.png" alt="Sales" width="20">
+                        <span>Sales Management</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="../sales_leads.php">New Leads</a>
+                        <a href="../sales_reports.php">Conversion Reports</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="../reports_pg.php" class="nav-link active">
+                        <img src="../../icons/market-insights.png" alt="Reports" width="20">
+                        <span>Reports</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="renewal_report.php">Renewal Report</a>
+                        <a href="revenue_source.php">Revenue Report</a>
+                    </div>
+                </div>
+            </nav>
+
+        </aside>
+
+        <main class="main-content">
+
+            <div class="page-header" style="margin-bottom: 20px;">
+                <div class="header-text">
+                    <h1>Feedback & Sentiment Analysis</h1>
+                    <p>Track member satisfaction and sentiment trends.</p>
+                </div>
+                <div class="header-actions">
+                    <div class="profile-pic">
+                        <img src="../../icons/JO.svg" alt="JO" width="20">
+                    </div>
+                </div>
+            </div>
+
+            <section class="kpi-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon purple-gradient">
+                            <img src="../../icons/face-smile-regular-full.svg" width="24">
+                        </div>
+                    </div>
+                    <div class="stat-body">
+                        <h3>Net Promoter Score</h3>
+                        <h2>+42</h2>
+                        <p class="growth positive">Great</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon green-gradient">
+                            <img src="../../icons/comment-dots-regular-full.svg" width="24">
+                        </div>
+                    </div>
+                    <div class="stat-body">
+                        <h3>Total Feedback</h3>
+                        <h2>158</h2>
+                        <p class="growth positive">+12 this week</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon orange-gradient">
+                            <img src="../../icons/star-half-stroke-solid-full.svg" width="24">
+                        </div>
+                    </div>
+                    <div class="stat-body">
+                        <h3>Avg. Rating</h3>
+                        <h2>4.6/5</h2>
+                        <p class="growth positive">Top Tier</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="table-panel">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Service Type</th>
+                                <th>Member Name</th>
+                                <th>Date</th>
+                                <th>Rating</th>
+                                <th>Feedback Comment</th>
+                                <th>Sentiment</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td><span class="sentiment-badge neutral">Online Training</span></td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar blue">R</div>
+                                        <div>
+                                            <span class="bold">Rohan Gupta</span>
+                                            <span class="email-sub">Gold Member</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="muted">Today, 10:30 AM</td>
+                                <td>
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                </td>
+                                <td class="comment-text">"The Zoom session for HIIT was intense! Audio quality was
+                                    perfect this time."</td>
+                                <td><span class="sentiment-badge positive">Positive</span></td>
+                                <td><button class="btn-icon"><img src="../../icons/pen-to-square-solid-full.svg"
+                                            width="14"></button></td>
+                            </tr>
+
+                            <tr>
+                                <td><span class="sentiment-badge" style="background: #E9D8FD; color: #44337A;">Offline
+                                        PT</span></td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar orange">P</div>
+                                        <div>
+                                            <span class="bold">Priya Sharma</span>
+                                            <span class="email-sub">Silver Member</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="muted">Yesterday</td>
+                                <td>
+                                    <i class="fa-solid fa-star rating-star"></i>
+                                    <i class="fa-solid fa-star rating-star"></i>
+                                    <i class="fa-solid fa-star rating-star"></i>
+                                    <img src="../../icons/star-regular-full.svg" class="rating-star" width="12">
+                                    <img src="../../icons/star-regular-full.svg" class="rating-star" width="12">
+                                </td>
+                                <td class="comment-text">"My offline trainer was 10 mins late. Form correction during
+                                    deadlifts was good though."</td>
+                                <td><span class="sentiment-badge negative">Negative</span></td>
+                                <td><button class="btn-icon"><img src="../../icons/check-solid-full.svg"
+                                            width="14"></button></td>
+                            </tr>
+
+                            <tr>
+                                <td><span class="sentiment-badge neutral">Online Training</span></td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar">A</div>
+                                        <div>
+                                            <span class="bold">Amit Verma</span>
+                                            <span class="email-sub">Monthly</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="muted">Jan 18, 2026</td>
+                                <td>
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                    <img src="../../icons/star-regular-full.svg" class="rating-star" width="12">
+                                </td>
+                                <td class="comment-text">"App workout logging is easy, but need more vegetarian options
+                                    in the diet plan."</td>
+                                <td><span class="sentiment-badge neutral">Neutral</span></td>
+                                <td><button class="btn-icon"><img src="../../icons/pen-to-square-solid-full.svg"
+                                            width="14"></button></td>
+                            </tr>
+
+                            <tr>
+                                <td><span class="sentiment-badge" style="background: #E9D8FD; color: #44337A;">Offline
+                                        PT</span></td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar blue">S</div>
+                                        <div>
+                                            <span class="bold">Sneha Kapoor</span>
+                                            <span class="email-sub">Platinum Member</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="muted">Jan 15, 2026</td>
+                                <td>
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                    <img src="../../icons/star-solid-full.svg" class="rating-star" width="12">
+                                </td>
+                                <td class="comment-text">"In-person sessions are great. Trainer Mike really pushes me to
+                                    my limits!"</td>
+                                <td><span class="sentiment-badge positive">Positive</span></td>
+                                <td><button class="btn-icon"><img src="../../icons/heart-regular-full.svg"
+                                            width="14"></button></td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('toggleBtn');
+            const mobileToggle = document.getElementById('mobileToggle');
+            const body = document.body;
+            const sidebar = document.querySelector('.sidebar');
+
+            // Desktop toggle button
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    body.classList.toggle('collapsed');
+                });
+            }
+
+            // Mobile toggle button
+            if (mobileToggle) {
+                mobileToggle.addEventListener('click', function () {
+                    body.classList.toggle('sidebar-open');
+                });
+            }
+
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function (event) {
+                const isClickInsideSidebar = sidebar.contains(event.target);
+                const isClickOnToggle = mobileToggle.contains(event.target);
+
+                if (!isClickInsideSidebar && !isClickOnToggle && body.classList.contains('sidebar-open') && window.innerWidth <= 992) {
+                    body.classList.remove('sidebar-open');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

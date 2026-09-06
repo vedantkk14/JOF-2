@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Staff Member | JOF Fitness</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../static/root.css">
+</head>
+
+<body class="page-add_staff">
+
+  <button class="mobile-toggle" id="mobileToggle">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <button class="toggle-sidebar-btn" id="toggleBtn">
+    <i class="fa-solid fa-chevron-left"></i>
+  </button>
+
+  <div class="dashboard-container">
+
+    <aside class="sidebar">
+      <div class="logo-area">
+        <img src="../icons/logo-light(1).png" alt="JOF Logo" class="brand-logo">
+      </div>
+
+      <div class="nav-label">MENU</div>
+
+      <nav class="navigation">
+        <a href="../templates/dashboard.html" class="nav-link">
+          <img src="../icons/dashboard.png" alt="Dashboard" width="20">
+          <span>Dashboard</span>
+        </a>
+        <div class="nav-item-dropdown">
+          <a href="../templates/members.html" class="nav-link">
+            <img src="../icons/users-solid-full.svg" alt="Members" width="20">
+            <span>Members</span>
+            <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+          </a>
+          <div class="sidebar-submenu">
+            <a href="../templates/add_member.html">Add New Member</a>
+            <a href="../templates/received_payments.html">Payment Details</a>
+            <a href="../templates/progress_report.html">Member Progress</a>
+          </div>
+        </div>
+        <div class="nav-item-dropdown">
+          <a href="../templates/diet-plans.html" class="nav-link">
+            <img src="../icons/balanced-diet.png" alt="Diet Plans" width="20">
+            <span>Diet Plans</span>
+            <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+          </a>
+          <div class="sidebar-submenu">
+            <a href="../templates/create_diet_plan.html">Create Diet Plan</a>
+            <a href="../templates/assign_diet_plan.html">Assign</a>
+          </div>
+        </div>
+        <a href="../templates/staff.html" class="nav-link active">
+          <img src="../icons/clipboard-user-solid-full.svg" alt="Staff" width="20">
+          <span>Staff</span>
+        </a>
+        <a href="../templates/membership.html" class="nav-link">
+          <img src="../icons/credit-card-solid-full.svg" alt="Membership" width="20">
+          <span>Membership</span>
+        </a>
+        <a href="../templates/payments.html" class="nav-link">
+          <img src="../icons/indian-rupee-sign-solid-full.svg" alt="Payments" width="20">
+          <span>Payments</span>
+        </a>
+        <div class="nav-item-dropdown">
+          <a href="../templates/sales_leads.php" class="nav-link">
+            <img src="../icons/trend.png" alt="Sales" width="20">
+            <span>Sales Management</span>
+            <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+          </a>
+          <div class="sidebar-submenu">
+            <a href="../templates/sales_leads.php">New Leads</a>
+            <a href="../templates/sales_reports.php">Conversion Reports</a>
+          </div>
+        </div>
+        <div class="nav-item-dropdown">
+          <a href="../templates/reports_pg.php" class="nav-link">
+            <img src="../icons/market-insights.png" alt="Reports" width="20">
+            <span>Reports</span>
+            <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+          </a>
+          <div class="sidebar-submenu">
+            <a href="../templates/reports/renewal_report.php">Renewal Report</a>
+            <a href="../templates/reports/revenue_source.php">Revenue Report</a>
+          </div>
+        </div>
+>>>>>>> 9d396f00c10ca14c57e5b778bbb11670764987df
+      </nav>
+    </aside>
+
+    <main class="main-content">
+
+      <header class="page-header">
+        <div>
+          <h1>Add New Staff</h1>
+          <p>Register a new instructor or staff member to the system.</p>
+        </div>
+      </header>
+
+      <div class="form-container">
+        <form class="staff-form" action="../templates/staff.html">
+
+          <div class="form-group">
+            <label for="fullname">Full Name</label>
+            <input type="text" id="fullname" placeholder="Ex: Tushar Patil" required />
+          </div>
+
+          <div class="form-row">
+
+            <div class="form-group">
+              <label for="role">Role</label>
+              <select id="role" required>
+                <option value="" disabled selected>Select role</option>
+                <option>Senior Instructor</option>
+                <option>Fitness Instructor</option>
+                <option>Strength Coach</option>
+                <option>Pilates Instructor</option>
+                <option>Zumba Instructor</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email Address</label>
+
+              <div class="field-line"><img src="../icons/envelope-solid-full.svg" class="field-icon" alt="Email Icon">
+                <input type="email" id="email" placeholder="staff@jof.com" required />
+              </div>
+            </div>
+
+          </div>
+
+          <div class="form-row">
+
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+
+              <div class="field-line"><img src="../icons/phone-solid-full.svg" class="field-icon" alt="Phone Icon">
+                <input type="tel" id="phone" placeholder="(+91) 98230 89706" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="specialities">Specialities <small>(Comma separated)</small></label>
+              <input type="text" id="specialities" placeholder="Ex: Yoga, Pilates, HIIT" />
+            </div>
+
+          </div>
+
+          <div class="form-actions">
+            <a href="..//templates/staff.html" class="btn cancel-btn">Cancel</a>
+            <button type="submit" class="btn add-btn">Add Staff Member</button>
+          </div>
+
+        </form>
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const toggleBtn = document.getElementById('toggleBtn');
+      const mobileToggle = document.getElementById('mobileToggle');
+      const body = document.body;
+      const sidebar = document.querySelector('.sidebar');
+
+      // Desktop toggle
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', function () {
+          body.classList.toggle('collapsed');
+        });
+      }
+
+      // Mobile toggle
+      if (mobileToggle) {
+        mobileToggle.addEventListener('click', function () {
+          body.classList.toggle('sidebar-open');
+        });
+      }
+
+      // Close sidebar when clicking outside on mobile
+      document.addEventListener('click', function (event) {
+        const isClickInsideSidebar = sidebar.contains(event.target);
+        const isClickOnToggle = mobileToggle.contains(event.target);
+
+        if (!isClickInsideSidebar && !isClickOnToggle && body.classList.contains('sidebar-open') && window.innerWidth <= 992) {
+          body.classList.remove('sidebar-open');
+        }
+      });
+
+      // Dropdown toggle functionality
+      const dropdownItems = document.querySelectorAll('.nav-item-dropdown > .nav-link');
+      dropdownItems.forEach(item => {
+        item.addEventListener('click', function (e) {
+          e.preventDefault();
+          const parent = this.parentElement;
+          const wasActive = parent.classList.contains('active');
+
+          // Close all other dropdowns
+          document.querySelectorAll('.nav-item-dropdown').forEach(dropdown => {
+            dropdown.classList.remove('active');
+          });
+
+          // Toggle current dropdown
+          if (!wasActive) {
+            parent.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>

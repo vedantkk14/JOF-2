@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOF Fitness | Member Progress Report</title>
+    <link rel="stylesheet" href="../static/root.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body class="page-progress_report">
+
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <button class="toggle-sidebar-btn" id="toggleBtn">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <div class="logo-area">
+                <img src="../icons/logo-light(1).png" alt="JOF Logo" class="brand-logo">
+            </div>
+
+            <div class="nav-label">MENU</div>
+
+            <nav class="navigation">
+                <a href="#" class="nav-link">
+                    <img src="../icons/dashboard.png" alt="Dashboard" width="20">
+                    <span>Dashboard</span>
+                </a>
+
+                <div class="nav-item-dropdown active">
+                    <a href="members.html" class="nav-link active">
+                        <img src="../icons/users-solid-full.svg" alt="Members" width="20">
+                        <span>Members</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="add_member.html">Add New Member</a>
+                        <a href="received_payments.html">Payment Details</a>
+                        <a href="progress_report.html" class="active">Member Progress</a>
+                    </div>
+                </div>
+
+                <div class="nav-item-dropdown">
+                    <a href="diet-plans.html" class="nav-link">
+                        <img src="../icons/balanced-diet.png" alt="Diet Plans" width="20">
+                        <span>Diet Plans</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="create_diet_plan.html">Create Diet Plan</a>
+                        <a href="assign_diet_plan.html">Assign</a>
+                    </div>
+                </div>
+
+
+
+                <a href="membership.html" class="nav-link">
+                    <img src="../icons/credit-card-regular-full.svg" alt="Membership" width="20">
+                    <span>Membership</span>
+                </a>
+
+                <a href="payments.html" class="nav-link">
+                    <img src="../icons/indian-rupee-sign-solid-full.svg" alt="Payments" width="20">
+                    <span>Payments</span>
+                </a>
+
+                <div class="nav-item-dropdown">
+                    <a href="sales_leads.php" class="nav-link">
+                        <img src="../icons/trend.png" alt="Sales" width="20">
+                        <span>Sales Management</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="sales_leads.php">New Leads</a>
+                        <a href="sales_reports.php">Conversion Reports</a>
+                    </div>
+                </div>
+
+                <div class="nav-item-dropdown">
+                    <a href="reports_pg.php" class="nav-link">
+                        <img src="../icons/market-insights.png" alt="Reports" width="20">
+                        <span>Reports</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="reports/renewal_report.php">Renewal Report</a>
+                        <a href="reports/revenue_source.php">Revenue Report</a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+
+            <!-- Page Header -->
+            <header class="page-header">
+                <div class="header-text">
+                    <h1>Member Progress Report</h1>
+                    <p>Track member fitness journey with detailed metrics and visual progress</p>
+                </div>
+                <div class="profile-pic">
+                    <img src="https://ui-avatars.com/api/?name=Staff&background=F25C2A&color=fff" alt="Profile">
+                </div>
+            </header>
+
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="control-left">
+                    <div class="input-group">
+                        <label for="memberSelect">
+                            <i class="fa-solid fa-user"></i> Select Member
+                        </label>
+                        <select id="memberSelect" class="form-select">
+                            <option selected>John Doe</option>
+                            <option>Sarah Johnson</option>
+                            <option>Mike Williams</option>
+                            <option>Emma Davis</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="control-right">
+                    <div class="input-group">
+                        <label for="dateRange">
+                            <i class="fa-solid fa-calendar"></i> Date Range
+                        </label>
+                        <select id="dateRange" class="form-select">
+                            <option selected>Last 3 Months</option>
+                            <option>Last 6 Months</option>
+                            <option>Last 12 Months</option>
+                            <option>All Time</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Metrics Cards -->
+            <div class="metrics-grid">
+                <div class="metric-card orange-gradient">
+                    <div class="metric-icon">
+                        <i class="fa-solid fa-weight-scale"></i>
+                    </div>
+                    <div class="metric-content">
+                        <p class="metric-label">Total Weight Lost</p>
+                        <h2 class="metric-value">12.5 kg</h2>
+                        <span class="metric-change positive">
+                            <i class="fa-solid fa-arrow-down"></i> 15.6% from start
+                        </span>
+                    </div>
+                </div>
+
+                <div class="metric-card purple-gradient">
+                    <div class="metric-icon">
+                        <i class="fa-solid fa-dumbbell"></i>
+                    </div>
+                    <div class="metric-content">
+                        <p class="metric-label">Muscle Mass Gained</p>
+                        <h2 class="metric-value">3.2 kg</h2>
+                        <span class="metric-change positive">
+                            <i class="fa-solid fa-arrow-up"></i> 8.4% increase
+                        </span>
+                    </div>
+                </div>
+
+                <div class="metric-card green-gradient">
+                    <div class="metric-icon">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <div class="metric-content">
+                        <p class="metric-label">Attendance Streak</p>
+                        <h2 class="metric-value">23 Days</h2>
+                        <span class="metric-change positive">
+                            <i class="fa-solid fa-check"></i> Active
+                        </span>
+                    </div>
+                </div>
+
+                <div class="metric-card blue-gradient">
+                    <div class="metric-icon">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                    </div>
+                    <div class="metric-content">
+                        <p class="metric-label">Current BMI</p>
+                        <h2 class="metric-value">24.3</h2>
+                        <span class="metric-change normal">
+                            <i class="fa-solid fa-circle-check"></i> Normal Range
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+
+                <!-- Weight History Line Chart -->
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-chart-line"></i> Weight History</h3>
+                        <p>Track weight changes over time</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="weightChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Monthly Attendance Bar Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-chart-column"></i> Monthly Attendance</h3>
+                        <p>Workout frequency per month</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Body Composition Radar Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-chart-pie"></i> Body Composition</h3>
+                        <p>Fat, muscle, water distribution</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="bodyCompositionChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Sidebar Toggle Logic
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('toggleBtn');
+            const mobileToggle = document.getElementById('mobileToggle');
+            const body = document.body;
+            const sidebar = document.querySelector('.sidebar');
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    body.classList.toggle('collapsed');
+                });
+            }
+
+
+
+            const dropdownItems = document.querySelectorAll('.nav-item-dropdown');
+            dropdownItems.forEach(item => {
+                const link = item.querySelector('.nav-link');
+                const arrow = link ? link.querySelector('.nav-arrow') : null;
+
+                if (arrow) {
+                    arrow.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        dropdownItems.forEach(otherItem => {
+                            if (otherItem !== item) {
+                                otherItem.classList.remove('active');
+                            }
+                        });
+
+                        item.classList.toggle('active');
+                    });
+                }
+            });
+
+            // ===== CHART.JS INITIALIZATION =====
+
+            // Weight History Line Chart
+            const weightCtx = document.getElementById('weightChart').getContext('2d');
+            new Chart(weightCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                    datasets: [{
+                        label: 'Weight (kg)',
+                        data: [80, 78.5, 77, 75.5, 74, 72, 70.5, 69, 67.5],
+                        borderColor: '#F25C2A',
+                        backgroundColor: 'rgba(242, 92, 42, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#F25C2A',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#1a202c',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            padding: 12,
+                            borderColor: '#F25C2A',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Monthly Attendance Bar Chart
+            const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+            new Chart(attendanceCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Workouts',
+                        data: [18, 22, 20, 25, 23, 26],
+                        backgroundColor: [
+                            'rgba(242, 92, 42, 0.8)',
+                            'rgba(142, 68, 173, 0.8)',
+                            'rgba(52, 211, 153, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(242, 92, 42, 0.8)',
+                            'rgba(142, 68, 173, 0.8)'
+                        ],
+                        borderRadius: 8,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Body Composition Radar Chart
+            const bodyCompCtx = document.getElementById('bodyCompositionChart').getContext('2d');
+            new Chart(bodyCompCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Muscle Mass', 'Body Fat', 'Water %', 'Bone Mass', 'BMR'],
+                    datasets: [{
+                        label: 'Current',
+                        data: [75, 18, 60, 85, 70],
+                        borderColor: '#F25C2A',
+                        backgroundColor: 'rgba(242, 92, 42, 0.2)',
+                        pointBackgroundColor: '#F25C2A',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }, {
+                        label: 'Target',
+                        data: [85, 12, 65, 85, 80],
+                        borderColor: '#8e44ad',
+                        backgroundColor: 'rgba(142, 68, 173, 0.2)',
+                        pointBackgroundColor: '#8e44ad',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                stepSize: 20
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

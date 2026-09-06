@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOF Fitness | Send Payment Reminder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="../static/root.css">
+</head>
+
+<body class="page-send_reminder">
+
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <button class="toggle-sidebar-btn" id="toggleBtn">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <div class="logo-area">
+                <img src="../icons/logo-light(1).png" alt="JOF Logo" class="brand-logo">
+            </div>
+
+            <div class="nav-label">MENU</div>
+            <nav class="navigation">
+                <a href="dashboard.html" class="nav-link">
+                    <img src="../icons/dashboard.png" alt="Dashboard" width="20">
+                    <span>Dashboard</span>
+                </a>
+                <a href="pt_session.php" class="nav-link">
+                    <img src="../icons/calendar.png" alt="PT Sessions" width="20">
+                    <span>PT Sessions</span>
+                </a>
+                <a href="consultation.php" class="nav-link">
+                    <img src="../icons/clipboard-user-solid-full.svg" alt="Consultation" width="20">
+                    <span>Consultation</span>
+                </a>
+                <div class="nav-item-dropdown">
+                    <a href="members.html" class="nav-link">
+                        <img src="../icons/users-solid-full.svg" alt="Members" width="20">
+                        <span>Members</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="add_member.html">Add New Member</a>
+                        <a href="received_payments.html">Payment Details</a>
+                        <a href="progress_report.html">Member Progress</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="diet-plans.html" class="nav-link">
+                        <img src="../icons/balanced-diet.png" alt="Diet Plans" width="20">
+                        <span>Diet Plans</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="create_diet_plan.html">Create Diet Plan</a>
+                        <a href="assign_diet_plan.html">Assign</a>
+                    </div>
+                </div>
+                <a href="staff.html" class="nav-link">
+                    <img src="../icons/clipboard-user-solid-full.svg" alt="Staff" width="20">
+                    <span>Staff</span>
+                </a>
+                <a href="membership.html" class="nav-link">
+                    <img src="../icons/credit-card-solid-full.svg" alt="Membership" width="20">
+                    <span>Membership</span>
+                </a>
+
+
+                <div class="nav-item-dropdown">
+                    <a href="payments.html" class="nav-link active">
+                        <img src="../icons/indian-rupee-sign-solid-full.svg" alt="Payments" width="20">
+                        <span>Payments</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+
+                        <a href="payment_installments.html">Installment Payments</a>
+                        <a href="outstanding_dues.html">Outstanding Dues</a>
+                        <a href="payment_recovery_communication.html">Recovery Communication</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="sales_leads.php" class="nav-link">
+                        <img src="../icons/trend.png" alt="Sales" width="20">
+                        <span>Sales Management</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="sales_leads.php">New Leads</a>
+                        <a href="sales_reports.php">Conversion Reports</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="reports_pg.php" class="nav-link">
+                        <img src="../icons/market-insights.png" alt="Reports" width="20">
+                        <span>Reports</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="reports/renewal_report.php">Renewal Report</a>
+                        <a href="reports/revenue_source.php">Revenue Report</a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+
+            <!-- Page Header -->
+            <header class="page-header">
+                <div class="header-text">
+                    <h1><i class="fa-solid fa-bell"></i> Send Payment Reminder</h1>
+                    <p>Send a professional reminder email to members with pending payments</p>
+                </div>
+                <div class="profile-pic">
+                    <img src="https://ui-avatars.com/api/?name=Staff&background=F25C2A&color=fff" alt="Profile">
+                </div>
+            </header>
+
+            <!-- Email Reminder Card -->
+            <div class="reminder-card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-envelope"></i> Email Reminder</h2>
+                    <p>Preview and send payment reminder to the member</p>
+                </div>
+
+                <form class="reminder-form" id="reminderForm">
+
+                    <!-- Member Selection Dropdown -->
+                    <div class="form-group">
+                        <label for="memberSelect">
+                            <i class="fa-solid fa-users"></i> Select Member
+                        </label>
+                        <select id="memberSelect" class="form-select">
+                            <option value="">-- Choose a member --</option>
+                            <option value="Sneha Reddy|79">Sneha Reddy (₹79 due)</option>
+                            <option value="Ishita Patel|49">Ishita Patel (₹49 due)</option>
+                            <option value="Priya Nair|79">Priya Nair (₹79 due)</option>
+                            <option value="Vedant Sharma|79">Vedant Sharma (₹79 due)</option>
+                            <option value="Kabir Naik|49">Kabir Naik (₹49 due)</option>
+                        </select>
+                    </div>
+
+                    <!-- Recipient -->
+                    <div class="form-group">
+                        <label for="recipient">
+                            <i class="fa-solid fa-user"></i> Recipient
+                        </label>
+                        <input type="text" id="recipient" class="form-input" readonly
+                            placeholder="Select a member above">
+                    </div>
+
+                    <!-- Amount -->
+                    <div class="form-group">
+                        <label for="amount">
+                            <i class="fa-solid fa-indian-rupee-sign"></i> Amount Due
+                        </label>
+                        <input type="text" id="amount" class="form-input" readonly placeholder="₹0">
+                    </div>
+
+                    <!-- Subject -->
+                    <div class="form-group">
+                        <label for="subject">
+                            <i class="fa-solid fa-heading"></i> Subject
+                        </label>
+                        <input type="text" id="subject" class="form-input" value="Payment Reminder: Membership Due">
+                    </div>
+
+                    <!-- Message -->
+                    <div class="form-group">
+                        <label for="message">
+                            <i class="fa-solid fa-message"></i> Message
+                        </label>
+                        <textarea id="message" class="form-textarea" rows="10"
+                            placeholder="Select a member to generate message..."></textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="form-actions">
+                        <a href="payments.html" class="btn-cancel">
+                            <i class="fa-solid fa-xmark"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn-send">
+                            <i class="fa-solid fa-paper-plane"></i> Send Email
+                        </button>
+                    </div>
+
+                </form>
+
+                <!-- Success Message (Hidden by default) -->
+                <div class="success-message" id="successMessage">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <h3>Reminder Sent Successfully!</h3>
+                    <p>The payment reminder has been sent to <span id="sentToName"></span></p>
+                    <a href="payments.html" class="btn-back">
+                        <i class="fa-solid fa-arrow-left"></i> Back to Payments
+                    </a>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Sidebar Toggle Logic
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('toggleBtn');
+            const mobileToggle = document.getElementById('mobileToggle');
+            const body = document.body;
+            const sidebar = document.querySelector('.sidebar');
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    body.classList.toggle('collapsed');
+                });
+            }
+
+
+
+            const dropdownItems = document.querySelectorAll('.nav-item-dropdown');
+            dropdownItems.forEach(item => {
+                const link = item.querySelector('.nav-link');
+                const arrow = link ? link.querySelector('.nav-arrow') : null;
+
+                if (arrow) {
+                    arrow.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        dropdownItems.forEach(otherItem => {
+                            if (otherItem !== item) {
+                                otherItem.classList.remove('active');
+                            }
+                        });
+
+                        item.classList.toggle('active');
+                    });
+                }
+            });
+
+            // ===== DYNAMIC URL PARAMETER HANDLING & MEMBER SELECTION =====
+
+            // Function to populate form with member data
+            function populateForm(memberName, memberAmount) {
+                document.getElementById('recipient').value = memberName;
+                document.getElementById('amount').value = '₹' + memberAmount;
+
+                // Pre-fill message template
+                const messageTemplate = `Hi ${memberName},
+
+This is a friendly reminder that your membership payment is due. We noticed that there is an outstanding balance of ₹${memberAmount} on your account.
+
+To continue enjoying uninterrupted access to JOF Fitness facilities and services, please make your payment at your earliest convenience.
+
+Payment Details:
+• Amount Due: ₹${memberAmount}
+• Member: ${memberName}
+
+You can make your payment:
+• At the gym reception
+• Through our online payment portal
+• Via bank transfer (contact us for details)
+
+If you have already made the payment, please disregard this message. If you have any questions or need assistance, feel free to contact us.
+
+Thank you for being a valued member of JOF Fitness!
+
+Best regards,
+JOF Fitness Team`;
+
+                document.getElementById('message').value = messageTemplate;
+            }
+
+            // Check URL parameters first (when coming from payments page)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlName = urlParams.get('name');
+            const urlAmount = urlParams.get('amount');
+
+            const memberSelect = document.getElementById('memberSelect');
+
+            if (urlName && urlAmount) {
+                // If URL params exist, populate form and select dropdown option
+                populateForm(urlName, urlAmount);
+
+                // Try to select the matching option in dropdown
+                const optionValue = `${urlName}|${urlAmount}`;
+                for (let option of memberSelect.options) {
+                    if (option.value.startsWith(urlName)) {
+                        option.selected = true;
+                        break;
+                    }
+                }
+            }
+
+            // Handle member dropdown selection change
+            memberSelect.addEventListener('change', function () {
+                const selectedValue = this.value;
+
+                if (selectedValue) {
+                    // Split the value to get name and amount
+                    const [name, amount] = selectedValue.split('|');
+                    populateForm(name, amount);
+                } else {
+                    // Clear form if no member selected
+                    document.getElementById('recipient').value = '';
+                    document.getElementById('amount').value = '';
+                    document.getElementById('message').value = '';
+                }
+            });
+
+            // ===== FORM SUBMISSION =====
+            const reminderForm = document.getElementById('reminderForm');
+            const successMessage = document.getElementById('successMessage');
+            const sentToName = document.getElementById('sentToName');
+
+            reminderForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const recipientName = document.getElementById('recipient').value;
+
+                if (!recipientName) {
+                    alert('Please select a member first!');
+                    return;
+                }
+
+                // Hide form, show success message
+                reminderForm.style.display = 'none';
+                successMessage.style.display = 'flex';
+                sentToName.textContent = recipientName;
+
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+    </script>
+
+</body>
+
+</html>

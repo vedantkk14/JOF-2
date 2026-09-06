@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Send Recovery Message | JoF Fitness</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../static/root.css">
+</head>
+
+<body class="page-payment_installments">
+
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <button class="toggle-sidebar-btn" id="toggleBtn">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <div class="logo-area">
+                <img src="../icons/logo-light(1).png" alt="JOF Logo" class="brand-logo">
+            </div>
+
+            <div class="nav-label">MENU</div>
+            <nav class="navigation">
+                <a href="dashboard.html" class="nav-link">
+                    <img src="../icons/dashboard.png" alt="Dashboard" width="20">
+                    <span>Dashboard</span>
+                </a>
+                <a href="pt_session.php" class="nav-link">
+                    <img src="../icons/calendar.png" alt="PT Sessions" width="20">
+                    <span>PT Sessions</span>
+                </a>
+                <a href="consultation.php" class="nav-link">
+                    <img src="../icons/clipboard-user-solid-full.svg" alt="Consultation" width="20">
+                    <span>Consultation</span>
+                </a>
+                <div class="nav-item-dropdown">
+                    <a href="members.html" class="nav-link">
+                        <img src="../icons/users-solid-full.svg" alt="Members" width="20">
+                        <span>Members</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="add_member.html">Add New Member</a>
+                        <a href="received_payments.html">Payment Details</a>
+                        <a href="progress_report.html">Member Progress</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="diet-plans.html" class="nav-link">
+                        <img src="../icons/balanced-diet.png" alt="Diet Plans" width="20">
+                        <span>Diet Plans</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="create_diet_plan.html">Create Diet Plan</a>
+                        <a href="assign_diet_plan.html">Assign</a>
+                    </div>
+                </div>
+                <a href="staff.html" class="nav-link">
+                    <img src="../icons/clipboard-user-solid-full.svg" alt="Staff" width="20">
+                    <span>Staff</span>
+                </a>
+                <a href="membership.html" class="nav-link">
+                    <img src="../icons/credit-card-solid-full.svg" alt="Membership" width="20">
+                    <span>Membership</span>
+                </a>
+                <div class="nav-item-dropdown active">
+                    <a href="payments.html" class="nav-link active">
+                        <img src="../icons/indian-rupee-sign-solid-full.svg" alt="Payments" width="20">
+                        <span>Payments</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+
+                        <a href="payment_installments.html">Installment Payments</a>
+                        <a href="outstanding_dues.html">Outstanding Dues</a>
+                        <a href="payment_recovery_communication.html" class="active">Recovery Communication</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="sales_leads.php" class="nav-link">
+                        <img src="../icons/trend.png" alt="Sales" width="20">
+                        <span>Sales Management</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="sales_leads.php">New Leads</a>
+                        <a href="sales_reports.php">Conversion Reports</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="reports_pg.php" class="nav-link">
+                        <img src="../icons/market-insights.png" alt="Reports" width="20">
+                        <span>Reports</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="reports/renewal_report.php">Renewal Report</a>
+                        <a href="reports/revenue_source.php">Revenue Source</a>
+                    </div>
+                </div>
+            </nav>
+
+        </aside>
+
+        <main class="main-content">
+
+            <div class="page-header">
+                <div class="header-text">
+                    <h1>Send Recovery Message</h1>
+                    <p>Send automated payment recovery reminders to members with outstanding dues</p>
+                </div>
+            </div>
+
+            <!-- Message Form -->
+            <div class="form-panel">
+                <div class="panel-header">
+                    <h2>Recovery Message Details</h2>
+                </div>
+                <div class="form-container">
+                    <form class="update-form" id="messageForm">
+
+                        <!-- Stage Info Alert -->
+                        <div class="stage-alert stage-alert-info" id="stageAlert">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <div>
+                                <strong>Stage 1: Polite Reminder</strong>
+                                <p>Sent 3 days after member exit. Friendly tone for initial contact.</p>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <!-- Select Member -->
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="memberSelect">
+                                    <i class="fa-solid fa-user"></i> Select Member
+                                </label>
+                                <select id="memberSelect" name="memberSelect" required>
+                                    <option value="">-- Choose a member with outstanding dues --</option>
+                                    <option value="1">Sanjay Verma - ₹8,500 Outstanding</option>
+                                    <option value="2">Meera Krishnan - ₹5,000 Outstanding</option>
+                                    <option value="3">Arjun Reddy - ₹12,000 Outstanding</option>
+                                    <option value="4">Kavita Nair - ₹3,500 Outstanding</option>
+                                    <option value="5">Rajesh Kumar - ₹6,200 Outstanding</option>
+                                </select>
+                            </div>
+
+                            <!-- Communication Channel -->
+                            <div class="form-group">
+                                <label for="channelSelect">
+                                    <i class="fa-solid fa-comment"></i> Communication Channel
+                                </label>
+                                <select id="channelSelect" name="channelSelect" required>
+                                    <option value="whatsapp">WhatsApp</option>
+                                    <option value="email">Email</option>
+                                    <option value="sms">SMS</option>
+                                </select>
+                            </div>
+
+                            <!-- Recovery Stage -->
+                            <div class="form-group">
+                                <label for="recoveryStage">
+                                    <i class="fa-solid fa-layer-group"></i> Recovery Stage
+                                </label>
+                                <select id="recoveryStage" name="recoveryStage" required>
+                                    <option value="1" selected>Stage 1 - Polite Reminder</option>
+                                    <option value="2">Stage 2 - Firm Follow-up</option>
+                                    <option value="3">Stage 3 - Final Notice</option>
+                                </select>
+                            </div>
+
+                            <!-- Message Template -->
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="messageTemplate">
+                                    <i class="fa-solid fa-message"></i> Message Template
+                                </label>
+                                <textarea id="messageTemplate" name="messageTemplate" rows="6"
+                                    required>Hi [Name], this is a friendly reminder about your pending payment of ₹[Amount]. Please clear it at your earliest convenience. Thank you!</textarea>
+                                <small class="form-hint">Use [Name] and [Amount] as placeholders. They will be replaced
+                                    automatically.</small>
+                            </div>
+
+                            <!-- Schedule Option -->
+                            <div class="form-group">
+                                <label for="sendOption">
+                                    <i class="fa-solid fa-clock"></i> Send Option
+                                </label>
+                                <select id="sendOption" name="sendOption" required>
+                                    <option value="now">Send Immediately</option>
+                                    <option value="schedule">Schedule for Later</option>
+                                </select>
+                            </div>
+
+                            <!-- Schedule Date/Time (hidden by default) -->
+                            <div class="form-group" id="scheduleGroup" style="display: none;">
+                                <label for="scheduleTime">
+                                    <i class="fa-solid fa-calendar"></i> Schedule Date & Time
+                                </label>
+                                <input type="datetime-local" id="scheduleTime" name="scheduleTime">
+                            </div>
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="message-preview">
+                            <h3><i class="fa-solid fa-eye"></i> Message Preview</h3>
+                            <div class="preview-box" id="previewBox">
+                                <p>Select a member to see the message preview...</p>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="button" class="btn-cancel"
+                                onclick="window.location.href='payment_recovery_communication.html'">
+                                <i class="fa-solid fa-xmark"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn-save">
+                                <i class="fa-solid fa-paper-plane"></i> Send Message
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+
+            // Dropdown Logic
+            const dropdownItems = document.querySelectorAll('.nav-item-dropdown');
+
+            dropdownItems.forEach(item => {
+                const link = item.querySelector('.nav-link');
+                const arrow = link ? link.querySelector('.nav-arrow') : null;
+
+                if (arrow) {
+                    arrow.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        dropdownItems.forEach(otherItem => {
+                            if (otherItem !== item) {
+                                otherItem.classList.remove('active');
+                            }
+                        });
+
+                        item.classList.toggle('active');
+                    });
+                }
+            });
+
+            // Recovery Stage logic
+            const recoveryStageSelect = document.getElementById('recoveryStage');
+            const stageAlert = document.getElementById('stageAlert');
+            const messageTemplate = document.getElementById('messageTemplate');
+
+            const stageTemplates = {
+                '1': {
+                    message: 'Hi [Name], this is a friendly reminder about your pending payment of ₹[Amount]. Please clear it at your earliest convenience. Thank you!',
+                    title: 'Stage 1: Polite Reminder',
+                    description: 'Sent 3 days after member exit. Friendly tone for initial contact.',
+                    class: 'stage-alert-info'
+                },
+                '2': {
+                    message: 'Dear [Name], we notice your payment of ₹[Amount] is still pending. Please settle this within the next 5 days to avoid further action.',
+                    title: 'Stage 2: Firm Follow-up',
+                    description: 'Sent 10 days after exit. More assertive tone.',
+                    class: 'stage-alert-warning'
+                },
+                '3': {
+                    message: 'FINAL NOTICE: [Name], your outstanding amount of ₹[Amount] must be paid immediately. Failure to comply may result in legal action.',
+                    title: 'Stage 3: Final Notice',
+                    description: 'Sent 20 days after exit. Firm and urgent tone.',
+                    class: 'stage-alert-danger'
+                }
+            };
+
+            // Get stage from URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const stageParam = urlParams.get('stage');
+            if (stageParam && stageTemplates[stageParam]) {
+                recoveryStageSelect.value = stageParam;
+                updateStageInfo(stageParam);
+            }
+
+            function updateStageInfo(stage) {
+                const stageInfo = stageTemplates[stage];
+                if (stageInfo) {
+                    stageAlert.className = 'stage-alert ' + stageInfo.class;
+                    stageAlert.innerHTML = `
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div>
+                            <strong>${stageInfo.title}</strong>
+                            <p>${stageInfo.description}</p>
+                        </div>
+                    `;
+                    messageTemplate.value = stageInfo.message;
+                    updatePreview();
+                }
+            }
+
+            recoveryStageSelect.addEventListener('change', function () {
+                updateStageInfo(this.value);
+            });
+
+            // Schedule option toggle
+            const sendOption = document.getElementById('sendOption');
+            const scheduleGroup = document.getElementById('scheduleGroup');
+
+            sendOption.addEventListener('change', function () {
+                if (this.value === 'schedule') {
+                    scheduleGroup.style.display = 'block';
+                    document.getElementById('scheduleTime').required = true;
+                } else {
+                    scheduleGroup.style.display = 'none';
+                    document.getElementById('scheduleTime').required = false;
+                }
+            });
+
+            // Member data
+            const memberData = {
+                '1': { name: 'Sanjay Verma', amount: '8,500' },
+                '2': { name: 'Meera Krishnan', amount: '5,000' },
+                '3': { name: 'Arjun Reddy', amount: '12,000' },
+                '4': { name: 'Kavita Nair', amount: '3,500' },
+                '5': { name: 'Rajesh Kumar', amount: '6,200' }
+            };
+
+            // Preview update
+            const memberSelect = document.getElementById('memberSelect');
+            const previewBox = document.getElementById('previewBox');
+
+            function updatePreview() {
+                const selectedMember = memberSelect.value;
+                if (selectedMember && memberData[selectedMember]) {
+                    const member = memberData[selectedMember];
+                    let message = messageTemplate.value;
+                    message = message.replace(/\[Name\]/g, member.name);
+                    message = message.replace(/\[Amount\]/g, member.amount);
+                    previewBox.innerHTML = `<p>${message}</p>`;
+                } else {
+                    previewBox.innerHTML = '<p>Select a member to see the message preview...</p>';
+                }
+            }
+
+            memberSelect.addEventListener('change', updatePreview);
+            messageTemplate.addEventListener('input', updatePreview);
+
+            // Form submission
+            document.getElementById('messageForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                alert('Message sent successfully! (This is a UI demo - no actual message was sent)');
+                window.location.href = 'payment_recovery_communication.html';
+            });
+        });
+    </script>
+
+</body>
+
+</html>

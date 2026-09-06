@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOF Admin | Login</title>
+    <link rel="stylesheet" href="../static/root.css">
+    <style>
+        .success-overlay {
+            z-index: 10000 !important;
+        }
+        
+        .success-modal {
+            background: #ffffff !important;
+            padding: 40px !important;
+            border-radius: 20px !important;
+            text-align: center !important;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2) !important;
+            width: 90% !important;
+            max-width: 380px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+        }
+
+        .login-success-icon-container {
+            width: 80px !important;
+            height: 80px !important;
+            background-color: #10B981 !important; /* Vibrant Green */
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 auto 20px auto !important;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3) !important;
+        }
+
+        .login-success-icon {
+            width: 35px !important;
+            height: 35px !important;
+            filter: brightness(0) invert(1) !important; /* Makes the icon pure white */
+            display: block !important;
+        }
+
+        .success-modal h3 {
+            font-size: 24px !important;
+            color: #1A202C !important;
+            margin-bottom: 8px !important;
+            font-weight: 700 !important;
+        }
+
+        .success-modal p {
+            color: #718096 !important;
+            font-size: 15px !important;
+            margin-bottom: 20px !important;
+        }
+
+        .spinner {
+            width: 24px !important;
+            height: 24px !important;
+            border: 3px solid #EDF2F7 !important;
+            border-top: 3px solid #10B981 !important;
+            border-radius: 50% !important;
+            animation: spin 0.8s linear infinite !important;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="page-login_page">
+
+<div class="success-overlay" id="successPopup">
+        <div class="success-modal">
+            <div class="login-success-icon-container">
+                <img src="../icons/check-solid-full.svg" class="login-success-icon" alt="Success">
+            </div>
+            <h3 id="popupTitle">Success!</h3>
+            <p id="popupMessage">Logging you in...</p>
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <div class="auth-container">
+        
+        <div class="visual-side">
+            <img src="../icons/logo-light(1).png" alt="JOF Logo" class="brand-logo-img">
+            <p class="brand-quote">
+                Get the best workouts & excercise plans tailored for you at JOF Fitness Center!
+            </p>
+        </div>
+
+        <div class="form-side">
+            
+            <div id="loginForm">
+                <div class="form-header">
+                    <h2>Welcome Back! 👋</h2>
+                    <p>Enter your details to access the admin panel.</p>
+                </div>
+
+                <form id="formLogin" action="../auth/login.php" method="POST">
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <div class="input-wrapper">
+                            <input type="email" name="email" class="form-input" placeholder="Email Address" required>
+                            <img src="../icons/envelope-solid-full.svg" class="input-icon" alt="email">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+                            <img src="../icons/lock-solid-full.svg" class="input-icon" alt="lock">
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <label class="remember-me">
+                            <input type="checkbox" name="remember"> Remember me
+                        </label>
+                       <a href="forgot_password.php" class="forgot-password">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Sign In</button>
+                </form>
+
+                <div class="switch-form">
+                    Don't have an account? <a href="registration_page.php">Sign Up</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        const form = document.getElementById('formLogin');
+        const popup = document.getElementById('successPopup');
+        const popupTitle = document.getElementById('popupTitle');
+        const popupMessage = document.getElementById('popupMessage');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault(); // stop normal form submit
+
+            const formData = new FormData(form);
+
+            fetch('../auth/login.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    popupTitle.innerText = "Login Successful!";
+                    popupMessage.innerText = "Redirecting to dashboard...";
+                    popup.classList.add('active');
+
+                    setTimeout(() => {
+                        window.location.href = '../templates/dashboard.php';
+                    }, 1500);
+
+                } else {
+                    popupTitle.innerText = "Login Failed";
+                    popupMessage.innerText = data.message;
+                    popup.classList.add('active');
+
+                    setTimeout(() => {
+                        popup.classList.remove('active');
+                    }, 2500);
+                }
+            })
+            .catch(() => {
+                popupTitle.innerText = "Error";
+                popupMessage.innerText = "Server not reachable";
+                popup.classList.add('active');
+            });
+        });
+</script>
+
+</body>
+</html>

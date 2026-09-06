@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOF Fitness | Trainer Performance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="../../static/root.css">
+
+</head>
+
+<body class="page-dashboard page-reports page-received_payment page-trainer_performance">
+
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <button class="toggle-sidebar-btn" id="toggleBtn">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+
+
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <div class="logo-area">
+                <img src="../../icons/logo-light(1).png" alt="JOF Logo" class="brand-logo">
+            </div>
+
+            <div class="nav-label">MENU</div>
+            <nav class="navigation">
+                <a href="../dashboard.html" class="nav-link">
+                    <img src="../../icons/dashboard.png" alt="Dashboard" width="20">
+                    <span>Dashboard</span>
+                </a>
+                <a href="../pt_session.php" class="nav-link">
+                    <img src="../../icons/calendar.png" alt="PT Sessions" width="20">
+                    <span>PT Sessions</span>
+                </a>
+                <a href="../consultation.php" class="nav-link">
+                    <img src="../../icons/clipboard-user-solid-full.svg" alt="Consultation" width="20">
+                    <span>Consultation</span>
+                </a>
+                <div class="nav-item-dropdown">
+                    <a href="../members.html" class="nav-link">
+                        <img src="../../icons/users-solid-full.svg" alt="Members" width="20">
+                        <span>Members</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="../add_member.html">Add New Member</a>
+                        <a href="../received_payments.html">Payment Details</a>
+                        <a href="../progress_report.html">Member Progress</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="../diet-plans.html" class="nav-link">
+                        <img src="../../icons/balanced-diet.png" alt="Diet Plans" width="20">
+                        <span>Diet Plans</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="../create_diet_plan.html">Create Diet Plan</a>
+                        <a href="../assign_diet_plan.html">Assign</a>
+                    </div>
+                </div>
+
+                <a href="../membership.html" class="nav-link">
+                    <img src="../../icons/credit-card-regular-full.svg" alt="Membership" width="20">
+                    <span>Membership</span>
+                </a>
+                <div class="nav-item-dropdown">
+                    <a href="../payments.html" class="nav-link">
+                        <img src="../../icons/indian-rupee-sign-solid-full.svg" alt="Payments" width="20">
+                        <span>Payments</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+
+                        <a href="../payment_installments.html">Installment Payments</a>
+                        <a href="../outstanding_dues.html">Outstanding Dues</a>
+                        <a href="../payment_recovery_communication.html">Recovery Communication</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="../sales_leads.php" class="nav-link">
+                        <img src="../../icons/trend.png" alt="Sales" width="20">
+                        <span>Sales Management</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="../sales_leads.php">New Leads</a>
+                        <a href="../sales_reports.php">Conversion Reports</a>
+                    </div>
+                </div>
+                <div class="nav-item-dropdown">
+                    <a href="../reports_pg.php" class="nav-link active">
+                        <img src="../../icons/market-insights.png" alt="Reports" width="20">
+                        <span>Reports</span>
+                        <i class="fa-solid fa-chevron-right ms-auto nav-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <a href="renewal_report.php">Renewal Report</a>
+                        <a href="revenue_source.php">Revenue Report</a>
+                    </div>
+                </div>
+            </nav>
+
+        </aside>
+
+        <main class="main-content">
+
+            <div class="page-header" style="margin-bottom: 20px;">
+                <div class="header-text">
+                    <h1>Trainer Performance Report</h1>
+                    <p>Track trainer productivity and feedback.</p>
+                </div>
+                <div class="header-actions">
+                    <div class="profile-pic">
+                        <img src="../../icons/JO.svg" alt="JO" width="20">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-panel">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Trainer Name</th>
+                                <th class="right">Members Handled</th>
+                                <th class="right">Avg Member Progress</th>
+                                <th class="right">Attendance Score</th>
+                                <th>Feedback Rating</th>
+                                <th>Performance Badge</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar blue">M</div>
+                                        <div>
+                                            <span class="bold">Mike Johnson</span>
+                                            <span class="email-sub">Senior Trainer</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="right">25</td>
+                                <td class="right" style="color: #48BB78; font-weight: 600;">85%</td>
+                                <td class="right">98%</td>
+                                <td>
+                                    <span class="rating-stars">
+                                        <img src="../../icons/star-solid-full.svg" width="12">
+                                        <img src="../../icons/star-solid-full.svg" width="12">
+                                        <img src="../../icons/star-solid-full.svg" width="12">
+                                        <img src="../../icons/star-solid-full.svg" width="12">
+                                        <img src="../../icons/star-half-stroke-solid-full.svg" width="12">
+                                    </span>
+                                    <span style="font-size: 12px; color: #718096; margin-left: 5px;">4.8</span>
+                                </td>
+                                <td><span class="pill badge-excellent">Excellent</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar orange">S</div>
+                                        <div>
+                                            <span class="bold">Sarah Lee</span>
+                                            <span class="email-sub">Yoga Instructor</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="right">40</td>
+                                <td class="right" style="color: #48BB78; font-weight: 600;">80%</td>
+                                <td class="right">95%</td>
+                                <td>
+                                    <span class="rating-stars">
+                                        <img src="../../icons/star-solid-full.svg" width="12">
+                                        <img src="../../icons/star-solid-full.svg" width="12">
+                                        <img src="../../icons/star-solid-full.svg" width="12">
+                                        <img src="../../icons/star-solid-full.svg" width="12">
+                                        <img src="../../icons/star-regular-full.svg" width="12">
+                                    </span>
+                                    <span style="font-size: 12px; color: #718096; margin-left: 5px;">4.0</span>
+                                </td>
+                                <td><span class="pill badge-good">Good</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar">D</div>
+                                        <div>
+                                            <span class="bold">David Chen</span>
+                                            <span class="email-sub">Junior Trainer</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="right">15</td>
+                                <td class="right" style="color: #ECC94B; font-weight: 600;">60%</td>
+                                <td class="right">85%</td>
+                                <td>
+                                    <span class="rating-stars">
+                                        <img src="../../icons/star-solid-full.svg" width="12">
+                                        <img src="../../icons/star-solid-full.svg" width="12">
+                                        <img src="../../icons/star-solid-full.svg" width="12">
+                                        <img src="../../icons/star-regular-full.svg" width="12">
+                                        <img src="../../icons/star-regular-full.svg" width="12">
+                                    </span>
+                                    <span style="font-size: 12px; color: #718096; margin-left: 5px;">3.2</span>
+                                </td>
+                                <td><span class="pill badge-improvement">Needs Improvement</span></td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('toggleBtn');
+            const mobileToggle = document.getElementById('mobileToggle');
+            const body = document.body;
+            const sidebar = document.querySelector('.sidebar');
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    body.classList.toggle('collapsed');
+                });
+            }
+
+            if (mobileToggle) {
+                mobileToggle.addEventListener('click', function () {
+                    body.classList.toggle('sidebar-open');
+                });
+            }
+
+            document.addEventListener('click', function (event) {
+                const isClickInsideSidebar = sidebar.contains(event.target);
+                const isClickOnToggle = mobileToggle.contains(event.target);
+
+                if (!isClickInsideSidebar && !isClickOnToggle && body.classList.contains('sidebar-open') && window.innerWidth <= 992) {
+                    body.classList.remove('sidebar-open');
+                }
+            });
+
+            const dropdownItems = document.querySelectorAll('.nav-item-dropdown');
+
+            dropdownItems.forEach(item => {
+                const link = item.querySelector('.nav-link');
+                const arrow = link ? link.querySelector('.nav-arrow') : null;
+
+                if (arrow) {
+                    arrow.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        dropdownItems.forEach(otherItem => {
+                            if (otherItem !== item) {
+                                otherItem.classList.remove('active');
+                            }
+                        });
+
+                        item.classList.toggle('active');
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

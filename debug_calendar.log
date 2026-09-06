@@ -1,0 +1,1888 @@
+[2026-03-16 11:15:31] === Calendar Handler Called ===
+[2026-03-16 11:15:31] Action: fetch
+[2026-03-16 11:15:31] Method: GET
+[2026-03-16 11:15:31] Raw Input: 
+[2026-03-16 12:47:04] === Calendar Handler Called ===
+[2026-03-16 12:47:04] Action: fetch
+[2026-03-16 12:47:04] Method: GET
+[2026-03-16 12:47:04] Raw Input: 
+[2026-03-16 13:05:02] === Calendar Handler Called ===
+[2026-03-16 13:05:02] Action: fetch
+[2026-03-16 13:05:02] Method: GET
+[2026-03-16 13:05:02] Raw Input: 
+[2026-03-16 13:32:53] === Calendar Handler Called ===
+[2026-03-16 13:32:53] Action: fetch
+[2026-03-16 13:32:53] Method: GET
+[2026-03-16 13:32:53] Raw Input: 
+[2026-03-16 13:49:00] === Calendar Handler Called ===
+[2026-03-16 13:49:00] Action: fetch
+[2026-03-16 13:49:00] Method: GET
+[2026-03-16 13:49:00] Raw Input: 
+[2026-03-16 14:00:26] === Calendar Handler Called ===
+[2026-03-16 14:00:26] Action: fetch
+[2026-03-16 14:00:26] Method: GET
+[2026-03-16 14:00:26] Raw Input: 
+[2026-03-16 14:01:11] === Calendar Handler Called ===
+[2026-03-16 14:01:11] Action: fetch
+[2026-03-16 14:01:11] Method: GET
+[2026-03-16 14:01:11] Raw Input: 
+[2026-03-16 14:03:14] === Calendar Handler Called ===
+[2026-03-16 14:03:14] Action: fetch
+[2026-03-16 14:03:14] Method: GET
+[2026-03-16 14:03:14] Raw Input: 
+[2026-03-16 14:03:31] === Calendar Handler Called ===
+[2026-03-16 14:03:31] Action: fetch
+[2026-03-16 14:03:31] Method: GET
+[2026-03-16 14:03:31] Raw Input: 
+[2026-03-16 14:03:32] === Calendar Handler Called ===
+[2026-03-16 14:03:32] Action: fetch
+[2026-03-16 14:03:32] Method: GET
+[2026-03-16 14:03:32] Raw Input: 
+[2026-03-16 14:03:34] === Calendar Handler Called ===
+[2026-03-16 14:03:34] Action: fetch
+[2026-03-16 14:03:34] Method: GET
+[2026-03-16 14:03:34] Raw Input: 
+[2026-03-16 14:04:50] === Calendar Handler Called ===
+[2026-03-16 14:04:50] Action: fetch
+[2026-03-16 14:04:50] Method: GET
+[2026-03-16 14:04:50] Raw Input: 
+[2026-03-16 14:04:53] === Calendar Handler Called ===
+[2026-03-16 14:04:53] Action: fetch
+[2026-03-16 14:04:53] Method: GET
+[2026-03-16 14:04:53] Raw Input: 
+[2026-03-16 14:40:47] === Calendar Handler Called ===
+[2026-03-16 14:40:47] Action: fetch
+[2026-03-16 14:40:47] Method: GET
+[2026-03-16 14:40:47] Raw Input: 
+[2026-03-16 14:45:06] === Calendar Handler Called ===
+[2026-03-16 14:45:06] Action: fetch
+[2026-03-16 14:45:06] Method: GET
+[2026-03-16 14:45:06] Raw Input: 
+[2026-03-16 14:47:09] === Calendar Handler Called ===
+[2026-03-16 14:47:09] Action: fetch
+[2026-03-16 14:47:09] Method: GET
+[2026-03-16 14:47:09] Raw Input: 
+[2026-03-16 14:49:52] === Calendar Handler Called ===
+[2026-03-16 14:49:52] Action: fetch
+[2026-03-16 14:49:52] Method: GET
+[2026-03-16 14:49:52] Raw Input: 
+[2026-03-16 14:50:18] === Calendar Handler Called ===
+[2026-03-16 14:50:18] Action: fetch
+[2026-03-16 14:50:18] Method: GET
+[2026-03-16 14:50:18] Raw Input: 
+[2026-03-16 14:52:08] === Calendar Handler Called ===
+[2026-03-16 14:52:08] Action: fetch
+[2026-03-16 14:52:08] Method: GET
+[2026-03-16 14:52:08] Raw Input: 
+[2026-03-16 14:52:17] === Calendar Handler Called ===
+[2026-03-16 14:52:17] Action: fetch
+[2026-03-16 14:52:17] Method: GET
+[2026-03-16 14:52:17] Raw Input: 
+[2026-03-16 14:52:24] === Calendar Handler Called ===
+[2026-03-16 14:52:24] Action: fetch
+[2026-03-16 14:52:24] Method: GET
+[2026-03-16 14:52:24] Raw Input: 
+[2026-03-16 14:52:26] === Calendar Handler Called ===
+[2026-03-16 14:52:26] Action: fetch
+[2026-03-16 14:52:26] Method: GET
+[2026-03-16 14:52:26] Raw Input: 
+[2026-03-16 14:53:47] === Calendar Handler Called ===
+[2026-03-16 14:53:47] Action: fetch
+[2026-03-16 14:53:47] Method: GET
+[2026-03-16 14:53:47] Raw Input: 
+[2026-03-16 14:53:57] === Calendar Handler Called ===
+[2026-03-16 14:53:57] Action: fetch
+[2026-03-16 14:53:57] Method: GET
+[2026-03-16 14:53:57] Raw Input: 
+[2026-03-16 14:54:07] === Calendar Handler Called ===
+[2026-03-16 14:54:07] Action: fetch
+[2026-03-16 14:54:07] Method: GET
+[2026-03-16 14:54:07] Raw Input: 
+[2026-03-16 14:57:40] === Calendar Handler Called ===
+[2026-03-16 14:57:40] Action: fetch
+[2026-03-16 14:57:40] Method: GET
+[2026-03-16 14:57:40] Raw Input: 
+[2026-03-16 15:03:54] === Calendar Handler Called ===
+[2026-03-16 15:03:54] Action: fetch
+[2026-03-16 15:03:54] Method: GET
+[2026-03-16 15:03:54] Raw Input: 
+[2026-03-16 15:06:43] === Calendar Handler Called ===
+[2026-03-16 15:06:43] Action: fetch
+[2026-03-16 15:06:43] Method: GET
+[2026-03-16 15:06:43] Raw Input: 
+[2026-03-16 15:10:07] === Calendar Handler Called ===
+[2026-03-16 15:10:07] Action: fetch
+[2026-03-16 15:10:07] Method: GET
+[2026-03-16 15:10:07] Raw Input: 
+[2026-03-16 15:23:32] === Calendar Handler Called ===
+[2026-03-16 15:23:32] Action: fetch
+[2026-03-16 15:23:32] Method: GET
+[2026-03-16 15:23:32] Raw Input: 
+[2026-03-16 15:23:33] === Calendar Handler Called ===
+[2026-03-16 15:23:33] Action: fetch
+[2026-03-16 15:23:33] Method: GET
+[2026-03-16 15:23:33] Raw Input: 
+[2026-03-16 18:29:36] === Calendar Handler Called ===
+[2026-03-16 18:29:36] Action: fetch
+[2026-03-16 18:29:36] Method: GET
+[2026-03-16 18:29:36] Raw Input: 
+[2026-03-16 18:30:34] === Calendar Handler Called ===
+[2026-03-16 18:30:34] Action: fetch
+[2026-03-16 18:30:34] Method: GET
+[2026-03-16 18:30:34] Raw Input: 
+[2026-03-16 18:30:45] === Calendar Handler Called ===
+[2026-03-16 18:30:45] Action: fetch
+[2026-03-16 18:30:45] Method: GET
+[2026-03-16 18:30:45] Raw Input: 
+[2026-03-16 18:35:26] === Calendar Handler Called ===
+[2026-03-16 18:35:26] Action: fetch
+[2026-03-16 18:35:26] Method: GET
+[2026-03-16 18:35:26] Raw Input: 
+[2026-03-16 18:45:31] === Calendar Handler Called ===
+[2026-03-16 18:45:31] Action: fetch
+[2026-03-16 18:45:31] Method: GET
+[2026-03-16 18:45:31] Raw Input: 
+[2026-03-16 19:07:05] === Calendar Handler Called ===
+[2026-03-16 19:07:05] Action: fetch
+[2026-03-16 19:07:05] Method: GET
+[2026-03-16 19:07:05] Raw Input: 
+[2026-03-16 19:15:31] === Calendar Handler Called ===
+[2026-03-16 19:15:31] Action: fetch
+[2026-03-16 19:15:31] Method: GET
+[2026-03-16 19:15:31] Raw Input: 
+[2026-03-16 19:19:05] === Calendar Handler Called ===
+[2026-03-16 19:19:05] Action: fetch
+[2026-03-16 19:19:05] Method: GET
+[2026-03-16 19:19:05] Raw Input: 
+[2026-03-17 04:57:20] === Calendar Handler Called ===
+[2026-03-17 04:57:20] Action: update_package
+[2026-03-17 04:57:20] Method: POST
+[2026-03-17 04:57:20] Raw Input: {"pt_id":56,"sessions":3}
+[2026-03-17 04:57:20] --- UPDATE PACKAGE START ---
+[2026-03-17 04:57:20] Update package successful!
+[2026-03-17 05:01:40] === Calendar Handler Called ===
+[2026-03-17 05:01:40] Action: fetch
+[2026-03-17 05:01:40] Method: GET
+[2026-03-17 05:01:40] Raw Input: 
+[2026-03-17 05:03:12] === Calendar Handler Called ===
+[2026-03-17 05:03:12] Action: fetch
+[2026-03-17 05:03:12] Method: GET
+[2026-03-17 05:03:12] Raw Input: 
+[2026-03-17 05:07:53] === Calendar Handler Called ===
+[2026-03-17 05:07:53] Action: fetch
+[2026-03-17 05:07:53] Method: GET
+[2026-03-17 05:07:53] Raw Input: 
+[2026-03-17 05:07:56] === Calendar Handler Called ===
+[2026-03-17 05:07:56] Action: fetch
+[2026-03-17 05:07:56] Method: GET
+[2026-03-17 05:07:56] Raw Input: 
+[2026-03-17 05:08:18] === Calendar Handler Called ===
+[2026-03-17 05:08:18] Action: fetch
+[2026-03-17 05:08:18] Method: GET
+[2026-03-17 05:08:18] Raw Input: 
+[2026-03-17 05:08:20] === Calendar Handler Called ===
+[2026-03-17 05:08:20] Action: fetch
+[2026-03-17 05:08:20] Method: GET
+[2026-03-17 05:08:20] Raw Input: 
+[2026-03-17 05:08:30] === Calendar Handler Called ===
+[2026-03-17 05:08:30] Action: fetch
+[2026-03-17 05:08:30] Method: GET
+[2026-03-17 05:08:30] Raw Input: 
+[2026-03-17 05:10:48] === Calendar Handler Called ===
+[2026-03-17 05:10:48] Action: fetch
+[2026-03-17 05:10:48] Method: GET
+[2026-03-17 05:10:48] Raw Input: 
+[2026-03-17 05:10:56] === Calendar Handler Called ===
+[2026-03-17 05:10:56] Action: fetch
+[2026-03-17 05:10:56] Method: GET
+[2026-03-17 05:10:56] Raw Input: 
+[2026-03-17 05:11:09] === Calendar Handler Called ===
+[2026-03-17 05:11:09] Action: fetch
+[2026-03-17 05:11:09] Method: GET
+[2026-03-17 05:11:09] Raw Input: 
+[2026-03-17 05:11:13] === Calendar Handler Called ===
+[2026-03-17 05:11:13] Action: fetch
+[2026-03-17 05:11:13] Method: GET
+[2026-03-17 05:11:13] Raw Input: 
+[2026-03-17 05:11:17] === Calendar Handler Called ===
+[2026-03-17 05:11:17] Action: fetch
+[2026-03-17 05:11:17] Method: GET
+[2026-03-17 05:11:17] Raw Input: 
+[2026-03-17 05:11:19] === Calendar Handler Called ===
+[2026-03-17 05:11:19] Action: fetch
+[2026-03-17 05:11:19] Method: GET
+[2026-03-17 05:11:19] Raw Input: 
+[2026-03-17 05:14:05] === Calendar Handler Called ===
+[2026-03-17 05:14:05] Action: fetch
+[2026-03-17 05:14:05] Method: GET
+[2026-03-17 05:14:05] Raw Input: 
+[2026-03-17 05:16:17] === Calendar Handler Called ===
+[2026-03-17 05:16:17] Action: fetch
+[2026-03-17 05:16:17] Method: GET
+[2026-03-17 05:16:17] Raw Input: 
+[2026-03-17 05:16:19] === Calendar Handler Called ===
+[2026-03-17 05:16:19] Action: fetch
+[2026-03-17 05:16:19] Method: GET
+[2026-03-17 05:16:19] Raw Input: 
+[2026-03-17 05:16:19] === Calendar Handler Called ===
+[2026-03-17 05:16:19] Action: fetch
+[2026-03-17 05:16:19] Method: GET
+[2026-03-17 05:16:19] Raw Input: 
+[2026-03-17 05:16:19] === Calendar Handler Called ===
+[2026-03-17 05:16:19] Action: fetch
+[2026-03-17 05:16:19] Method: GET
+[2026-03-17 05:16:19] Raw Input: 
+[2026-03-17 05:16:20] === Calendar Handler Called ===
+[2026-03-17 05:16:20] Action: fetch
+[2026-03-17 05:16:20] Method: GET
+[2026-03-17 05:16:20] Raw Input: 
+[2026-03-17 05:16:20] === Calendar Handler Called ===
+[2026-03-17 05:16:20] Action: fetch
+[2026-03-17 05:16:20] Method: GET
+[2026-03-17 05:16:20] Raw Input: 
+[2026-03-17 05:16:20] === Calendar Handler Called ===
+[2026-03-17 05:16:20] Action: fetch
+[2026-03-17 05:16:20] Method: GET
+[2026-03-17 05:16:20] Raw Input: 
+[2026-03-17 05:16:20] === Calendar Handler Called ===
+[2026-03-17 05:16:20] Action: fetch
+[2026-03-17 05:16:20] Method: GET
+[2026-03-17 05:16:20] Raw Input: 
+[2026-03-17 05:16:20] === Calendar Handler Called ===
+[2026-03-17 05:16:20] Action: fetch
+[2026-03-17 05:16:20] Method: GET
+[2026-03-17 05:16:20] Raw Input: 
+[2026-03-17 05:18:36] === Calendar Handler Called ===
+[2026-03-17 05:18:36] Action: fetch
+[2026-03-17 05:18:36] Method: GET
+[2026-03-17 05:18:36] Raw Input: 
+[2026-03-17 05:19:15] === Calendar Handler Called ===
+[2026-03-17 05:19:15] Action: fetch
+[2026-03-17 05:19:15] Method: GET
+[2026-03-17 05:19:15] Raw Input: 
+[2026-03-17 05:19:15] === Calendar Handler Called ===
+[2026-03-17 05:19:15] Action: fetch
+[2026-03-17 05:19:15] Method: GET
+[2026-03-17 05:19:15] Raw Input: 
+[2026-03-17 05:19:15] === Calendar Handler Called ===
+[2026-03-17 05:19:15] Action: fetch
+[2026-03-17 05:19:15] Method: GET
+[2026-03-17 05:19:15] Raw Input: 
+[2026-03-17 05:19:16] === Calendar Handler Called ===
+[2026-03-17 05:19:16] Action: fetch
+[2026-03-17 05:19:16] Method: GET
+[2026-03-17 05:19:16] Raw Input: 
+[2026-03-17 05:19:16] === Calendar Handler Called ===
+[2026-03-17 05:19:16] Action: fetch
+[2026-03-17 05:19:16] Method: GET
+[2026-03-17 05:19:16] Raw Input: 
+[2026-03-17 05:24:25] === Calendar Handler Called ===
+[2026-03-17 05:24:25] Action: fetch
+[2026-03-17 05:24:25] Method: GET
+[2026-03-17 05:24:25] Raw Input: 
+[2026-03-17 05:40:36] === Calendar Handler Called ===
+[2026-03-17 05:40:36] Action: fetch
+[2026-03-17 05:40:36] Method: GET
+[2026-03-17 05:40:36] Raw Input: 
+[2026-03-17 05:53:57] === Calendar Handler Called ===
+[2026-03-17 05:53:57] Action: fetch
+[2026-03-17 05:53:57] Method: GET
+[2026-03-17 05:53:57] Raw Input: 
+[2026-03-17 06:12:39] === Calendar Handler Called ===
+[2026-03-17 06:12:39] Action: fetch
+[2026-03-17 06:12:39] Method: GET
+[2026-03-17 06:12:39] Raw Input: 
+[2026-03-17 06:13:01] === Calendar Handler Called ===
+[2026-03-17 06:13:01] Action: update_package
+[2026-03-17 06:13:01] Method: POST
+[2026-03-17 06:13:01] Raw Input: {"pt_id":"56","sessions":"2"}
+[2026-03-17 06:13:01] --- UPDATE PACKAGE START ---
+[2026-03-17 06:13:01] Update package successful!
+[2026-03-17 06:13:04] === Calendar Handler Called ===
+[2026-03-17 06:13:04] Action: fetch
+[2026-03-17 06:13:04] Method: GET
+[2026-03-17 06:13:04] Raw Input: 
+[2026-03-17 06:13:17] === Calendar Handler Called ===
+[2026-03-17 06:13:17] Action: fetch
+[2026-03-17 06:13:17] Method: GET
+[2026-03-17 06:13:17] Raw Input: 
+[2026-03-17 06:13:40] === Calendar Handler Called ===
+[2026-03-17 06:13:40] Action: add
+[2026-03-17 06:13:40] Method: POST
+[2026-03-17 06:13:40] Raw Input: {"id":"","pt_id":"56","member_id":"86","date":"2026-03-18","time":"07:00","reschedule_type":"none"}
+[2026-03-17 06:13:40] --- ADD SESSION START ---
+[2026-03-17 06:13:40] Received pt_id: 56
+[2026-03-17 06:13:40] Received member_id: 86
+[2026-03-17 06:13:40] Received date: 2026-03-18
+[2026-03-17 06:13:40] Received time: 07:00
+[2026-03-17 06:13:40] Parsed pt_id: 56, member_id: 86
+[2026-03-17 06:13:40] Checking PT package existence...
+[2026-03-17 06:13:40] Total sessions: 5
+[2026-03-17 06:13:40] Counting actual sessions...
+[2026-03-17 06:13:40] Actual used: 0
+[2026-03-17 06:13:40] Preparing insert statement...
+[2026-03-17 06:13:40] Executing insert...
+[2026-03-17 06:13:40] Insert successful!
+[2026-03-17 06:13:40] Sessions_used synced
+[2026-03-17 06:13:42] === Calendar Handler Called ===
+[2026-03-17 06:13:42] Action: fetch
+[2026-03-17 06:13:42] Method: GET
+[2026-03-17 06:13:42] Raw Input: 
+[2026-03-17 06:14:00] === Calendar Handler Called ===
+[2026-03-17 06:14:00] Action: reschedule
+[2026-03-17 06:14:00] Method: POST
+[2026-03-17 06:14:00] Raw Input: {"id":"36","pt_id":"56","member_id":"86","date":"2026-03-19","time":"07:00:00","reschedule_type":"member"}
+[2026-03-17 06:14:00] --- RESCHEDULE SESSION START ---
+[2026-03-17 06:14:00] Session ID: 36
+[2026-03-17 06:14:00] Reschedule Type: member
+[2026-03-17 06:14:00] Reschedule successful!
+[2026-03-17 06:14:02] === Calendar Handler Called ===
+[2026-03-17 06:14:02] Action: fetch
+[2026-03-17 06:14:02] Method: GET
+[2026-03-17 06:14:02] Raw Input: 
+[2026-03-17 06:14:06] === Calendar Handler Called ===
+[2026-03-17 06:14:06] Action: fetch
+[2026-03-17 06:14:06] Method: GET
+[2026-03-17 06:14:06] Raw Input: 
+[2026-03-17 06:14:32] === Calendar Handler Called ===
+[2026-03-17 06:14:32] Action: fetch
+[2026-03-17 06:14:32] Method: GET
+[2026-03-17 06:14:32] Raw Input: 
+[2026-03-17 06:14:35] === Calendar Handler Called ===
+[2026-03-17 06:14:35] Action: fetch
+[2026-03-17 06:14:35] Method: GET
+[2026-03-17 06:14:35] Raw Input: 
+[2026-03-17 06:14:56] === Calendar Handler Called ===
+[2026-03-17 06:14:56] Action: fetch
+[2026-03-17 06:14:56] Method: GET
+[2026-03-17 06:14:56] Raw Input: 
+[2026-03-17 06:14:56] === Calendar Handler Called ===
+[2026-03-17 06:14:56] Action: fetch
+[2026-03-17 06:14:56] Method: GET
+[2026-03-17 06:14:56] Raw Input: 
+[2026-03-17 06:14:56] === Calendar Handler Called ===
+[2026-03-17 06:14:56] Action: fetch
+[2026-03-17 06:14:56] Method: GET
+[2026-03-17 06:14:56] Raw Input: 
+[2026-03-17 06:16:46] === Calendar Handler Called ===
+[2026-03-17 06:16:46] Action: fetch
+[2026-03-17 06:16:46] Method: GET
+[2026-03-17 06:16:46] Raw Input: 
+[2026-03-17 06:17:15] === Calendar Handler Called ===
+[2026-03-17 06:17:15] Action: fetch
+[2026-03-17 06:17:15] Method: GET
+[2026-03-17 06:17:15] Raw Input: 
+[2026-03-17 06:17:43] === Calendar Handler Called ===
+[2026-03-17 06:17:43] Action: add
+[2026-03-17 06:17:43] Method: POST
+[2026-03-17 06:17:43] Raw Input: {"id":"","pt_id":"56","member_id":"86","date":"2026-03-17","time":"18:00","reschedule_type":"none"}
+[2026-03-17 06:17:43] --- ADD SESSION START ---
+[2026-03-17 06:17:43] Received pt_id: 56
+[2026-03-17 06:17:43] Received member_id: 86
+[2026-03-17 06:17:43] Received date: 2026-03-17
+[2026-03-17 06:17:43] Received time: 18:00
+[2026-03-17 06:17:43] Parsed pt_id: 56, member_id: 86
+[2026-03-17 06:17:43] Checking PT package existence...
+[2026-03-17 06:17:43] Total sessions: 5
+[2026-03-17 06:17:43] Counting actual sessions...
+[2026-03-17 06:17:43] Actual used: 1
+[2026-03-17 06:17:43] Preparing insert statement...
+[2026-03-17 06:17:43] Executing insert...
+[2026-03-17 06:17:43] Insert successful!
+[2026-03-17 06:17:43] Sessions_used synced
+[2026-03-17 06:17:45] === Calendar Handler Called ===
+[2026-03-17 06:17:45] Action: fetch
+[2026-03-17 06:17:45] Method: GET
+[2026-03-17 06:17:45] Raw Input: 
+[2026-03-17 06:19:18] === Calendar Handler Called ===
+[2026-03-17 06:19:18] Action: fetch
+[2026-03-17 06:19:18] Method: GET
+[2026-03-17 06:19:18] Raw Input: 
+[2026-03-17 06:27:22] === Calendar Handler Called ===
+[2026-03-17 06:27:22] Action: fetch
+[2026-03-17 06:27:22] Method: GET
+[2026-03-17 06:27:22] Raw Input: 
+[2026-03-17 06:39:14] === Calendar Handler Called ===
+[2026-03-17 06:39:14] Action: fetch
+[2026-03-17 06:39:14] Method: GET
+[2026-03-17 06:39:14] Raw Input: 
+[2026-03-17 06:39:22] === Calendar Handler Called ===
+[2026-03-17 06:39:22] Action: fetch
+[2026-03-17 06:39:22] Method: GET
+[2026-03-17 06:39:22] Raw Input: 
+[2026-03-17 06:39:29] === Calendar Handler Called ===
+[2026-03-17 06:39:29] Action: fetch
+[2026-03-17 06:39:29] Method: GET
+[2026-03-17 06:39:29] Raw Input: 
+[2026-03-17 06:39:46] === Calendar Handler Called ===
+[2026-03-17 06:39:46] Action: fetch
+[2026-03-17 06:39:46] Method: GET
+[2026-03-17 06:39:46] Raw Input: 
+[2026-03-17 06:39:57] === Calendar Handler Called ===
+[2026-03-17 06:39:57] Action: fetch
+[2026-03-17 06:39:57] Method: GET
+[2026-03-17 06:39:57] Raw Input: 
+[2026-03-17 06:40:00] === Calendar Handler Called ===
+[2026-03-17 06:40:00] Action: fetch
+[2026-03-17 06:40:00] Method: GET
+[2026-03-17 06:40:00] Raw Input: 
+[2026-03-17 06:54:32] === Calendar Handler Called ===
+[2026-03-17 06:54:32] Action: fetch
+[2026-03-17 06:54:32] Method: GET
+[2026-03-17 06:54:32] Raw Input: 
+[2026-03-17 09:04:38] === Calendar Handler Called ===
+[2026-03-17 09:04:38] Action: fetch
+[2026-03-17 09:04:38] Method: GET
+[2026-03-17 09:04:38] Raw Input: 
+[2026-03-17 10:28:05] === Calendar Handler Called ===
+[2026-03-17 10:28:05] Action: fetch
+[2026-03-17 10:28:05] Method: GET
+[2026-03-17 10:28:05] Raw Input: 
+[2026-03-17 10:29:18] === Calendar Handler Called ===
+[2026-03-17 10:29:18] Action: fetch
+[2026-03-17 10:29:18] Method: GET
+[2026-03-17 10:29:18] Raw Input: 
+[2026-03-17 11:30:29] === Calendar Handler Called ===
+[2026-03-17 11:30:29] Action: fetch
+[2026-03-17 11:30:29] Method: GET
+[2026-03-17 11:30:29] Raw Input: 
+[2026-03-17 11:30:40] === Calendar Handler Called ===
+[2026-03-17 11:30:40] Action: fetch
+[2026-03-17 11:30:40] Method: GET
+[2026-03-17 11:30:40] Raw Input: 
+[2026-03-17 11:30:43] === Calendar Handler Called ===
+[2026-03-17 11:30:43] Action: fetch
+[2026-03-17 11:30:43] Method: GET
+[2026-03-17 11:30:43] Raw Input: 
+[2026-03-17 11:30:49] === Calendar Handler Called ===
+[2026-03-17 11:30:49] Action: fetch
+[2026-03-17 11:30:49] Method: GET
+[2026-03-17 11:30:49] Raw Input: 
+[2026-03-17 11:37:16] === Calendar Handler Called ===
+[2026-03-17 11:37:16] Action: fetch
+[2026-03-17 11:37:16] Method: GET
+[2026-03-17 11:37:16] Raw Input: 
+[2026-03-17 11:44:07] === Calendar Handler Called ===
+[2026-03-17 11:44:07] Action: fetch
+[2026-03-17 11:44:07] Method: GET
+[2026-03-17 11:44:07] Raw Input: 
+[2026-03-17 11:45:34] === Calendar Handler Called ===
+[2026-03-17 11:45:34] Action: fetch
+[2026-03-17 11:45:34] Method: GET
+[2026-03-17 11:45:34] Raw Input: 
+[2026-03-17 12:02:00] === Calendar Handler Called ===
+[2026-03-17 12:02:00] Action: fetch
+[2026-03-17 12:02:00] Method: GET
+[2026-03-17 12:02:00] Raw Input: 
+[2026-03-17 12:03:59] === Calendar Handler Called ===
+[2026-03-17 12:03:59] Action: fetch
+[2026-03-17 12:03:59] Method: GET
+[2026-03-17 12:03:59] Raw Input: 
+[2026-03-17 12:35:38] === Calendar Handler Called ===
+[2026-03-17 12:35:38] Action: fetch
+[2026-03-17 12:35:38] Method: GET
+[2026-03-17 12:35:38] Raw Input: 
+[2026-03-17 12:35:40] === Calendar Handler Called ===
+[2026-03-17 12:35:40] Action: fetch
+[2026-03-17 12:35:40] Method: GET
+[2026-03-17 12:35:40] Raw Input: 
+[2026-03-17 12:43:49] === Calendar Handler Called ===
+[2026-03-17 12:43:49] Action: fetch
+[2026-03-17 12:43:49] Method: GET
+[2026-03-17 12:43:49] Raw Input: 
+[2026-03-17 12:43:50] === Calendar Handler Called ===
+[2026-03-17 12:43:50] Action: fetch
+[2026-03-17 12:43:50] Method: GET
+[2026-03-17 12:43:50] Raw Input: 
+[2026-03-17 12:43:51] === Calendar Handler Called ===
+[2026-03-17 12:43:51] Action: fetch
+[2026-03-17 12:43:51] Method: GET
+[2026-03-17 12:43:51] Raw Input: 
+[2026-03-17 12:43:52] === Calendar Handler Called ===
+[2026-03-17 12:43:52] Action: fetch
+[2026-03-17 12:43:52] Method: GET
+[2026-03-17 12:43:52] Raw Input: 
+[2026-03-17 12:44:52] === Calendar Handler Called ===
+[2026-03-17 12:44:52] Action: fetch
+[2026-03-17 12:44:52] Method: GET
+[2026-03-17 12:44:52] Raw Input: 
+[2026-03-17 12:46:59] === Calendar Handler Called ===
+[2026-03-17 12:46:59] Action: fetch
+[2026-03-17 12:46:59] Method: GET
+[2026-03-17 12:46:59] Raw Input: 
+[2026-03-17 12:47:09] === Calendar Handler Called ===
+[2026-03-17 12:47:09] Action: fetch
+[2026-03-17 12:47:09] Method: GET
+[2026-03-17 12:47:09] Raw Input: 
+[2026-03-17 12:47:10] === Calendar Handler Called ===
+[2026-03-17 12:47:10] Action: fetch
+[2026-03-17 12:47:10] Method: GET
+[2026-03-17 12:47:10] Raw Input: 
+[2026-03-17 12:48:03] === Calendar Handler Called ===
+[2026-03-17 12:48:03] Action: fetch
+[2026-03-17 12:48:03] Method: GET
+[2026-03-17 12:48:03] Raw Input: 
+[2026-03-17 12:56:21] === Calendar Handler Called ===
+[2026-03-17 12:56:21] Action: fetch
+[2026-03-17 12:56:21] Method: GET
+[2026-03-17 12:56:21] Raw Input: 
+[2026-03-17 12:56:25] === Calendar Handler Called ===
+[2026-03-17 12:56:25] Action: fetch
+[2026-03-17 12:56:25] Method: GET
+[2026-03-17 12:56:25] Raw Input: 
+[2026-03-17 12:56:37] === Calendar Handler Called ===
+[2026-03-17 12:56:37] Action: fetch
+[2026-03-17 12:56:37] Method: GET
+[2026-03-17 12:56:37] Raw Input: 
+[2026-03-17 12:57:39] === Calendar Handler Called ===
+[2026-03-17 12:57:39] Action: fetch
+[2026-03-17 12:57:39] Method: GET
+[2026-03-17 12:57:39] Raw Input: 
+[2026-03-17 12:57:48] === Calendar Handler Called ===
+[2026-03-17 12:57:48] Action: fetch
+[2026-03-17 12:57:48] Method: GET
+[2026-03-17 12:57:48] Raw Input: 
+[2026-03-17 13:02:20] === Calendar Handler Called ===
+[2026-03-17 13:02:20] Action: fetch
+[2026-03-17 13:02:20] Method: GET
+[2026-03-17 13:02:20] Raw Input: 
+[2026-03-17 13:02:24] === Calendar Handler Called ===
+[2026-03-17 13:02:24] Action: fetch
+[2026-03-17 13:02:24] Method: GET
+[2026-03-17 13:02:24] Raw Input: 
+[2026-03-17 13:02:41] === Calendar Handler Called ===
+[2026-03-17 13:02:41] Action: fetch
+[2026-03-17 13:02:41] Method: GET
+[2026-03-17 13:02:41] Raw Input: 
+[2026-03-17 13:05:58] === Calendar Handler Called ===
+[2026-03-17 13:05:58] Action: fetch
+[2026-03-17 13:05:58] Method: GET
+[2026-03-17 13:05:58] Raw Input: 
+[2026-03-17 13:06:39] === Calendar Handler Called ===
+[2026-03-17 13:06:39] Action: fetch
+[2026-03-17 13:06:39] Method: GET
+[2026-03-17 13:06:39] Raw Input: 
+[2026-03-17 13:06:44] === Calendar Handler Called ===
+[2026-03-17 13:06:44] Action: fetch
+[2026-03-17 13:06:44] Method: GET
+[2026-03-17 13:06:44] Raw Input: 
+[2026-03-17 13:08:14] === Calendar Handler Called ===
+[2026-03-17 13:08:14] Action: fetch
+[2026-03-17 13:08:14] Method: GET
+[2026-03-17 13:08:14] Raw Input: 
+[2026-03-17 13:08:33] === Calendar Handler Called ===
+[2026-03-17 13:08:33] Action: update_package
+[2026-03-17 13:08:33] Method: POST
+[2026-03-17 13:08:33] Raw Input: {"pt_id":61,"sessions":2}
+[2026-03-17 13:08:33] --- UPDATE PACKAGE START ---
+[2026-03-17 13:08:33] Update package successful!
+[2026-03-17 13:08:59] === Calendar Handler Called ===
+[2026-03-17 13:08:59] Action: fetch
+[2026-03-17 13:08:59] Method: GET
+[2026-03-17 13:08:59] Raw Input: 
+[2026-03-17 13:09:01] === Calendar Handler Called ===
+[2026-03-17 13:09:01] Action: fetch
+[2026-03-17 13:09:01] Method: GET
+[2026-03-17 13:09:01] Raw Input: 
+[2026-03-17 13:10:28] === Calendar Handler Called ===
+[2026-03-17 13:10:28] Action: fetch
+[2026-03-17 13:10:28] Method: GET
+[2026-03-17 13:10:28] Raw Input: 
+[2026-03-17 18:12:41] === Calendar Handler Called ===
+[2026-03-17 18:12:41] Action: fetch
+[2026-03-17 18:12:41] Method: GET
+[2026-03-17 18:12:41] Raw Input: 
+[2026-03-18 05:07:18] === Calendar Handler Called ===
+[2026-03-18 05:07:18] Action: fetch
+[2026-03-18 05:07:18] Method: GET
+[2026-03-18 05:07:18] Raw Input: 
+[2026-03-18 05:24:32] === Calendar Handler Called ===
+[2026-03-18 05:24:32] Action: fetch
+[2026-03-18 05:24:32] Method: GET
+[2026-03-18 05:24:32] Raw Input: 
+[2026-03-18 05:24:34] === Calendar Handler Called ===
+[2026-03-18 05:24:34] Action: fetch
+[2026-03-18 05:24:34] Method: GET
+[2026-03-18 05:24:34] Raw Input: 
+[2026-03-18 05:28:07] === Calendar Handler Called ===
+[2026-03-18 05:28:07] Action: fetch
+[2026-03-18 05:28:07] Method: GET
+[2026-03-18 05:28:07] Raw Input: 
+[2026-03-18 05:59:59] === Calendar Handler Called ===
+[2026-03-18 05:59:59] Action: fetch
+[2026-03-18 05:59:59] Method: GET
+[2026-03-18 05:59:59] Raw Input: 
+[2026-03-18 06:00:20] === Calendar Handler Called ===
+[2026-03-18 06:00:20] Action: fetch
+[2026-03-18 06:00:20] Method: GET
+[2026-03-18 06:00:20] Raw Input: 
+[2026-03-18 06:00:24] === Calendar Handler Called ===
+[2026-03-18 06:00:24] Action: fetch
+[2026-03-18 06:00:24] Method: GET
+[2026-03-18 06:00:24] Raw Input: 
+[2026-03-18 06:00:33] === Calendar Handler Called ===
+[2026-03-18 06:00:33] Action: fetch
+[2026-03-18 06:00:33] Method: GET
+[2026-03-18 06:00:33] Raw Input: 
+[2026-03-18 06:03:42] === Calendar Handler Called ===
+[2026-03-18 06:03:42] Action: fetch
+[2026-03-18 06:03:42] Method: GET
+[2026-03-18 06:03:42] Raw Input: 
+[2026-03-18 06:04:14] === Calendar Handler Called ===
+[2026-03-18 06:04:14] Action: fetch
+[2026-03-18 06:04:14] Method: GET
+[2026-03-18 06:04:14] Raw Input: 
+[2026-03-18 06:04:20] === Calendar Handler Called ===
+[2026-03-18 06:04:20] Action: fetch
+[2026-03-18 06:04:20] Method: GET
+[2026-03-18 06:04:20] Raw Input: 
+[2026-03-18 06:04:24] === Calendar Handler Called ===
+[2026-03-18 06:04:24] Action: fetch
+[2026-03-18 06:04:24] Method: GET
+[2026-03-18 06:04:24] Raw Input: 
+[2026-03-18 06:04:48] === Calendar Handler Called ===
+[2026-03-18 06:04:48] Action: fetch
+[2026-03-18 06:04:48] Method: GET
+[2026-03-18 06:04:48] Raw Input: 
+[2026-03-18 06:07:58] === Calendar Handler Called ===
+[2026-03-18 06:07:58] Action: fetch
+[2026-03-18 06:07:58] Method: GET
+[2026-03-18 06:07:58] Raw Input: 
+[2026-03-18 06:08:01] === Calendar Handler Called ===
+[2026-03-18 06:08:01] Action: fetch
+[2026-03-18 06:08:01] Method: GET
+[2026-03-18 06:08:01] Raw Input: 
+[2026-03-18 06:08:03] === Calendar Handler Called ===
+[2026-03-18 06:08:03] Action: fetch
+[2026-03-18 06:08:03] Method: GET
+[2026-03-18 06:08:03] Raw Input: 
+[2026-03-18 06:08:12] === Calendar Handler Called ===
+[2026-03-18 06:08:12] Action: fetch
+[2026-03-18 06:08:12] Method: GET
+[2026-03-18 06:08:12] Raw Input: 
+[2026-03-18 06:09:41] === Calendar Handler Called ===
+[2026-03-18 06:09:41] Action: fetch
+[2026-03-18 06:09:41] Method: GET
+[2026-03-18 06:09:41] Raw Input: 
+[2026-03-18 06:09:42] === Calendar Handler Called ===
+[2026-03-18 06:09:42] Action: fetch
+[2026-03-18 06:09:42] Method: GET
+[2026-03-18 06:09:42] Raw Input: 
+[2026-03-18 06:09:42] === Calendar Handler Called ===
+[2026-03-18 06:09:42] Action: fetch
+[2026-03-18 06:09:42] Method: GET
+[2026-03-18 06:09:42] Raw Input: 
+[2026-03-18 06:09:42] === Calendar Handler Called ===
+[2026-03-18 06:09:42] Action: fetch
+[2026-03-18 06:09:42] Method: GET
+[2026-03-18 06:09:42] Raw Input: 
+[2026-03-18 06:09:42] === Calendar Handler Called ===
+[2026-03-18 06:09:42] Action: fetch
+[2026-03-18 06:09:42] Method: GET
+[2026-03-18 06:09:42] Raw Input: 
+[2026-03-18 06:09:42] === Calendar Handler Called ===
+[2026-03-18 06:09:42] Action: fetch
+[2026-03-18 06:09:42] Method: GET
+[2026-03-18 06:09:42] Raw Input: 
+[2026-03-18 06:09:51] === Calendar Handler Called ===
+[2026-03-18 06:09:51] Action: fetch
+[2026-03-18 06:09:51] Method: GET
+[2026-03-18 06:09:51] Raw Input: 
+[2026-03-18 06:09:51] === Calendar Handler Called ===
+[2026-03-18 06:09:51] Action: fetch
+[2026-03-18 06:09:51] Method: GET
+[2026-03-18 06:09:51] Raw Input: 
+[2026-03-18 06:09:52] === Calendar Handler Called ===
+[2026-03-18 06:09:52] Action: fetch
+[2026-03-18 06:09:52] Method: GET
+[2026-03-18 06:09:52] Raw Input: 
+[2026-03-18 06:09:52] === Calendar Handler Called ===
+[2026-03-18 06:09:52] Action: fetch
+[2026-03-18 06:09:52] Method: GET
+[2026-03-18 06:09:52] Raw Input: 
+[2026-03-18 06:09:52] === Calendar Handler Called ===
+[2026-03-18 06:09:52] Action: fetch
+[2026-03-18 06:09:52] Method: GET
+[2026-03-18 06:09:52] Raw Input: 
+[2026-03-18 06:09:52] === Calendar Handler Called ===
+[2026-03-18 06:09:52] Action: fetch
+[2026-03-18 06:09:52] Method: GET
+[2026-03-18 06:09:52] Raw Input: 
+[2026-03-18 06:10:01] === Calendar Handler Called ===
+[2026-03-18 06:10:01] Action: fetch
+[2026-03-18 06:10:01] Method: GET
+[2026-03-18 06:10:01] Raw Input: 
+[2026-03-18 06:12:33] === Calendar Handler Called ===
+[2026-03-18 06:12:33] Action: fetch
+[2026-03-18 06:12:33] Method: GET
+[2026-03-18 06:12:33] Raw Input: 
+[2026-03-18 06:12:37] === Calendar Handler Called ===
+[2026-03-18 06:12:37] Action: fetch
+[2026-03-18 06:12:37] Method: GET
+[2026-03-18 06:12:37] Raw Input: 
+[2026-03-18 06:12:55] === Calendar Handler Called ===
+[2026-03-18 06:12:55] Action: fetch
+[2026-03-18 06:12:55] Method: GET
+[2026-03-18 06:12:55] Raw Input: 
+[2026-03-18 06:12:55] === Calendar Handler Called ===
+[2026-03-18 06:12:55] Action: fetch
+[2026-03-18 06:12:55] Method: GET
+[2026-03-18 06:12:55] Raw Input: 
+[2026-03-18 06:12:57] === Calendar Handler Called ===
+[2026-03-18 06:12:57] Action: fetch
+[2026-03-18 06:12:57] Method: GET
+[2026-03-18 06:12:57] Raw Input: 
+[2026-03-18 06:14:31] === Calendar Handler Called ===
+[2026-03-18 06:14:31] Action: fetch
+[2026-03-18 06:14:31] Method: GET
+[2026-03-18 06:14:31] Raw Input: 
+[2026-03-18 06:14:32] === Calendar Handler Called ===
+[2026-03-18 06:14:32] Action: fetch
+[2026-03-18 06:14:32] Method: GET
+[2026-03-18 06:14:32] Raw Input: 
+[2026-03-18 06:14:32] === Calendar Handler Called ===
+[2026-03-18 06:14:32] Action: fetch
+[2026-03-18 06:14:32] Method: GET
+[2026-03-18 06:14:32] Raw Input: 
+[2026-03-18 06:14:32] === Calendar Handler Called ===
+[2026-03-18 06:14:32] Action: fetch
+[2026-03-18 06:14:32] Method: GET
+[2026-03-18 06:14:32] Raw Input: 
+[2026-03-18 06:35:31] === Calendar Handler Called ===
+[2026-03-18 06:35:31] Action: fetch
+[2026-03-18 06:35:31] Method: GET
+[2026-03-18 06:35:31] Raw Input: 
+[2026-03-18 08:45:41] === Calendar Handler Called ===
+[2026-03-18 08:45:41] Action: fetch
+[2026-03-18 08:45:41] Method: GET
+[2026-03-18 08:45:41] Raw Input: 
+[2026-03-18 08:45:45] === Calendar Handler Called ===
+[2026-03-18 08:45:45] Action: fetch
+[2026-03-18 08:45:45] Method: GET
+[2026-03-18 08:45:45] Raw Input: 
+[2026-03-18 09:02:34] === Calendar Handler Called ===
+[2026-03-18 09:02:34] Action: fetch
+[2026-03-18 09:02:34] Method: GET
+[2026-03-18 09:02:34] Raw Input: 
+[2026-03-18 09:49:40] === Calendar Handler Called ===
+[2026-03-18 09:49:40] Action: fetch
+[2026-03-18 09:49:40] Method: GET
+[2026-03-18 09:49:40] Raw Input: 
+[2026-03-18 10:15:33] === Calendar Handler Called ===
+[2026-03-18 10:15:33] Action: fetch
+[2026-03-18 10:15:33] Method: GET
+[2026-03-18 10:15:33] Raw Input: 
+[2026-03-18 17:43:26] === Calendar Handler Called ===
+[2026-03-18 17:43:26] Action: fetch
+[2026-03-18 17:43:26] Method: GET
+[2026-03-18 17:43:26] Raw Input: 
+[2026-03-19 05:29:39] === Calendar Handler Called ===
+[2026-03-19 05:29:39] Action: fetch
+[2026-03-19 05:29:39] Method: GET
+[2026-03-19 05:29:39] Raw Input: 
+[2026-03-19 05:35:04] === Calendar Handler Called ===
+[2026-03-19 05:35:04] Action: fetch
+[2026-03-19 05:35:04] Method: GET
+[2026-03-19 05:35:04] Raw Input: 
+[2026-03-19 05:38:20] === Calendar Handler Called ===
+[2026-03-19 05:38:20] Action: fetch
+[2026-03-19 05:38:20] Method: GET
+[2026-03-19 05:38:20] Raw Input: 
+[2026-03-19 05:38:24] === Calendar Handler Called ===
+[2026-03-19 05:38:24] Action: fetch
+[2026-03-19 05:38:24] Method: GET
+[2026-03-19 05:38:24] Raw Input: 
+[2026-03-19 10:48:04] === Calendar Handler Called ===
+[2026-03-19 10:48:04] Action: fetch
+[2026-03-19 10:48:04] Method: GET
+[2026-03-19 10:48:04] Raw Input: 
+[2026-03-19 10:48:53] === Calendar Handler Called ===
+[2026-03-19 10:48:53] Action: update_package
+[2026-03-19 10:48:53] Method: POST
+[2026-03-19 10:48:53] Raw Input: {"pt_id":62,"sessions":2}
+[2026-03-19 10:48:53] --- UPDATE PACKAGE START ---
+[2026-03-19 10:48:53] Update package successful!
+[2026-03-19 10:49:05] === Calendar Handler Called ===
+[2026-03-19 10:49:05] Action: fetch
+[2026-03-19 10:49:05] Method: GET
+[2026-03-19 10:49:05] Raw Input: 
+[2026-03-19 10:49:22] === Calendar Handler Called ===
+[2026-03-19 10:49:22] Action: add
+[2026-03-19 10:49:22] Method: POST
+[2026-03-19 10:49:22] Raw Input: {"id":"","pt_id":"62","member_id":"98","date":"2026-03-20","time":"10:00","reschedule_type":"none"}
+[2026-03-19 10:49:22] --- ADD SESSION START ---
+[2026-03-19 10:49:22] Received pt_id: 62
+[2026-03-19 10:49:22] Received member_id: 98
+[2026-03-19 10:49:22] Received date: 2026-03-20
+[2026-03-19 10:49:22] Received time: 10:00
+[2026-03-19 10:49:22] Parsed pt_id: 62, member_id: 98
+[2026-03-19 10:49:22] Checking PT package existence...
+[2026-03-19 10:49:22] Total sessions: 2
+[2026-03-19 10:49:22] Counting actual sessions...
+[2026-03-19 10:49:22] Actual used: 0
+[2026-03-19 10:49:22] Preparing insert statement...
+[2026-03-19 10:49:22] Executing insert...
+[2026-03-19 10:49:22] Insert successful!
+[2026-03-19 10:49:22] Sessions_used synced
+[2026-03-19 10:49:24] === Calendar Handler Called ===
+[2026-03-19 10:49:24] Action: fetch
+[2026-03-19 10:49:24] Method: GET
+[2026-03-19 10:49:24] Raw Input: 
+[2026-03-19 10:49:49] === Calendar Handler Called ===
+[2026-03-19 10:49:49] Action: add
+[2026-03-19 10:49:49] Method: POST
+[2026-03-19 10:49:49] Raw Input: {"id":"","pt_id":"62","member_id":"98","date":"2026-03-21","time":"10:00","reschedule_type":"none"}
+[2026-03-19 10:49:49] --- ADD SESSION START ---
+[2026-03-19 10:49:49] Received pt_id: 62
+[2026-03-19 10:49:49] Received member_id: 98
+[2026-03-19 10:49:49] Received date: 2026-03-21
+[2026-03-19 10:49:49] Received time: 10:00
+[2026-03-19 10:49:49] Parsed pt_id: 62, member_id: 98
+[2026-03-19 10:49:49] Checking PT package existence...
+[2026-03-19 10:49:49] Total sessions: 2
+[2026-03-19 10:49:49] Counting actual sessions...
+[2026-03-19 10:49:49] Actual used: 1
+[2026-03-19 10:49:49] Preparing insert statement...
+[2026-03-19 10:49:49] Executing insert...
+[2026-03-19 10:49:49] Insert successful!
+[2026-03-19 10:49:49] Sessions_used synced
+[2026-03-19 10:49:51] === Calendar Handler Called ===
+[2026-03-19 10:49:51] Action: fetch
+[2026-03-19 10:49:51] Method: GET
+[2026-03-19 10:49:51] Raw Input: 
+[2026-03-19 10:50:18] === Calendar Handler Called ===
+[2026-03-19 10:50:18] Action: fetch
+[2026-03-19 10:50:18] Method: GET
+[2026-03-19 10:50:18] Raw Input: 
+[2026-03-19 10:50:37] === Calendar Handler Called ===
+[2026-03-19 10:50:37] Action: reschedule
+[2026-03-19 10:50:37] Method: POST
+[2026-03-19 10:50:37] Raw Input: {"id":"38","pt_id":"62","member_id":"98","date":"2026-03-19","time":"19:00","reschedule_type":"member"}
+[2026-03-19 10:50:37] --- RESCHEDULE SESSION START ---
+[2026-03-19 10:50:37] Session ID: 38
+[2026-03-19 10:50:37] Reschedule Type: member
+[2026-03-19 10:50:37] Reschedule successful!
+[2026-03-19 10:50:39] === Calendar Handler Called ===
+[2026-03-19 10:50:39] Action: fetch
+[2026-03-19 10:50:39] Method: GET
+[2026-03-19 10:50:39] Raw Input: 
+[2026-03-19 12:45:53] === Calendar Handler Called ===
+[2026-03-19 12:45:53] Action: fetch
+[2026-03-19 12:45:53] Method: GET
+[2026-03-19 12:45:53] Raw Input: 
+[2026-03-19 13:58:55] === Calendar Handler Called ===
+[2026-03-19 13:58:55] Action: fetch
+[2026-03-19 13:58:55] Method: GET
+[2026-03-19 13:58:55] Raw Input: 
+[2026-03-19 14:03:01] === Calendar Handler Called ===
+[2026-03-19 14:03:01] Action: fetch
+[2026-03-19 14:03:01] Method: GET
+[2026-03-19 14:03:01] Raw Input: 
+[2026-03-20 10:57:29] === Calendar Handler Called ===
+[2026-03-20 10:57:29] Action: fetch
+[2026-03-20 10:57:29] Method: GET
+[2026-03-20 10:57:29] Raw Input: 
+[2026-03-20 16:00:28] === Calendar Handler Called ===
+[2026-03-20 16:00:28] Action: fetch
+[2026-03-20 16:00:28] Method: GET
+[2026-03-20 16:00:28] Raw Input: 
+[2026-03-21 10:55:11] === Calendar Handler Called ===
+[2026-03-21 10:55:11] Action: fetch
+[2026-03-21 10:55:11] Method: GET
+[2026-03-21 10:55:11] Raw Input: 
+[2026-03-21 13:02:42] === Calendar Handler Called ===
+[2026-03-21 13:02:42] Action: fetch
+[2026-03-21 13:02:42] Method: GET
+[2026-03-21 13:02:42] Raw Input: 
+[2026-03-21 13:04:11] === Calendar Handler Called ===
+[2026-03-21 13:04:11] Action: fetch
+[2026-03-21 13:04:11] Method: GET
+[2026-03-21 13:04:11] Raw Input: 
+[2026-03-21 14:24:47] === Calendar Handler Called ===
+[2026-03-21 14:24:47] Action: fetch
+[2026-03-21 14:24:47] Method: GET
+[2026-03-21 14:24:47] Raw Input: 
+[2026-03-21 16:50:09] === Calendar Handler Called ===
+[2026-03-21 16:50:09] Action: fetch
+[2026-03-21 16:50:09] Method: GET
+[2026-03-21 16:50:09] Raw Input: 
+[2026-03-23 04:42:09] === Calendar Handler Called ===
+[2026-03-23 04:42:09] Action: fetch
+[2026-03-23 04:42:09] Method: GET
+[2026-03-23 04:42:09] Raw Input: 
+[2026-03-23 04:42:37] === Calendar Handler Called ===
+[2026-03-23 04:42:37] Action: fetch
+[2026-03-23 04:42:37] Method: GET
+[2026-03-23 04:42:37] Raw Input: 
+[2026-03-23 04:43:09] === Calendar Handler Called ===
+[2026-03-23 04:43:09] Action: fetch
+[2026-03-23 04:43:09] Method: GET
+[2026-03-23 04:43:09] Raw Input: 
+[2026-03-23 04:45:06] === Calendar Handler Called ===
+[2026-03-23 04:45:06] Action: fetch
+[2026-03-23 04:45:06] Method: GET
+[2026-03-23 04:45:06] Raw Input: 
+[2026-03-23 04:46:05] === Calendar Handler Called ===
+[2026-03-23 04:46:05] Action: fetch
+[2026-03-23 04:46:05] Method: GET
+[2026-03-23 04:46:05] Raw Input: 
+[2026-03-23 04:46:07] === Calendar Handler Called ===
+[2026-03-23 04:46:07] Action: fetch
+[2026-03-23 04:46:07] Method: GET
+[2026-03-23 04:46:07] Raw Input: 
+[2026-03-23 04:46:15] === Calendar Handler Called ===
+[2026-03-23 04:46:15] Action: fetch
+[2026-03-23 04:46:15] Method: GET
+[2026-03-23 04:46:15] Raw Input: 
+[2026-03-23 05:07:31] === Calendar Handler Called ===
+[2026-03-23 05:07:31] Action: fetch
+[2026-03-23 05:07:31] Method: GET
+[2026-03-23 05:07:31] Raw Input: 
+[2026-03-23 05:07:32] === Calendar Handler Called ===
+[2026-03-23 05:07:32] Action: fetch
+[2026-03-23 05:07:32] Method: GET
+[2026-03-23 05:07:32] Raw Input: 
+[2026-03-23 05:35:21] === Calendar Handler Called ===
+[2026-03-23 05:35:21] Action: fetch
+[2026-03-23 05:35:21] Method: GET
+[2026-03-23 05:35:21] Raw Input: 
+[2026-03-23 06:27:47] === Calendar Handler Called ===
+[2026-03-23 06:27:47] Action: fetch
+[2026-03-23 06:27:47] Method: GET
+[2026-03-23 06:27:47] Raw Input: 
+[2026-03-23 06:27:55] === Calendar Handler Called ===
+[2026-03-23 06:27:55] Action: fetch
+[2026-03-23 06:27:55] Method: GET
+[2026-03-23 06:27:55] Raw Input: 
+[2026-03-23 06:28:01] === Calendar Handler Called ===
+[2026-03-23 06:28:01] Action: fetch
+[2026-03-23 06:28:01] Method: GET
+[2026-03-23 06:28:01] Raw Input: 
+[2026-03-23 06:56:27] === Calendar Handler Called ===
+[2026-03-23 06:56:27] Action: fetch
+[2026-03-23 06:56:27] Method: GET
+[2026-03-23 06:56:27] Raw Input: 
+[2026-03-23 06:58:21] === Calendar Handler Called ===
+[2026-03-23 06:58:21] Action: fetch
+[2026-03-23 06:58:21] Method: GET
+[2026-03-23 06:58:21] Raw Input: 
+[2026-03-23 06:58:25] === Calendar Handler Called ===
+[2026-03-23 06:58:25] Action: fetch
+[2026-03-23 06:58:25] Method: GET
+[2026-03-23 06:58:25] Raw Input: 
+[2026-03-23 10:44:23] === Calendar Handler Called ===
+[2026-03-23 10:44:23] Action: fetch
+[2026-03-23 10:44:23] Method: GET
+[2026-03-23 10:44:23] Raw Input: 
+[2026-03-23 10:50:51] === Calendar Handler Called ===
+[2026-03-23 10:50:51] Action: fetch
+[2026-03-23 10:50:51] Method: GET
+[2026-03-23 10:50:51] Raw Input: 
+[2026-03-23 10:53:40] === Calendar Handler Called ===
+[2026-03-23 10:53:40] Action: fetch
+[2026-03-23 10:53:40] Method: GET
+[2026-03-23 10:53:40] Raw Input: 
+[2026-03-23 11:05:17] === Calendar Handler Called ===
+[2026-03-23 11:05:17] Action: fetch
+[2026-03-23 11:05:17] Method: GET
+[2026-03-23 11:05:17] Raw Input: 
+[2026-03-23 11:11:43] === Calendar Handler Called ===
+[2026-03-23 11:11:43] Action: fetch
+[2026-03-23 11:11:43] Method: GET
+[2026-03-23 11:11:43] Raw Input: 
+[2026-03-23 11:14:45] === Calendar Handler Called ===
+[2026-03-23 11:14:45] Action: fetch
+[2026-03-23 11:14:45] Method: GET
+[2026-03-23 11:14:45] Raw Input: 
+[2026-03-24 04:02:44] === Calendar Handler Called ===
+[2026-03-24 04:02:44] Action: fetch
+[2026-03-24 04:02:44] Method: GET
+[2026-03-24 04:02:44] Raw Input: 
+[2026-03-24 11:35:38] === Calendar Handler Called ===
+[2026-03-24 11:35:38] Action: fetch
+[2026-03-24 11:35:38] Method: GET
+[2026-03-24 11:35:38] Raw Input: 
+[2026-03-24 11:35:40] === Calendar Handler Called ===
+[2026-03-24 11:35:40] Action: fetch
+[2026-03-24 11:35:40] Method: GET
+[2026-03-24 11:35:40] Raw Input: 
+[2026-03-24 11:37:47] === Calendar Handler Called ===
+[2026-03-24 11:37:47] Action: fetch
+[2026-03-24 11:37:47] Method: GET
+[2026-03-24 11:37:47] Raw Input: 
+[2026-03-24 11:38:34] === Calendar Handler Called ===
+[2026-03-24 11:38:34] Action: fetch
+[2026-03-24 11:38:34] Method: GET
+[2026-03-24 11:38:34] Raw Input: 
+[2026-03-24 11:59:18] === Calendar Handler Called ===
+[2026-03-24 11:59:18] Action: fetch
+[2026-03-24 11:59:18] Method: GET
+[2026-03-24 11:59:18] Raw Input: 
+[2026-03-24 14:17:10] === Calendar Handler Called ===
+[2026-03-24 14:17:10] Action: fetch
+[2026-03-24 14:17:10] Method: GET
+[2026-03-24 14:17:10] Raw Input: 
+[2026-03-26 11:46:12] === Calendar Handler Called ===
+[2026-03-26 11:46:12] Action: fetch
+[2026-03-26 11:46:12] Method: GET
+[2026-03-26 11:46:12] Raw Input: 
+[2026-03-26 11:52:48] === Calendar Handler Called ===
+[2026-03-26 11:52:48] Action: fetch
+[2026-03-26 11:52:48] Method: GET
+[2026-03-26 11:52:48] Raw Input: 
+[2026-03-26 11:52:49] === Calendar Handler Called ===
+[2026-03-26 11:52:49] Action: fetch
+[2026-03-26 11:52:49] Method: GET
+[2026-03-26 11:52:49] Raw Input: 
+[2026-03-26 12:13:06] === Calendar Handler Called ===
+[2026-03-26 12:13:06] Action: fetch
+[2026-03-26 12:13:06] Method: GET
+[2026-03-26 12:13:06] Raw Input: 
+[2026-03-26 12:13:07] === Calendar Handler Called ===
+[2026-03-26 12:13:07] Action: fetch
+[2026-03-26 12:13:07] Method: GET
+[2026-03-26 12:13:07] Raw Input: 
+[2026-03-26 12:15:40] === Calendar Handler Called ===
+[2026-03-26 12:15:40] Action: fetch
+[2026-03-26 12:15:40] Method: GET
+[2026-03-26 12:15:40] Raw Input: 
+[2026-03-27 04:50:28] === Calendar Handler Called ===
+[2026-03-27 04:50:28] Action: fetch
+[2026-03-27 04:50:28] Method: GET
+[2026-03-27 04:50:28] Raw Input: 
+[2026-03-27 04:50:32] === Calendar Handler Called ===
+[2026-03-27 04:50:32] Action: fetch
+[2026-03-27 04:50:32] Method: GET
+[2026-03-27 04:50:32] Raw Input: 
+[2026-03-27 05:37:23] === Calendar Handler Called ===
+[2026-03-27 05:37:23] Action: fetch
+[2026-03-27 05:37:23] Method: GET
+[2026-03-27 05:37:23] Raw Input: 
+[2026-03-27 05:48:49] === Calendar Handler Called ===
+[2026-03-27 05:48:49] Action: fetch
+[2026-03-27 05:48:49] Method: GET
+[2026-03-27 05:48:49] Raw Input: 
+[2026-03-27 05:53:34] === Calendar Handler Called ===
+[2026-03-27 05:53:34] Action: fetch
+[2026-03-27 05:53:34] Method: GET
+[2026-03-27 05:53:34] Raw Input: 
+[2026-03-27 05:53:38] === Calendar Handler Called ===
+[2026-03-27 05:53:38] Action: fetch
+[2026-03-27 05:53:38] Method: GET
+[2026-03-27 05:53:38] Raw Input: 
+[2026-03-27 05:55:14] === Calendar Handler Called ===
+[2026-03-27 05:55:14] Action: fetch
+[2026-03-27 05:55:14] Method: GET
+[2026-03-27 05:55:14] Raw Input: 
+[2026-03-27 05:55:43] === Calendar Handler Called ===
+[2026-03-27 05:55:43] Action: fetch
+[2026-03-27 05:55:43] Method: GET
+[2026-03-27 05:55:43] Raw Input: 
+[2026-03-27 06:00:14] === Calendar Handler Called ===
+[2026-03-27 06:00:14] Action: fetch
+[2026-03-27 06:00:14] Method: GET
+[2026-03-27 06:00:14] Raw Input: 
+[2026-03-27 06:00:37] === Calendar Handler Called ===
+[2026-03-27 06:00:37] Action: fetch
+[2026-03-27 06:00:37] Method: GET
+[2026-03-27 06:00:37] Raw Input: 
+[2026-03-27 06:00:41] === Calendar Handler Called ===
+[2026-03-27 06:00:41] Action: fetch
+[2026-03-27 06:00:41] Method: GET
+[2026-03-27 06:00:41] Raw Input: 
+[2026-03-27 06:02:21] === Calendar Handler Called ===
+[2026-03-27 06:02:21] Action: fetch
+[2026-03-27 06:02:21] Method: GET
+[2026-03-27 06:02:21] Raw Input: 
+[2026-03-27 06:02:23] === Calendar Handler Called ===
+[2026-03-27 06:02:23] Action: fetch
+[2026-03-27 06:02:23] Method: GET
+[2026-03-27 06:02:23] Raw Input: 
+[2026-03-27 06:03:02] === Calendar Handler Called ===
+[2026-03-27 06:03:02] Action: fetch
+[2026-03-27 06:03:02] Method: GET
+[2026-03-27 06:03:02] Raw Input: 
+[2026-03-27 06:03:04] === Calendar Handler Called ===
+[2026-03-27 06:03:04] Action: fetch
+[2026-03-27 06:03:04] Method: GET
+[2026-03-27 06:03:04] Raw Input: 
+[2026-03-27 06:03:05] === Calendar Handler Called ===
+[2026-03-27 06:03:05] Action: fetch
+[2026-03-27 06:03:05] Method: GET
+[2026-03-27 06:03:05] Raw Input: 
+[2026-03-27 06:03:07] === Calendar Handler Called ===
+[2026-03-27 06:03:07] Action: fetch
+[2026-03-27 06:03:07] Method: GET
+[2026-03-27 06:03:07] Raw Input: 
+[2026-03-27 06:04:26] === Calendar Handler Called ===
+[2026-03-27 06:04:26] Action: fetch
+[2026-03-27 06:04:26] Method: GET
+[2026-03-27 06:04:26] Raw Input: 
+[2026-03-27 06:06:51] === Calendar Handler Called ===
+[2026-03-27 06:06:51] Action: fetch
+[2026-03-27 06:06:51] Method: GET
+[2026-03-27 06:06:51] Raw Input: 
+[2026-03-27 06:07:10] === Calendar Handler Called ===
+[2026-03-27 06:07:10] Action: fetch
+[2026-03-27 06:07:10] Method: GET
+[2026-03-27 06:07:10] Raw Input: 
+[2026-03-27 06:07:23] === Calendar Handler Called ===
+[2026-03-27 06:07:23] Action: fetch
+[2026-03-27 06:07:23] Method: GET
+[2026-03-27 06:07:23] Raw Input: 
+[2026-03-27 06:07:23] === Calendar Handler Called ===
+[2026-03-27 06:07:23] Action: fetch
+[2026-03-27 06:07:23] Method: GET
+[2026-03-27 06:07:23] Raw Input: 
+[2026-03-27 06:07:24] === Calendar Handler Called ===
+[2026-03-27 06:07:24] Action: fetch
+[2026-03-27 06:07:24] Method: GET
+[2026-03-27 06:07:24] Raw Input: 
+[2026-03-27 06:07:28] === Calendar Handler Called ===
+[2026-03-27 06:07:28] Action: fetch
+[2026-03-27 06:07:28] Method: GET
+[2026-03-27 06:07:28] Raw Input: 
+[2026-03-27 06:14:03] === Calendar Handler Called ===
+[2026-03-27 06:14:03] Action: fetch
+[2026-03-27 06:14:03] Method: GET
+[2026-03-27 06:14:03] Raw Input: 
+[2026-03-27 06:19:27] === Calendar Handler Called ===
+[2026-03-27 06:19:27] Action: fetch
+[2026-03-27 06:19:27] Method: GET
+[2026-03-27 06:19:27] Raw Input: 
+[2026-03-27 06:26:44] === Calendar Handler Called ===
+[2026-03-27 06:26:44] Action: fetch
+[2026-03-27 06:26:44] Method: GET
+[2026-03-27 06:26:44] Raw Input: 
+[2026-03-27 06:28:16] === Calendar Handler Called ===
+[2026-03-27 06:28:16] Action: fetch
+[2026-03-27 06:28:16] Method: GET
+[2026-03-27 06:28:16] Raw Input: 
+[2026-03-27 06:28:31] === Calendar Handler Called ===
+[2026-03-27 06:28:31] Action: fetch
+[2026-03-27 06:28:31] Method: GET
+[2026-03-27 06:28:31] Raw Input: 
+[2026-03-27 06:35:21] === Calendar Handler Called ===
+[2026-03-27 06:35:21] Action: fetch
+[2026-03-27 06:35:21] Method: GET
+[2026-03-27 06:35:21] Raw Input: 
+[2026-03-27 06:35:24] === Calendar Handler Called ===
+[2026-03-27 06:35:24] Action: fetch
+[2026-03-27 06:35:24] Method: GET
+[2026-03-27 06:35:24] Raw Input: 
+[2026-03-27 06:35:30] === Calendar Handler Called ===
+[2026-03-27 06:35:30] Action: fetch
+[2026-03-27 06:35:30] Method: GET
+[2026-03-27 06:35:30] Raw Input: 
+[2026-03-27 06:35:32] === Calendar Handler Called ===
+[2026-03-27 06:35:32] Action: fetch
+[2026-03-27 06:35:32] Method: GET
+[2026-03-27 06:35:32] Raw Input: 
+[2026-03-27 06:35:35] === Calendar Handler Called ===
+[2026-03-27 06:35:35] Action: fetch
+[2026-03-27 06:35:35] Method: GET
+[2026-03-27 06:35:35] Raw Input: 
+[2026-03-27 06:50:21] === Calendar Handler Called ===
+[2026-03-27 06:50:21] Action: fetch
+[2026-03-27 06:50:21] Method: GET
+[2026-03-27 06:50:21] Raw Input: 
+[2026-03-27 06:52:18] === Calendar Handler Called ===
+[2026-03-27 06:52:18] Action: fetch
+[2026-03-27 06:52:18] Method: GET
+[2026-03-27 06:52:18] Raw Input: 
+[2026-03-27 06:52:31] === Calendar Handler Called ===
+[2026-03-27 06:52:31] Action: fetch
+[2026-03-27 06:52:31] Method: GET
+[2026-03-27 06:52:31] Raw Input: 
+[2026-03-27 06:53:45] === Calendar Handler Called ===
+[2026-03-27 06:53:45] Action: fetch
+[2026-03-27 06:53:45] Method: GET
+[2026-03-27 06:53:45] Raw Input: 
+[2026-03-27 06:54:26] === Calendar Handler Called ===
+[2026-03-27 06:54:26] Action: fetch
+[2026-03-27 06:54:26] Method: GET
+[2026-03-27 06:54:26] Raw Input: 
+[2026-03-27 06:57:39] === Calendar Handler Called ===
+[2026-03-27 06:57:39] Action: fetch
+[2026-03-27 06:57:39] Method: GET
+[2026-03-27 06:57:39] Raw Input: 
+[2026-03-27 07:04:18] === Calendar Handler Called ===
+[2026-03-27 07:04:18] Action: fetch
+[2026-03-27 07:04:18] Method: GET
+[2026-03-27 07:04:18] Raw Input: 
+[2026-03-27 07:09:36] === Calendar Handler Called ===
+[2026-03-27 07:09:36] Action: fetch
+[2026-03-27 07:09:36] Method: GET
+[2026-03-27 07:09:36] Raw Input: 
+[2026-03-27 07:36:39] === Calendar Handler Called ===
+[2026-03-27 07:36:39] Action: fetch
+[2026-03-27 07:36:39] Method: GET
+[2026-03-27 07:36:39] Raw Input: 
+[2026-03-27 11:55:32] === Calendar Handler Called ===
+[2026-03-27 11:55:32] Action: fetch
+[2026-03-27 11:55:32] Method: GET
+[2026-03-27 11:55:32] Raw Input: 
+[2026-03-27 11:55:34] === Calendar Handler Called ===
+[2026-03-27 11:55:34] Action: fetch
+[2026-03-27 11:55:34] Method: GET
+[2026-03-27 11:55:34] Raw Input: 
+[2026-03-27 12:28:47] === Calendar Handler Called ===
+[2026-03-27 12:28:47] Action: fetch
+[2026-03-27 12:28:47] Method: GET
+[2026-03-27 12:28:47] Raw Input: 
+[2026-03-27 12:28:49] === Calendar Handler Called ===
+[2026-03-27 12:28:49] Action: fetch
+[2026-03-27 12:28:49] Method: GET
+[2026-03-27 12:28:49] Raw Input: 
+[2026-03-27 12:28:49] === Calendar Handler Called ===
+[2026-03-27 12:28:49] Action: fetch
+[2026-03-27 12:28:49] Method: GET
+[2026-03-27 12:28:49] Raw Input: 
+[2026-03-27 12:28:50] === Calendar Handler Called ===
+[2026-03-27 12:28:50] Action: fetch
+[2026-03-27 12:28:50] Method: GET
+[2026-03-27 12:28:50] Raw Input: 
+[2026-03-27 12:28:50] === Calendar Handler Called ===
+[2026-03-27 12:28:50] Action: fetch
+[2026-03-27 12:28:50] Method: GET
+[2026-03-27 12:28:50] Raw Input: 
+[2026-03-27 12:28:50] === Calendar Handler Called ===
+[2026-03-27 12:28:50] Action: fetch
+[2026-03-27 12:28:50] Method: GET
+[2026-03-27 12:28:50] Raw Input: 
+[2026-03-27 12:28:51] === Calendar Handler Called ===
+[2026-03-27 12:28:51] Action: fetch
+[2026-03-27 12:28:51] Method: GET
+[2026-03-27 12:28:51] Raw Input: 
+[2026-03-27 12:28:51] === Calendar Handler Called ===
+[2026-03-27 12:28:51] Action: fetch
+[2026-03-27 12:28:51] Method: GET
+[2026-03-27 12:28:51] Raw Input: 
+[2026-03-27 12:28:51] === Calendar Handler Called ===
+[2026-03-27 12:28:51] Action: fetch
+[2026-03-27 12:28:51] Method: GET
+[2026-03-27 12:28:51] Raw Input: 
+[2026-03-27 12:28:51] === Calendar Handler Called ===
+[2026-03-27 12:28:51] Action: fetch
+[2026-03-27 12:28:51] Method: GET
+[2026-03-27 12:28:51] Raw Input: 
+[2026-03-27 12:28:51] === Calendar Handler Called ===
+[2026-03-27 12:28:51] Action: fetch
+[2026-03-27 12:28:51] Method: GET
+[2026-03-27 12:28:51] Raw Input: 
+[2026-03-27 12:28:52] === Calendar Handler Called ===
+[2026-03-27 12:28:52] Action: fetch
+[2026-03-27 12:28:52] Method: GET
+[2026-03-27 12:28:52] Raw Input: 
+[2026-03-27 12:28:52] === Calendar Handler Called ===
+[2026-03-27 12:28:52] Action: fetch
+[2026-03-27 12:28:52] Method: GET
+[2026-03-27 12:28:52] Raw Input: 
+[2026-03-27 12:28:52] === Calendar Handler Called ===
+[2026-03-27 12:28:52] Action: fetch
+[2026-03-27 12:28:52] Method: GET
+[2026-03-27 12:28:52] Raw Input: 
+[2026-03-27 12:28:52] === Calendar Handler Called ===
+[2026-03-27 12:28:52] Action: fetch
+[2026-03-27 12:28:52] Method: GET
+[2026-03-27 12:28:52] Raw Input: 
+[2026-03-27 12:28:53] === Calendar Handler Called ===
+[2026-03-27 12:28:53] Action: fetch
+[2026-03-27 12:28:53] Method: GET
+[2026-03-27 12:28:53] Raw Input: 
+[2026-03-27 12:52:33] === Calendar Handler Called ===
+[2026-03-27 12:52:33] Action: fetch
+[2026-03-27 12:52:33] Method: GET
+[2026-03-27 12:52:33] Raw Input: 
+[2026-03-28 09:42:57] === Calendar Handler Called ===
+[2026-03-28 09:42:57] Action: fetch
+[2026-03-28 09:42:57] Method: GET
+[2026-03-28 09:42:57] Raw Input: 
+[2026-03-30 04:33:08] === Calendar Handler Called ===
+[2026-03-30 04:33:08] Action: fetch
+[2026-03-30 04:33:08] Method: GET
+[2026-03-30 04:33:08] Raw Input: 
+[2026-03-30 10:59:44] === Calendar Handler Called ===
+[2026-03-30 10:59:44] Action: fetch
+[2026-03-30 10:59:44] Method: GET
+[2026-03-30 10:59:44] Raw Input: 
+[2026-03-30 11:30:34] === Calendar Handler Called ===
+[2026-03-30 11:30:34] Action: fetch
+[2026-03-30 11:30:34] Method: GET
+[2026-03-30 11:30:34] Raw Input: 
+[2026-03-30 11:35:26] === Calendar Handler Called ===
+[2026-03-30 11:35:26] Action: fetch
+[2026-03-30 11:35:26] Method: GET
+[2026-03-30 11:35:26] Raw Input: 
+[2026-03-30 11:35:27] === Calendar Handler Called ===
+[2026-03-30 11:35:27] Action: fetch
+[2026-03-30 11:35:27] Method: GET
+[2026-03-30 11:35:27] Raw Input: 
+[2026-03-30 16:44:51] === Calendar Handler Called ===
+[2026-03-30 16:44:51] Action: fetch
+[2026-03-30 16:44:51] Method: GET
+[2026-03-30 16:44:51] Raw Input: 
+[2026-03-30 16:46:27] === Calendar Handler Called ===
+[2026-03-30 16:46:27] Action: fetch
+[2026-03-30 16:46:27] Method: GET
+[2026-03-30 16:46:27] Raw Input: 
+[2026-03-31 11:28:13] === Calendar Handler Called ===
+[2026-03-31 11:28:13] Action: fetch
+[2026-03-31 11:28:13] Method: GET
+[2026-03-31 11:28:13] Raw Input: 
+[2026-03-31 11:28:34] === Calendar Handler Called ===
+[2026-03-31 11:28:34] Action: fetch
+[2026-03-31 11:28:34] Method: GET
+[2026-03-31 11:28:34] Raw Input: 
+[2026-03-31 12:54:16] === Calendar Handler Called ===
+[2026-03-31 12:54:16] Action: fetch
+[2026-03-31 12:54:16] Method: GET
+[2026-03-31 12:54:16] Raw Input: 
+[2026-04-01 11:41:09] === Calendar Handler Called ===
+[2026-04-01 11:41:09] Action: fetch
+[2026-04-01 11:41:09] Method: GET
+[2026-04-01 11:41:09] Raw Input: 
+[2026-04-01 11:42:10] === Calendar Handler Called ===
+[2026-04-01 11:42:10] Action: fetch
+[2026-04-01 11:42:10] Method: GET
+[2026-04-01 11:42:10] Raw Input: 
+[2026-04-01 12:22:41] === Calendar Handler Called ===
+[2026-04-01 12:22:41] Action: fetch
+[2026-04-01 12:22:41] Method: GET
+[2026-04-01 12:22:41] Raw Input: 
+[2026-04-01 12:45:41] === Calendar Handler Called ===
+[2026-04-01 12:45:41] Action: fetch
+[2026-04-01 12:45:41] Method: GET
+[2026-04-01 12:45:41] Raw Input: 
+[2026-04-01 12:46:01] === Calendar Handler Called ===
+[2026-04-01 12:46:01] Action: fetch
+[2026-04-01 12:46:01] Method: GET
+[2026-04-01 12:46:01] Raw Input: 
+[2026-04-01 13:00:25] === Calendar Handler Called ===
+[2026-04-01 13:00:25] Action: fetch
+[2026-04-01 13:00:25] Method: GET
+[2026-04-01 13:00:25] Raw Input: 
+[2026-04-01 13:45:11] === Calendar Handler Called ===
+[2026-04-01 13:45:11] Action: fetch
+[2026-04-01 13:45:11] Method: GET
+[2026-04-01 13:45:11] Raw Input: 
+[2026-04-02 04:38:50] === Calendar Handler Called ===
+[2026-04-02 04:38:50] Action: fetch
+[2026-04-02 04:38:50] Method: GET
+[2026-04-02 04:38:50] Raw Input: 
+[2026-04-02 10:42:31] === Calendar Handler Called ===
+[2026-04-02 10:42:31] Action: fetch
+[2026-04-02 10:42:31] Method: GET
+[2026-04-02 10:42:31] Raw Input: 
+[2026-04-02 10:54:55] === Calendar Handler Called ===
+[2026-04-02 10:54:55] Action: fetch
+[2026-04-02 10:54:55] Method: GET
+[2026-04-02 10:54:55] Raw Input: 
+[2026-04-02 11:09:59] === Calendar Handler Called ===
+[2026-04-02 11:09:59] Action: fetch
+[2026-04-02 11:09:59] Method: GET
+[2026-04-02 11:09:59] Raw Input: 
+[2026-04-02 11:23:57] === Calendar Handler Called ===
+[2026-04-02 11:23:57] Action: fetch
+[2026-04-02 11:23:57] Method: GET
+[2026-04-02 11:23:57] Raw Input: 
+[2026-04-02 11:38:15] === Calendar Handler Called ===
+[2026-04-02 11:38:15] Action: fetch
+[2026-04-02 11:38:15] Method: GET
+[2026-04-02 11:38:15] Raw Input: 
+[2026-04-02 11:39:10] === Calendar Handler Called ===
+[2026-04-02 11:39:10] Action: fetch
+[2026-04-02 11:39:10] Method: GET
+[2026-04-02 11:39:10] Raw Input: 
+[2026-04-02 11:39:18] === Calendar Handler Called ===
+[2026-04-02 11:39:18] Action: fetch
+[2026-04-02 11:39:18] Method: GET
+[2026-04-02 11:39:18] Raw Input: 
+[2026-04-02 11:43:48] === Calendar Handler Called ===
+[2026-04-02 11:43:48] Action: fetch
+[2026-04-02 11:43:48] Method: GET
+[2026-04-02 11:43:48] Raw Input: 
+[2026-04-02 11:55:50] === Calendar Handler Called ===
+[2026-04-02 11:55:50] Action: fetch
+[2026-04-02 11:55:50] Method: GET
+[2026-04-02 11:55:50] Raw Input: 
+[2026-04-02 11:55:50] === Calendar Handler Called ===
+[2026-04-02 11:55:50] Action: fetch
+[2026-04-02 11:55:50] Method: GET
+[2026-04-02 11:55:50] Raw Input: 
+[2026-04-02 12:00:29] === Calendar Handler Called ===
+[2026-04-02 12:00:29] Action: fetch
+[2026-04-02 12:00:29] Method: GET
+[2026-04-02 12:00:29] Raw Input: 
+[2026-04-02 12:04:17] === Calendar Handler Called ===
+[2026-04-02 12:04:17] Action: fetch
+[2026-04-02 12:04:17] Method: GET
+[2026-04-02 12:04:17] Raw Input: 
+[2026-04-02 12:06:15] === Calendar Handler Called ===
+[2026-04-02 12:06:15] Action: fetch
+[2026-04-02 12:06:15] Method: GET
+[2026-04-02 12:06:15] Raw Input: 
+[2026-04-02 12:12:16] === Calendar Handler Called ===
+[2026-04-02 12:12:16] Action: fetch
+[2026-04-02 12:12:16] Method: GET
+[2026-04-02 12:12:16] Raw Input: 
+[2026-04-02 12:13:15] === Calendar Handler Called ===
+[2026-04-02 12:13:15] Action: fetch
+[2026-04-02 12:13:15] Method: GET
+[2026-04-02 12:13:15] Raw Input: 
+[2026-04-02 12:13:23] === Calendar Handler Called ===
+[2026-04-02 12:13:23] Action: fetch
+[2026-04-02 12:13:23] Method: GET
+[2026-04-02 12:13:23] Raw Input: 
+[2026-04-02 12:16:33] === Calendar Handler Called ===
+[2026-04-02 12:16:33] Action: fetch
+[2026-04-02 12:16:33] Method: GET
+[2026-04-02 12:16:33] Raw Input: 
+[2026-04-03 19:51:09] === Calendar Handler Called ===
+[2026-04-03 19:51:09] Action: fetch
+[2026-04-03 19:51:09] Method: GET
+[2026-04-03 19:51:09] Raw Input: 
+[2026-04-06 05:11:36] === Calendar Handler Called ===
+[2026-04-06 05:11:36] Action: fetch
+[2026-04-06 05:11:36] Method: GET
+[2026-04-06 05:11:36] Raw Input: 
+[2026-04-06 07:59:34] === Calendar Handler Called ===
+[2026-04-06 07:59:34] Action: fetch
+[2026-04-06 07:59:34] Method: GET
+[2026-04-06 07:59:34] Raw Input: 
+[2026-04-06 08:06:18] === Calendar Handler Called ===
+[2026-04-06 08:06:18] Action: fetch
+[2026-04-06 08:06:18] Method: GET
+[2026-04-06 08:06:18] Raw Input: 
+[2026-04-06 08:06:20] === Calendar Handler Called ===
+[2026-04-06 08:06:20] Action: fetch
+[2026-04-06 08:06:20] Method: GET
+[2026-04-06 08:06:20] Raw Input: 
+[2026-04-06 08:06:31] === Calendar Handler Called ===
+[2026-04-06 08:06:31] Action: fetch
+[2026-04-06 08:06:31] Method: GET
+[2026-04-06 08:06:31] Raw Input: 
+[2026-04-06 08:13:31] === Calendar Handler Called ===
+[2026-04-06 08:13:31] Action: fetch
+[2026-04-06 08:13:31] Method: GET
+[2026-04-06 08:13:31] Raw Input: 
+[2026-04-06 09:29:24] === Calendar Handler Called ===
+[2026-04-06 09:29:24] Action: fetch
+[2026-04-06 09:29:24] Method: GET
+[2026-04-06 09:29:24] Raw Input: 
+[2026-04-07 04:52:20] === Calendar Handler Called ===
+[2026-04-07 04:52:20] Action: fetch
+[2026-04-07 04:52:20] Method: GET
+[2026-04-07 04:52:20] Raw Input: 
+[2026-04-07 09:29:16] === Calendar Handler Called ===
+[2026-04-07 09:29:16] Action: fetch
+[2026-04-07 09:29:16] Method: GET
+[2026-04-07 09:29:16] Raw Input: 
+[2026-04-08 06:23:46] === Calendar Handler Called ===
+[2026-04-08 06:23:46] Action: fetch
+[2026-04-08 06:23:46] Method: GET
+[2026-04-08 06:23:46] Raw Input: 
+[2026-04-08 06:25:28] === Calendar Handler Called ===
+[2026-04-08 06:25:28] Action: fetch
+[2026-04-08 06:25:28] Method: GET
+[2026-04-08 06:25:28] Raw Input: 
+[2026-04-08 06:26:30] === Calendar Handler Called ===
+[2026-04-08 06:26:30] Action: fetch
+[2026-04-08 06:26:30] Method: GET
+[2026-04-08 06:26:30] Raw Input: 
+[2026-04-08 06:26:50] === Calendar Handler Called ===
+[2026-04-08 06:26:50] Action: fetch
+[2026-04-08 06:26:50] Method: GET
+[2026-04-08 06:26:50] Raw Input: 
+[2026-04-08 09:48:46] === Calendar Handler Called ===
+[2026-04-08 09:48:46] Action: fetch
+[2026-04-08 09:48:46] Method: GET
+[2026-04-08 09:48:46] Raw Input: 
+[2026-04-08 09:48:48] === Calendar Handler Called ===
+[2026-04-08 09:48:48] Action: fetch
+[2026-04-08 09:48:48] Method: GET
+[2026-04-08 09:48:48] Raw Input: 
+[2026-04-08 09:48:49] === Calendar Handler Called ===
+[2026-04-08 09:48:49] Action: fetch
+[2026-04-08 09:48:49] Method: GET
+[2026-04-08 09:48:49] Raw Input: 
+[2026-04-08 10:05:57] === Calendar Handler Called ===
+[2026-04-08 10:05:57] Action: fetch
+[2026-04-08 10:05:57] Method: GET
+[2026-04-08 10:05:57] Raw Input: 
+[2026-04-08 15:19:54] === Calendar Handler Called ===
+[2026-04-08 15:19:54] Action: fetch
+[2026-04-08 15:19:54] Method: GET
+[2026-04-08 15:19:54] Raw Input: 
+[2026-04-09 08:46:25] === Calendar Handler Called ===
+[2026-04-09 08:46:25] Action: fetch
+[2026-04-09 08:46:25] Method: GET
+[2026-04-09 08:46:25] Raw Input: 
+[2026-04-09 09:58:37] === Calendar Handler Called ===
+[2026-04-09 09:58:37] Action: fetch
+[2026-04-09 09:58:37] Method: GET
+[2026-04-09 09:58:37] Raw Input: 
+[2026-04-10 13:05:09] === Calendar Handler Called ===
+[2026-04-10 13:05:09] Action: fetch
+[2026-04-10 13:05:09] Method: GET
+[2026-04-10 13:05:09] Raw Input: 
+[2026-04-10 13:09:00] === Calendar Handler Called ===
+[2026-04-10 13:09:00] Action: fetch
+[2026-04-10 13:09:00] Method: GET
+[2026-04-10 13:09:00] Raw Input: 
+[2026-04-10 13:40:46] === Calendar Handler Called ===
+[2026-04-10 13:40:46] Action: fetch
+[2026-04-10 13:40:46] Method: GET
+[2026-04-10 13:40:46] Raw Input: 
+[2026-04-10 13:40:51] === Calendar Handler Called ===
+[2026-04-10 13:40:51] Action: fetch
+[2026-04-10 13:40:51] Method: GET
+[2026-04-10 13:40:51] Raw Input: 
+[2026-04-10 13:54:30] === Calendar Handler Called ===
+[2026-04-10 13:54:30] Action: fetch
+[2026-04-10 13:54:30] Method: GET
+[2026-04-10 13:54:30] Raw Input: 
+[2026-04-10 13:54:51] === Calendar Handler Called ===
+[2026-04-10 13:54:51] Action: fetch
+[2026-04-10 13:54:51] Method: GET
+[2026-04-10 13:54:51] Raw Input: 
+[2026-04-10 13:55:05] === Calendar Handler Called ===
+[2026-04-10 13:55:05] Action: fetch
+[2026-04-10 13:55:05] Method: GET
+[2026-04-10 13:55:05] Raw Input: 
+[2026-04-10 13:56:03] === Calendar Handler Called ===
+[2026-04-10 13:56:03] Action: fetch
+[2026-04-10 13:56:03] Method: GET
+[2026-04-10 13:56:03] Raw Input: 
+[2026-04-10 13:56:44] === Calendar Handler Called ===
+[2026-04-10 13:56:44] Action: fetch
+[2026-04-10 13:56:44] Method: GET
+[2026-04-10 13:56:44] Raw Input: 
+[2026-04-10 19:28:12] === Calendar Handler Called ===
+[2026-04-10 19:28:12] Action: fetch
+[2026-04-10 19:28:12] Method: GET
+[2026-04-10 19:28:12] Raw Input: 
+[2026-04-11 06:19:07] === Calendar Handler Called ===
+[2026-04-11 06:19:07] Action: fetch
+[2026-04-11 06:19:07] Method: GET
+[2026-04-11 06:19:07] Raw Input: 
+[2026-04-12 07:41:40] === Calendar Handler Called ===
+[2026-04-12 07:41:40] Action: fetch
+[2026-04-12 07:41:40] Method: GET
+[2026-04-12 07:41:40] Raw Input: 
+[2026-04-12 07:41:52] === Calendar Handler Called ===
+[2026-04-12 07:41:52] Action: fetch
+[2026-04-12 07:41:52] Method: GET
+[2026-04-12 07:41:52] Raw Input: 
+[2026-04-12 07:43:58] === Calendar Handler Called ===
+[2026-04-12 07:43:58] Action: fetch
+[2026-04-12 07:43:58] Method: GET
+[2026-04-12 07:43:58] Raw Input: 
+[2026-04-12 07:44:04] === Calendar Handler Called ===
+[2026-04-12 07:44:04] Action: update_package
+[2026-04-12 07:44:04] Method: POST
+[2026-04-12 07:44:04] Raw Input: {"pt_id":96,"sessions":2}
+[2026-04-12 07:44:04] --- UPDATE PACKAGE START ---
+[2026-04-12 07:44:04] Update package successful!
+[2026-04-12 07:44:07] === Calendar Handler Called ===
+[2026-04-12 07:44:07] Action: fetch
+[2026-04-12 07:44:07] Method: GET
+[2026-04-12 07:44:07] Raw Input: 
+[2026-04-12 07:44:34] === Calendar Handler Called ===
+[2026-04-12 07:44:34] Action: fetch
+[2026-04-12 07:44:34] Method: GET
+[2026-04-12 07:44:34] Raw Input: 
+[2026-04-12 07:44:58] === Calendar Handler Called ===
+[2026-04-12 07:44:58] Action: add
+[2026-04-12 07:44:58] Method: POST
+[2026-04-12 07:44:58] Raw Input: {"id":"","pt_id":"96","member_id":"180","date":"2026-04-15","time":"07:00","reschedule_type":"none"}
+[2026-04-12 07:44:58] --- ADD SESSION START ---
+[2026-04-12 07:44:58] Received pt_id: 96
+[2026-04-12 07:44:58] Received member_id: 180
+[2026-04-12 07:44:58] Received date: 2026-04-15
+[2026-04-12 07:44:58] Received time: 07:00
+[2026-04-12 07:44:58] Parsed pt_id: 96, member_id: 180
+[2026-04-12 07:44:58] Checking PT package existence...
+[2026-04-12 07:44:58] Total sessions: 2
+[2026-04-12 07:44:58] Counting actual sessions...
+[2026-04-12 07:44:58] Actual used: 0
+[2026-04-12 07:44:58] Preparing insert statement...
+[2026-04-12 07:44:58] Executing insert...
+[2026-04-12 07:44:58] Insert successful!
+[2026-04-12 07:44:58] Sessions_used synced
+[2026-04-12 07:45:00] === Calendar Handler Called ===
+[2026-04-12 07:45:00] Action: fetch
+[2026-04-12 07:45:00] Method: GET
+[2026-04-12 07:45:00] Raw Input: 
+[2026-04-12 07:45:46] === Calendar Handler Called ===
+[2026-04-12 07:45:46] Action: delete
+[2026-04-12 07:45:46] Method: POST
+[2026-04-12 07:45:46] Raw Input: {"id":40}
+[2026-04-12 07:45:46] --- DELETE SESSION START ---
+[2026-04-12 07:45:46] Session ID: 40
+[2026-04-12 07:45:46] Delete successful!
+[2026-04-12 07:45:46] Sessions_used count updated
+[2026-04-12 07:45:48] === Calendar Handler Called ===
+[2026-04-12 07:45:48] Action: fetch
+[2026-04-12 07:45:48] Method: GET
+[2026-04-12 07:45:48] Raw Input: 
+[2026-04-12 07:45:50] === Calendar Handler Called ===
+[2026-04-12 07:45:50] Action: fetch
+[2026-04-12 07:45:50] Method: GET
+[2026-04-12 07:45:50] Raw Input: 
+[2026-04-12 07:46:57] === Calendar Handler Called ===
+[2026-04-12 07:46:57] Action: fetch
+[2026-04-12 07:46:57] Method: GET
+[2026-04-12 07:46:57] Raw Input: 
+[2026-04-12 07:58:19] === Calendar Handler Called ===
+[2026-04-12 07:58:19] Action: fetch
+[2026-04-12 07:58:19] Method: GET
+[2026-04-12 07:58:19] Raw Input: 
+[2026-04-12 07:58:25] === Calendar Handler Called ===
+[2026-04-12 07:58:25] Action: update_package
+[2026-04-12 07:58:25] Method: POST
+[2026-04-12 07:58:25] Raw Input: {"pt_id":"96","sessions":"1"}
+[2026-04-12 07:58:25] --- UPDATE PACKAGE START ---
+[2026-04-12 07:58:25] Update package successful!
+[2026-04-12 07:58:27] === Calendar Handler Called ===
+[2026-04-12 07:58:27] Action: fetch
+[2026-04-12 07:58:27] Method: GET
+[2026-04-12 07:58:27] Raw Input: 
+[2026-04-12 07:58:35] === Calendar Handler Called ===
+[2026-04-12 07:58:35] Action: fetch
+[2026-04-12 07:58:35] Method: GET
+[2026-04-12 07:58:35] Raw Input: 
+[2026-04-12 07:58:36] === Calendar Handler Called ===
+[2026-04-12 07:58:36] Action: fetch
+[2026-04-12 07:58:36] Method: GET
+[2026-04-12 07:58:36] Raw Input: 
+[2026-04-12 07:58:40] === Calendar Handler Called ===
+[2026-04-12 07:58:40] Action: update_package
+[2026-04-12 07:58:40] Method: POST
+[2026-04-12 07:58:40] Raw Input: {"pt_id":"96","sessions":"1"}
+[2026-04-12 07:58:40] --- UPDATE PACKAGE START ---
+[2026-04-12 07:58:40] Update package successful!
+[2026-04-12 07:58:41] === Calendar Handler Called ===
+[2026-04-12 07:58:41] Action: fetch
+[2026-04-12 07:58:41] Method: GET
+[2026-04-12 07:58:41] Raw Input: 
+[2026-04-12 07:58:59] === Calendar Handler Called ===
+[2026-04-12 07:58:59] Action: fetch
+[2026-04-12 07:58:59] Method: GET
+[2026-04-12 07:58:59] Raw Input: 
+[2026-04-12 07:59:09] === Calendar Handler Called ===
+[2026-04-12 07:59:09] Action: fetch
+[2026-04-12 07:59:09] Method: GET
+[2026-04-12 07:59:09] Raw Input: 
+[2026-04-12 07:59:11] === Calendar Handler Called ===
+[2026-04-12 07:59:11] Action: fetch
+[2026-04-12 07:59:11] Method: GET
+[2026-04-12 07:59:11] Raw Input: 
+[2026-04-14 16:50:04] === Calendar Handler Called ===
+[2026-04-14 16:50:04] Action: fetch
+[2026-04-14 16:50:04] Method: GET
+[2026-04-14 16:50:04] Raw Input: 
+[2026-04-15 05:57:37] === Calendar Handler Called ===
+[2026-04-15 05:57:37] Action: fetch
+[2026-04-15 05:57:37] Method: GET
+[2026-04-15 05:57:37] Raw Input: 
+[2026-04-15 19:26:09] === Calendar Handler Called ===
+[2026-04-15 19:26:09] Action: fetch
+[2026-04-15 19:26:09] Method: GET
+[2026-04-15 19:26:09] Raw Input: 
+[2026-04-16 05:32:38] === Calendar Handler Called ===
+[2026-04-16 05:32:38] Action: fetch
+[2026-04-16 05:32:38] Method: GET
+[2026-04-16 05:32:38] Raw Input: 
+[2026-04-16 05:38:03] === Calendar Handler Called ===
+[2026-04-16 05:38:03] Action: fetch
+[2026-04-16 05:38:03] Method: GET
+[2026-04-16 05:38:03] Raw Input: 
+[2026-04-19 06:41:23] === Calendar Handler Called ===
+[2026-04-19 06:41:23] Action: fetch
+[2026-04-19 06:41:23] Method: GET
+[2026-04-19 06:41:23] Raw Input: 
+[2026-04-20 14:40:26] === Calendar Handler Called ===
+[2026-04-20 14:40:26] Action: fetch
+[2026-04-20 14:40:26] Method: GET
+[2026-04-20 14:40:26] Raw Input: 
+[2026-04-20 15:07:25] === Calendar Handler Called ===
+[2026-04-20 15:07:25] Action: fetch
+[2026-04-20 15:07:25] Method: GET
+[2026-04-20 15:07:25] Raw Input: 
+[2026-04-20 15:07:29] === Calendar Handler Called ===
+[2026-04-20 15:07:29] Action: fetch
+[2026-04-20 15:07:29] Method: GET
+[2026-04-20 15:07:29] Raw Input: 
+[2026-04-20 15:12:30] === Calendar Handler Called ===
+[2026-04-20 15:12:30] Action: fetch
+[2026-04-20 15:12:30] Method: GET
+[2026-04-20 15:12:30] Raw Input: 
+[2026-04-24 19:18:08] === Calendar Handler Called ===
+[2026-04-24 19:18:08] Action: fetch
+[2026-04-24 19:18:08] Method: GET
+[2026-04-24 19:18:08] Raw Input: 
+[2026-04-25 18:37:14] === Calendar Handler Called ===
+[2026-04-25 18:37:14] Action: fetch
+[2026-04-25 18:37:14] Method: GET
+[2026-04-25 18:37:14] Raw Input: 
+[2026-04-27 10:41:24] === Calendar Handler Called ===
+[2026-04-27 10:41:24] Action: fetch
+[2026-04-27 10:41:24] Method: GET
+[2026-04-27 10:41:24] Raw Input: 
+[2026-04-27 10:48:02] === Calendar Handler Called ===
+[2026-04-27 10:48:02] Action: fetch
+[2026-04-27 10:48:02] Method: GET
+[2026-04-27 10:48:02] Raw Input: 
+[2026-04-27 10:48:16] === Calendar Handler Called ===
+[2026-04-27 10:48:16] Action: fetch
+[2026-04-27 10:48:16] Method: GET
+[2026-04-27 10:48:16] Raw Input: 
+[2026-04-27 14:54:12] === Calendar Handler Called ===
+[2026-04-27 14:54:12] Action: fetch
+[2026-04-27 14:54:12] Method: GET
+[2026-04-27 14:54:12] Raw Input: 
+[2026-04-28 20:05:47] === Calendar Handler Called ===
+[2026-04-28 20:05:47] Action: fetch
+[2026-04-28 20:05:47] Method: GET
+[2026-04-28 20:05:47] Raw Input: 
+[2026-05-01 06:35:47] === Calendar Handler Called ===
+[2026-05-01 06:35:47] Action: fetch
+[2026-05-01 06:35:47] Method: GET
+[2026-05-01 06:35:47] Raw Input: 
+[2026-05-01 07:11:35] === Calendar Handler Called ===
+[2026-05-01 07:11:35] Action: fetch
+[2026-05-01 07:11:35] Method: GET
+[2026-05-01 07:11:35] Raw Input: 
+[2026-05-01 08:07:17] === Calendar Handler Called ===
+[2026-05-01 08:07:17] Action: fetch
+[2026-05-01 08:07:17] Method: GET
+[2026-05-01 08:07:17] Raw Input: 
+[2026-05-02 13:32:53] === Calendar Handler Called ===
+[2026-05-02 13:32:53] Action: fetch
+[2026-05-02 13:32:53] Method: GET
+[2026-05-02 13:32:53] Raw Input: 
+[2026-05-04 10:46:57] === Calendar Handler Called ===
+[2026-05-04 10:46:57] Action: fetch
+[2026-05-04 10:46:57] Method: GET
+[2026-05-04 10:46:57] Raw Input: 
+[2026-05-10 08:44:47] === Calendar Handler Called ===
+[2026-05-10 08:44:47] Action: fetch
+[2026-05-10 08:44:47] Method: GET
+[2026-05-10 08:44:47] Raw Input: 
+[2026-05-10 09:03:31] === Calendar Handler Called ===
+[2026-05-10 09:03:31] Action: fetch
+[2026-05-10 09:03:31] Method: GET
+[2026-05-10 09:03:31] Raw Input: 
+[2026-05-10 09:03:38] === Calendar Handler Called ===
+[2026-05-10 09:03:38] Action: fetch
+[2026-05-10 09:03:38] Method: GET
+[2026-05-10 09:03:38] Raw Input: 
+[2026-05-11 05:20:09] === Calendar Handler Called ===
+[2026-05-11 05:20:09] Action: fetch
+[2026-05-11 05:20:09] Method: GET
+[2026-05-11 05:20:09] Raw Input: 
+[2026-05-16 06:10:17] === Calendar Handler Called ===
+[2026-05-16 06:10:18] Action: fetch
+[2026-05-16 06:10:18] Method: GET
+[2026-05-16 06:10:18] Raw Input: 
+[2026-05-18 15:02:28] === Calendar Handler Called ===
+[2026-05-18 15:02:28] Action: fetch
+[2026-05-18 15:02:28] Method: GET
+[2026-05-18 15:02:28] Raw Input: 
+[2026-05-18 15:02:44] === Calendar Handler Called ===
+[2026-05-18 15:02:44] Action: fetch
+[2026-05-18 15:02:44] Method: GET
+[2026-05-18 15:02:44] Raw Input: 
+[2026-05-21 03:16:01] === Calendar Handler Called ===
+[2026-05-21 03:16:01] Action: fetch
+[2026-05-21 03:16:01] Method: GET
+[2026-05-21 03:16:01] Raw Input: 
+[2026-05-26 12:42:03] === Calendar Handler Called ===
+[2026-05-26 12:42:03] Action: fetch
+[2026-05-26 12:42:03] Method: GET
+[2026-05-26 12:42:03] Raw Input: 
+[2026-05-27 14:37:56] === Calendar Handler Called ===
+[2026-05-27 14:37:56] Action: fetch
+[2026-05-27 14:37:56] Method: GET
+[2026-05-27 14:37:56] Raw Input: 
+[2026-05-27 18:15:57] === Calendar Handler Called ===
+[2026-05-27 18:15:57] Action: fetch
+[2026-05-27 18:15:57] Method: GET
+[2026-05-27 18:15:57] Raw Input: 
+[2026-05-29 17:58:15] === Calendar Handler Called ===
+[2026-05-29 17:58:15] Action: fetch
+[2026-05-29 17:58:15] Method: GET
+[2026-05-29 17:58:15] Raw Input: 
+[2026-05-29 17:59:12] === Calendar Handler Called ===
+[2026-05-29 17:59:12] Action: fetch
+[2026-05-29 17:59:12] Method: GET
+[2026-05-29 17:59:12] Raw Input: 
+[2026-06-14 12:11:03] === Calendar Handler Called ===
+[2026-06-14 12:11:03] Action: fetch
+[2026-06-14 12:11:03] Method: GET
+[2026-06-14 12:11:03] Raw Input: 
+[2026-06-16 12:01:52] === Calendar Handler Called ===
+[2026-06-16 12:01:52] Action: fetch
+[2026-06-16 12:01:52] Method: GET
+[2026-06-16 12:01:52] Raw Input: 
+[2026-07-06 18:58:05] === Calendar Handler Called ===
+[2026-07-06 18:58:05] Action: fetch
+[2026-07-06 18:58:05] Method: GET
+[2026-07-06 18:58:05] Raw Input: 
+[2026-07-06 19:16:25] === Calendar Handler Called ===
+[2026-07-06 19:16:25] Action: fetch
+[2026-07-06 19:16:25] Method: GET
+[2026-07-06 19:16:25] Raw Input: 
+[2026-07-15 14:40:08] === Calendar Handler Called ===
+[2026-07-15 14:40:08] Action: fetch
+[2026-07-15 14:40:08] Method: GET
+[2026-07-15 14:40:08] Raw Input: 
+[2026-07-18 20:43:19] === Calendar Handler Called ===
+[2026-07-18 20:43:19] Action: fetch
+[2026-07-18 20:43:19] Method: GET
+[2026-07-18 20:43:19] Raw Input: 
+[2026-07-21 06:29:08] === Calendar Handler Called ===
+[2026-07-21 06:29:08] Action: fetch
+[2026-07-21 06:29:08] Method: GET
+[2026-07-21 06:29:08] Raw Input: 
+[2026-07-21 08:45:24] === Calendar Handler Called ===
+[2026-07-21 08:45:24] Action: fetch
+[2026-07-21 08:45:24] Method: GET
+[2026-07-21 08:45:24] Raw Input: 
+[2026-07-23 08:22:22] === Calendar Handler Called ===
+[2026-07-23 08:22:22] Action: fetch
+[2026-07-23 08:22:22] Method: GET
+[2026-07-23 08:22:22] Raw Input: 
+[2026-07-23 08:26:50] === Calendar Handler Called ===
+[2026-07-23 08:26:50] Action: fetch
+[2026-07-23 08:26:50] Method: GET
+[2026-07-23 08:26:50] Raw Input: 
+[2026-07-23 18:43:19] === Calendar Handler Called ===
+[2026-07-23 18:43:19] Action: fetch
+[2026-07-23 18:43:19] Method: GET
+[2026-07-23 18:43:19] Raw Input: 
+[2026-08-01 09:17:14] === Calendar Handler Called ===
+[2026-08-01 09:17:14] Action: fetch
+[2026-08-01 09:17:14] Method: GET
+[2026-08-01 09:17:14] Raw Input: 
+[2026-08-19 17:40:23] === Calendar Handler Called ===
+[2026-08-19 17:40:23] Action: fetch
+[2026-08-19 17:40:23] Method: GET
+[2026-08-19 17:40:23] Raw Input: 
+[2026-09-05 06:18:26] === Calendar Handler Called ===
+[2026-09-05 06:18:26] Action: fetch
+[2026-09-05 06:18:26] Method: GET
+[2026-09-05 06:18:26] Raw Input: 
+[2026-09-05 21:32:56] === Calendar Handler Called ===
+[2026-09-05 21:32:56] Action: fetch
+[2026-09-05 21:32:56] Method: GET
+[2026-09-05 21:32:56] Raw Input: 
+[2026-09-05 21:32:58] === Calendar Handler Called ===
+[2026-09-05 21:32:58] Action: fetch
+[2026-09-05 21:32:58] Method: GET
+[2026-09-05 21:32:58] Raw Input: 
+[2026-09-05 21:57:44] === Calendar Handler Called ===
+[2026-09-05 21:57:44] Action: fetch
+[2026-09-05 21:57:44] Method: GET
+[2026-09-05 21:57:44] Raw Input: 
