@@ -48,13 +48,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'vedantkolhapure111@gmail.com';
-        $mail->Password = 'tzhiwibunjrfgfjj';
+        $mail->Username = 'vrishabhchadchan1@gmail.com';
+        $mail->Password = 'qmhbeaswhyhsjbao';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
         $mail->CharSet = 'UTF-8';
 
-        $mail->setFrom('vedantkolhapure111@gmail.com', 'JOF INDIA');
+        $mail->setFrom('vrishabhchadchan1@gmail.com', 'JOF INDIA');
         $mail->addAddress($member['email'], $member['full_name']);
         $mail->isHTML(true);
         $mail->Subject = $subject;
@@ -190,7 +190,7 @@ function generateEmailBody($member, $type, $custom_message, $payment_data)
                         </tr>
                         <tr>
                             <td class='footer'>
-                                <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vedantkolhapure111@gmail.com</p>
+                                <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vrishabhchadchan1@gmail.com</p>
                                 <p class='footer-text'>© 2026 JOF INDIA. All rights reserved.</p>
                                 <p class='footer-text'>Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra</p>
                             </td>

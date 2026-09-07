@@ -27,7 +27,7 @@ $current_phase = isset($name_parts[1]) ? trim($name_parts[1]) : 'Unknown Phase';
 
 // 3. Fetch ALL Phases for this Client (For the Dropdown)
 $history_sql = "SELECT id, plan_name FROM diet_plans WHERE plan_name LIKE ? ORDER BY id ASC";
-$search_name = $client_name . "%";
+$search_name = $client_name . " - %";
 $stmt_hist = $conn->prepare($history_sql);
 $stmt_hist->bind_param("s", $search_name);
 $stmt_hist->execute();

@@ -29,11 +29,23 @@ $current_phase = isset($name_parts[1]) ? trim($name_parts[1]) : '';
 
 // Fetch ALL Phases for this Client (for Phase Selection dropdown)
 $history_sql = "SELECT id, plan_name FROM diet_plans WHERE plan_name LIKE ? ORDER BY id ASC";
-$search_name = $client_name . "%";
+$search_name = $client_name . " - %";
 $stmt_hist = $conn->prepare($history_sql);
 $stmt_hist->bind_param("s", $search_name);
 $stmt_hist->execute();
 $all_phases = $stmt_hist->get_result();
+
+// Fetch reusable diet templates (guard: table may not exist yet on this server)
+$dp_templates = [];
+$dp_tpl_check = $conn->query("SHOW TABLES LIKE 'diet_plan_templates'");
+if ($dp_tpl_check && $dp_tpl_check->num_rows > 0) {
+    $dp_tpl_res = $conn->query("SELECT id, template_name, goal, diet_type, calories, duration, breakfast, lunch, snack, dinner FROM diet_plan_templates ORDER BY template_name ASC");
+    if ($dp_tpl_res) {
+        while ($row = $dp_tpl_res->fetch_assoc()) {
+            $dp_templates[] = $row;
+        }
+    }
+}
 
 // --- PARSING LOGIC: Extract separate fields from combined DB columns ---
 // Uses flexible regex to handle variations: "**WAKE UP:**", "**WAKE UP (6 AM):**", "**WAKE UP :**" etc.
@@ -205,6 +217,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
 
         <div class="card-body">
+
+            <?php if (!empty($dp_templates)): ?>
+            <div style="margin:0 0 18px; padding:12px 14px; border:1px dashed #10B981; border-radius:12px; background:#ECFDF5; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                <label style="font-weight:700; font-size:13px; color:#065F46; margin:0;">
+                    <img src="../icons/clipboard-list-solid-full.svg" width="14" style="vertical-align:-2px; margin-right:6px;">Use a template
+                </label>
+                <select id="tplPicker" style="flex:1; min-width:200px; padding:8px 10px; border:1px solid #A7F3D0; border-radius:8px; font-size:13px; background:#fff;">
+                    <option value="">&mdash; Select a template to auto-fill &mdash;</option>
+                    <?php foreach ($dp_templates as $t): ?>
+                        <option value="<?= (int) $t['id'] ?>"><?= htmlspecialchars($t['template_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="button" class="btn btn-primary" style="padding:8px 16px;" onclick="applyTemplate()">Fill form</button>
+                <span id="tplMsg" style="font-size:12px; color:#059669;"></span>
+            </div>
+            <script>window.__DP_TEMPLATES = <?= json_encode($dp_templates, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;</script>
+            <?php endif; ?>
+
             <form method="POST" action="">
 
                 <div class="section-title"><img src="../icons/clipboard-user-solid-full.svg"><span>Phase
@@ -398,6 +428,60 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 
     <script>
+        // ---- Use a template: split the packed meal columns back into the 8 fields ----
+        function unpackDiet(b, l, s, d) {
+            b = b || ''; l = l || ''; s = s || ''; d = d || '';
+            const o = { wake_up: '', post_workout: '', breakfast: '', lunch: '', snack: '', dinner: '', pre_sleep: '', guidelines: '' };
+            let m;
+            if ((m = b.match(/\*\*WAKE\s*UP\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*([\s\S]*?)(?=\n\n|💪|🍳|$)/u))) o.wake_up = m[1].trim();
+            if ((m = b.match(/\*\*POST\s*WORKOUT\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*([\s\S]*?)(?=\n\n|🍳|$)/u))) o.post_workout = m[1].trim();
+            if ((m = b.match(/\*\*BREAKFAST\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*([\s\S]*)/u))) o.breakfast = m[1].trim();
+            else if (!o.wake_up && !o.post_workout) o.breakfast = b.trim();
+
+            o.lunch = l.replace(/^[\s\S]*?\*\*LUNCH\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*\n?/u, '').trim();
+            o.snack = s.replace(/^[\s\S]*?\*\*MID\s*MEAL\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*\n?/u, '').trim();
+
+            if ((m = d.match(/\*\*DINNER\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*([\s\S]*?)(?=\n\n|🌙|📝|$)/u))) o.dinner = m[1].trim();
+            else if (d.indexOf('**DINNER') === -1 && d.indexOf('**PRE-SLEEP') === -1 && d.indexOf('**GUIDELINES') === -1) o.dinner = d.trim();
+            if ((m = d.match(/\*\*PRE-SLEEP\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*([\s\S]*?)(?=\n\n|📝|$)/u))) o.pre_sleep = m[1].trim();
+            if ((m = d.match(/\*\*GUIDELINES\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*([\s\S]*)/u))) o.guidelines = m[1].trim();
+            return o;
+        }
+
+        function applyTemplate() {
+            const sel = document.getElementById('tplPicker');
+            const msg = document.getElementById('tplMsg');
+            const list = window.__DP_TEMPLATES || [];
+            const t = list.find(x => String(x.id) === String(sel && sel.value));
+            if (!t) { if (msg) { msg.textContent = 'Pick a template first.'; msg.style.color = '#b45309'; } return; }
+            if (!confirm('Replace the current meal details with the "' + t.template_name + '" template? You can still edit before saving.')) return;
+            const form = document.querySelector('.card-body form');
+            const meals = unpackDiet(t.breakfast, t.lunch, t.snack, t.dinner);
+            let n = 0;
+            const flash = el => { el.style.transition = 'background .4s'; el.style.background = '#ecfdf5'; setTimeout(() => el.style.background = '', 1000); };
+            const setF = (name, val) => {
+                if (val === undefined || val === null || val === '') return;
+                const el = form.querySelector('[name="' + name + '"]');
+                if (!el) return;
+                el.value = val; n++; flash(el);
+            };
+            ['wake_up', 'post_workout', 'breakfast', 'lunch', 'snack', 'dinner', 'pre_sleep', 'guidelines'].forEach(k => setF(k, meals[k]));
+            setF('calories', (t.calories && String(t.calories) !== '0') ? t.calories : '');
+            setF('duration', t.duration);
+            [['goal', t.goal], ['diet_type', t.diet_type]].forEach(function (pair) {
+                const name = pair[0], val = pair[1];
+                if (!val) return;
+                const el = form.querySelector('[name="' + name + '"]');
+                if (!el) return;
+                if (el.tagName === 'SELECT') {
+                    const want = String(val).toLowerCase();
+                    const opt = [...el.options].find(o => o.value.toLowerCase() === want || o.text.toLowerCase() === want);
+                    if (opt) { el.value = opt.value; n++; flash(el); }
+                } else { el.value = val; n++; flash(el); }
+            });
+            if (msg) { msg.textContent = '✓ Filled ' + n + ' field(s). Edit anything, then Save Changes.'; msg.style.color = '#059669'; }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             const isSuccess = "<?= $success ?>";
             if (isSuccess === "updated") {

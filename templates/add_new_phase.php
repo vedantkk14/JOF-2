@@ -28,7 +28,6 @@ $name_parts = explode(" - ", $plan['plan_name']);
 $client_name = trim($name_parts[0]);
 
 // 3. Find all existing phases for this client
-$all_phases_list = ["Week 1 & 2", "Week 3 & 4", "Week 5 & 6", "Week 7 & 8", "Maintenance"];
 $existing_phases = [];
 
 $history_sql = "SELECT plan_name FROM diet_plans WHERE plan_name LIKE ?";
@@ -45,12 +44,26 @@ while ($row = $result_hist->fetch_assoc()) {
     }
 }
 
-// 4. Determine the next phase (first phase not yet created)
-$next_phase = "Week 1 & 2"; // fallback
-foreach ($all_phases_list as $phase) {
-    if (!in_array($phase, $existing_phases)) {
-        $next_phase = $phase;
-        break;
+// 4. Determine the next phase — always the next consecutive 2-week block.
+//    Keeps going indefinitely (Week 9 & 10, Week 11 & 12, ...) with no "Maintenance" cap.
+$highest_week = 0;
+foreach ($existing_phases as $phase) {
+    if (preg_match('/Week\s*(\d+)\s*&\s*(\d+)/i', $phase, $m)) {
+        $highest_week = max($highest_week, (int) $m[1], (int) $m[2]);
+    }
+}
+$start_week = $highest_week + 1;
+$next_phase = "Week " . $start_week . " & " . ($start_week + 1);
+
+// Fetch reusable diet templates (guard: table may not exist yet on this server)
+$dp_templates = [];
+$dp_tpl_check = $conn->query("SHOW TABLES LIKE 'diet_plan_templates'");
+if ($dp_tpl_check && $dp_tpl_check->num_rows > 0) {
+    $dp_tpl_res = $conn->query("SELECT id, template_name, goal, diet_type, calories, duration, breakfast, lunch, snack, dinner FROM diet_plan_templates ORDER BY template_name ASC");
+    if ($dp_tpl_res) {
+        while ($row = $dp_tpl_res->fetch_assoc()) {
+            $dp_templates[] = $row;
+        }
     }
 }
 
@@ -111,6 +124,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($stmt->execute()) {
             $new_id = $conn->insert_id;
             $success = "success";
+        } else {
+            $error = "Could not save phase: " . $stmt->error;
         }
     } catch (Exception $e) {
         $error = "Error: " . $e->getMessage();
@@ -152,6 +167,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
 
         <div class="card-body">
+
+            <?php if (!empty($dp_templates)): ?>
+            <div style="margin:0 0 18px; padding:12px 14px; border:1px dashed #10B981; border-radius:12px; background:#ECFDF5; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                <label style="font-weight:700; font-size:13px; color:#065F46; margin:0;">
+                    <img src="../icons/clipboard-list-solid-full.svg" width="14" style="vertical-align:-2px; margin-right:6px;">Use a template
+                </label>
+                <select id="tplPicker" style="flex:1; min-width:200px; padding:8px 10px; border:1px solid #A7F3D0; border-radius:8px; font-size:13px; background:#fff;">
+                    <option value="">&mdash; Select a template to auto-fill &mdash;</option>
+                    <?php foreach ($dp_templates as $t): ?>
+                        <option value="<?= (int) $t['id'] ?>"><?= htmlspecialchars($t['template_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="button" class="btn btn-primary" style="padding:8px 16px;" onclick="applyTemplate()">Fill form</button>
+                <span id="tplMsg" style="font-size:12px; color:#059669;"></span>
+            </div>
+            <script>window.__DP_TEMPLATES = <?= json_encode($dp_templates, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;</script>
+            <?php endif; ?>
+
             <form method="POST" action="">
 
                 <div class="section-title"><img src="../icons/clipboard-user-solid-full.svg"><span>Phase
@@ -189,8 +222,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div class="input-group">
                         <label>Diet Type *</label>
                         <div class="input-wrapper">
-                            <input type="text" name="diet_type" class="form-input" value=""
-                                placeholder="e.g. Vegetarian" required>
+                            <select name="diet_type" class="form-input" required>
+                                <option value="veg">Vegetarian</option>
+                                <option value="nonveg">Non-Veg</option>
+                                <option value="vegan">Vegan</option>
+                            </select>
                             <img src="../icons/leaf-solid-full.svg" class="input-icon">
                         </div>
                     </div>
@@ -326,6 +362,60 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 
     <script>
+        // ---- Use a template: split the packed meal columns back into the 8 fields ----
+        function unpackDiet(b, l, s, d) {
+            b = b || ''; l = l || ''; s = s || ''; d = d || '';
+            const o = { wake_up: '', post_workout: '', breakfast: '', lunch: '', snack: '', dinner: '', pre_sleep: '', guidelines: '' };
+            let m;
+            if ((m = b.match(/\*\*WAKE\s*UP\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*([\s\S]*?)(?=\n\n|💪|🍳|$)/u))) o.wake_up = m[1].trim();
+            if ((m = b.match(/\*\*POST\s*WORKOUT\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*([\s\S]*?)(?=\n\n|🍳|$)/u))) o.post_workout = m[1].trim();
+            if ((m = b.match(/\*\*BREAKFAST\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*([\s\S]*)/u))) o.breakfast = m[1].trim();
+            else if (!o.wake_up && !o.post_workout) o.breakfast = b.trim();
+
+            o.lunch = l.replace(/^[\s\S]*?\*\*LUNCH\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*\n?/u, '').trim();
+            o.snack = s.replace(/^[\s\S]*?\*\*MID\s*MEAL\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*\n?/u, '').trim();
+
+            if ((m = d.match(/\*\*DINNER\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*([\s\S]*?)(?=\n\n|🌙|📝|$)/u))) o.dinner = m[1].trim();
+            else if (d.indexOf('**DINNER') === -1 && d.indexOf('**PRE-SLEEP') === -1 && d.indexOf('**GUIDELINES') === -1) o.dinner = d.trim();
+            if ((m = d.match(/\*\*PRE-SLEEP\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*([\s\S]*?)(?=\n\n|📝|$)/u))) o.pre_sleep = m[1].trim();
+            if ((m = d.match(/\*\*GUIDELINES\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*([\s\S]*)/u))) o.guidelines = m[1].trim();
+            return o;
+        }
+
+        function applyTemplate() {
+            const sel = document.getElementById('tplPicker');
+            const msg = document.getElementById('tplMsg');
+            const list = window.__DP_TEMPLATES || [];
+            const t = list.find(x => String(x.id) === String(sel && sel.value));
+            if (!t) { if (msg) { msg.textContent = 'Pick a template first.'; msg.style.color = '#b45309'; } return; }
+            if (!confirm('Fill this phase with the "' + t.template_name + '" template? You can still edit before saving.')) return;
+            const form = document.querySelector('.card-body form');
+            const meals = unpackDiet(t.breakfast, t.lunch, t.snack, t.dinner);
+            let n = 0;
+            const flash = el => { el.style.transition = 'background .4s'; el.style.background = '#ecfdf5'; setTimeout(() => el.style.background = '', 1000); };
+            const setF = (name, val) => {
+                if (val === undefined || val === null || val === '') return;
+                const el = form.querySelector('[name="' + name + '"]');
+                if (!el) return;
+                el.value = val; n++; flash(el);
+            };
+            ['wake_up', 'post_workout', 'breakfast', 'lunch', 'snack', 'dinner', 'pre_sleep', 'guidelines'].forEach(k => setF(k, meals[k]));
+            setF('calories', (t.calories && String(t.calories) !== '0') ? t.calories : '');
+            setF('duration', t.duration);
+            [['goal', t.goal], ['diet_type', t.diet_type]].forEach(function (pair) {
+                const name = pair[0], val = pair[1];
+                if (!val) return;
+                const el = form.querySelector('[name="' + name + '"]');
+                if (!el) return;
+                if (el.tagName === 'SELECT') {
+                    const want = String(val).toLowerCase();
+                    const opt = [...el.options].find(o => o.value.toLowerCase() === want || o.text.toLowerCase() === want);
+                    if (opt) { el.value = opt.value; n++; flash(el); }
+                } else { el.value = val; n++; flash(el); }
+            });
+            if (msg) { msg.textContent = '✓ Filled ' + n + ' field(s). Edit anything, then Save New Phase.'; msg.style.color = '#059669'; }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             if ("<?= $success ?>" === "success") {
                 document.getElementById('successToast').classList.add('visible');

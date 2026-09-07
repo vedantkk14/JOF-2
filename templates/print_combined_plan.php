@@ -30,7 +30,7 @@ $history_sql = "SELECT * FROM diet_plans
                 AND id <= ? 
                 ORDER BY id ASC";
 
-$search_name = $client_name . "%"; 
+$search_name = $client_name . " - %";
 $stmt_hist = $conn->prepare($history_sql);
 $stmt_hist->bind_param("si", $search_name, $current_plan_id);
 $stmt_hist->execute();

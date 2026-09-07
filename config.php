@@ -1,7 +1,7 @@
 <?php
 $servername = "localhost";
 $username = "root";
-$password = "Ferrari@111";
+$password = "vrishabh#2807";
 $dbname = "fitness_crm";
 
 $conn = mysqli_connect($servername, $username, $password, $dbname);
