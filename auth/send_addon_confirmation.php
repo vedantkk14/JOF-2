@@ -11,21 +11,11 @@ function sendAddonConfirmation($member_name, $member_email, $service_type, $sche
     $mail = new PHPMailer(true);
 
     try {
-        // SMTP Configuration
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = 'vedantkolhapure111@gmail.com';
-        $mail->Password = 'tzhiwibunjrfgfjj';
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
+        // Shared SMTP credentials (auth/mail_config.php → .env)
+        require_once __DIR__ . '/mail_config.php';
+        jof_configure_mailer($mail);
 
-        //Recipients
-
-
-
-        $mail->setFrom('vedantkolhapure111@gmail.com', 'JOF INDIA');
-
+        // Recipients
         $mail->addAddress($member_email, $member_name);
 
         // Format date and time

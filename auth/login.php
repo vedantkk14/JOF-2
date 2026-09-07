@@ -21,10 +21,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $submitted = $_POST['_csrf_token'] ?? '';
 $stored    = $_SESSION['_csrf_token'] ?? '';
 if (!$stored || !hash_equals($stored, $submitted)) {
-    echo json_encode(['success' => false, 'message' => 'Security token mismatch. Please refresh and try again.']);
+    // Issue a fresh token so the user can retry without a full page reload
+    $new_csrf = bin2hex(random_bytes(32));
+    $_SESSION['_csrf_token'] = $new_csrf;
+    echo json_encode(['success' => false, 'message' => 'Security token expired. Please try again.', 'csrf_token' => $new_csrf]);
     exit;
 }
-unset($_SESSION['_csrf_token']); // rotate after use
+
+// ── Rotate CSRF: consume old token, issue a fresh one for next attempt ─
+unset($_SESSION['_csrf_token']);
+$new_csrf = bin2hex(random_bytes(32));
+$_SESSION['_csrf_token'] = $new_csrf;
 
 // ── Rate Limiting (5 failed attempts per 10 min per IP) ───────────
 $ip       = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
@@ -38,7 +45,7 @@ if ((time() - $rl_data['since']) > 600) {
 
 if ($rl_data['count'] >= 5) {
     $wait = (int) ceil((600 - (time() - $rl_data['since'])) / 60);
-    echo json_encode(['success' => false, 'message' => "Too many failed attempts. Try again in {$wait} minute(s)."]);
+    echo json_encode(['success' => false, 'message' => "Too many failed attempts. Try again in {$wait} minute(s).", 'csrf_token' => $new_csrf]);
     exit;
 }
 
@@ -47,12 +54,12 @@ $email    = trim(filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL));
 $password = $_POST['password'] ?? '';
 
 if ($email === '' || $password === '') {
-    echo json_encode(['success' => false, 'message' => 'Email and password are required.']);
+    echo json_encode(['success' => false, 'message' => 'Email and password are required.', 'csrf_token' => $new_csrf]);
     exit;
 }
 
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
+    echo json_encode(['success' => false, 'message' => 'Invalid email or password.', 'csrf_token' => $new_csrf]);
     exit;
 }
 
@@ -79,7 +86,7 @@ if ($user && password_verify($password, $user['password']) && in_array($user['ro
     $rl_data['count']++;
     $_SESSION[$rl_key] = $rl_data;
 
-    echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
+    echo json_encode(['success' => false, 'message' => 'Invalid email or password.', 'csrf_token' => $new_csrf]);
 }
 
 function _redirect(string $role): string {

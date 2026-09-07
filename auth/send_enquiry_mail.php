@@ -22,18 +22,11 @@ function sendEnquiryEmail($full_name, $email)
     try {
         $mail = new PHPMailer(true);
 
-        // SMTP Configuration
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = 'vedantkolhapure111@gmail.com';
-        $mail->Password = 'tzhiwibunjrfgfjj';
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        $mail->Port = 465;
-        $mail->CharSet = 'UTF-8';
+        // Shared SMTP credentials (auth/mail_config.php → .env)
+        require_once __DIR__ . '/mail_config.php';
+        jof_configure_mailer($mail, ['secure' => 'ssl', 'port' => 465]);
 
         // Email Settings
-        $mail->setFrom('vedantkolhapure111@gmail.com', 'JOF INDIA');
         $mail->addReplyTo('vedantkolhapure111@gmail.com', 'JOF INDIA Support');
         $mail->addAddress($email, $full_name);
         $mail->isHTML(true);

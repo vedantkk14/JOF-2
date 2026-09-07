@@ -24,17 +24,9 @@ if (mysqli_num_rows($result) > 0) {
     $mail = new PHPMailer(true);
 
     try {
-        // --- SMTP CONFIGURATION ---
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = 'vedantkolhapure111@gmail.com';
-        $mail->Password = 'tzhiwibunjrfgfjj';
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
-        $mail->CharSet = 'UTF-8';
-
-        $mail->setFrom('vedantkolhapure111@gmail.com', 'JOF INDIA');
+        // Shared SMTP credentials (auth/mail_config.php → .env)
+        require_once __DIR__ . '/mail_config.php';
+        jof_configure_mailer($mail);
         $mail->isHTML(true);
 
         while ($row = mysqli_fetch_assoc($result)) {

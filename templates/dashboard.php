@@ -5,6 +5,11 @@ require_role(['admin', 'trainer']);
 // Database connection
 require_once __DIR__ . '/../config.php';
 
+// Staff who may create new login accounts (admin + trainer share this tier app-wide)
+$current_user     = get_session_user();
+$can_manage_staff = in_array($current_user['role'] ?? '', ['admin', 'trainer'], true);
+$csrf_token       = generate_csrf_token();
+
 // Fetch Total Members
 $total_members = 0;
 $total_members_result = mysqli_query($conn, "SELECT COUNT(*) as total FROM members WHERE status = 'active'");
@@ -619,6 +624,281 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
         .btn-confirm-delete:active {
             transform: translateY(0);
         }
+
+        /* ══ Add Admin / Add Counsellor top-bar buttons ══ */
+        .page-dashboard .staff-quick-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 15px 8px 8px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid #EEF0F3;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+            transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .page-dashboard .staff-quick-btn .sqb-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 9px;
+            background: #FFF4EF;
+            color: #F25C2A;
+            flex-shrink: 0;
+        }
+
+        .page-dashboard .staff-quick-btn .sqb-icon img,
+        .page-dashboard .staff-quick-btn .sqb-icon svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .page-dashboard .staff-quick-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.1);
+        }
+
+        .page-dashboard .staff-quick-btn.primary {
+            background: linear-gradient(135deg, #F25C2A, #E5502B);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(242, 92, 42, 0.28);
+        }
+
+        .page-dashboard .staff-quick-btn.primary .sqb-icon {
+            background: rgba(255, 255, 255, 0.22);
+            color: #fff;
+        }
+
+        .page-dashboard .staff-quick-btn.primary:hover {
+            box-shadow: 0 8px 20px rgba(242, 92, 42, 0.38);
+        }
+
+        @media (max-width: 640px) {
+            .page-dashboard .staff-quick-btn span {
+                display: none;
+            }
+
+            .page-dashboard .staff-quick-btn {
+                padding: 8px;
+                gap: 0;
+            }
+        }
+
+        /* ══ Create-account modal cards ══ */
+        .page-dashboard .staff-modal {
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            padding: 20px;
+        }
+
+        .page-dashboard .staff-modal.active {
+            animation: staffFade .2s ease;
+        }
+
+        @keyframes staffFade {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .page-dashboard .staff-modal-card {
+            position: relative;
+            background: #fff;
+            width: 100%;
+            max-width: 430px;
+            border-radius: 20px;
+            padding: 28px 26px 24px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24), 0 4px 14px rgba(15, 23, 42, 0.08);
+            animation: staffPop .28s cubic-bezier(.34, 1.56, .64, 1);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        @keyframes staffPop {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .page-dashboard .staff-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 9px;
+            background: #F1F5F9;
+            color: #64748B;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .18s ease, color .18s ease;
+        }
+
+        .page-dashboard .staff-modal-close:hover {
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+
+        .page-dashboard .staff-modal-close img,
+        .page-dashboard .staff-modal-close svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        .page-dashboard .staff-modal-head {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+            padding-right: 34px;
+        }
+
+        .page-dashboard .staff-modal-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 13px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #FFF4EF, #FFE4D6);
+            color: #F25C2A;
+        }
+
+        .page-dashboard .staff-modal-icon img,
+        .page-dashboard .staff-modal-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .page-dashboard .staff-modal-head h3 {
+            margin: 0 0 3px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1E293B;
+        }
+
+        .page-dashboard .staff-modal-head p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #64748B;
+            line-height: 1.4;
+        }
+
+        .page-dashboard .staff-field {
+            margin-bottom: 14px;
+        }
+
+        .page-dashboard .staff-field label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #94A3B8;
+        }
+
+        .page-dashboard .staff-field input,
+        .page-dashboard .staff-field select {
+            width: 100%;
+            padding: 11px 13px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 0.92rem;
+            font-family: inherit;
+            color: #1E293B;
+            background: #fff;
+            outline: none;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .page-dashboard .staff-field input::placeholder {
+            color: #CBD5E1;
+        }
+
+        .page-dashboard .staff-field input:focus,
+        .page-dashboard .staff-field select:focus {
+            border-color: #F25C2A;
+            box-shadow: 0 0 0 3px rgba(242, 92, 42, 0.12);
+        }
+
+        .page-dashboard .staff-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .page-dashboard .staff-btn-ghost,
+        .page-dashboard .staff-btn-primary {
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+        }
+
+        .page-dashboard .staff-btn-ghost {
+            background: #F1F5F9;
+            color: #475569;
+        }
+
+        .page-dashboard .staff-btn-ghost:hover {
+            background: #E2E8F0;
+            color: #334155;
+        }
+
+        .page-dashboard .staff-btn-primary {
+            background: linear-gradient(135deg, #F25C2A, #E5502B);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(242, 92, 42, 0.28);
+        }
+
+        .page-dashboard .staff-btn-primary:hover {
+            box-shadow: 0 7px 18px rgba(242, 92, 42, 0.38);
+            transform: translateY(-1px);
+        }
+
+        .page-dashboard .staff-btn-primary:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .page-dashboard .staff-form-msg {
+            padding: 10px 13px;
+            border-radius: 10px;
+            font-size: 0.83rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
     </style>
 </head>
 
@@ -642,6 +922,21 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
                     <p>Here's what's happening at <b>JOF INDIA</b> today.</p>
                 </div>
                 <div class="header-actions">
+                    <?php if ($can_manage_staff): ?>
+                        <!-- Create staff login accounts -->
+                        <button type="button" class="staff-quick-btn primary" id="openAdminModalBtn"
+                            title="Create an admin or trainer login">
+                            <span class="sqb-icon"><img src="../icons/user-tie-solid-full.svg"
+                                    class="fa-solid fa-user-tie"></span>
+                            <span>Add Admin</span>
+                        </button>
+                        <button type="button" class="staff-quick-btn" id="openCounsellorModalBtn"
+                            title="Create a counsellor login">
+                            <span class="sqb-icon"><img src="../icons/clipboard-user-solid-full.svg"
+                                    class="fa-solid fa-clipboard-user"></span>
+                            <span>Add Counsellor</span>
+                        </button>
+                    <?php endif; ?>
                     <!-- PT Sessions Notification Button -->
                     <div class="pt-notif-container" id="ptNotifContainer">
                         <button class="pt-notif-btn" id="ptNotifBtn" title="Today's PT Sessions">
@@ -903,6 +1198,95 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
             </div>
         </div>
     </div>
+
+    <?php if ($can_manage_staff): ?>
+        <!-- Create Admin / Trainer Account Modal -->
+        <div class="modal-overlay staff-modal" id="adminModal">
+            <div class="staff-modal-card">
+                <button type="button" class="staff-modal-close" data-close="adminModal" aria-label="Close">
+                    <img src="../icons/xmark-solid-full.svg" class="fa-solid fa-xmark">
+                </button>
+                <div class="staff-modal-head">
+                    <div class="staff-modal-icon">
+                        <img src="../icons/user-tie-solid-full.svg" class="fa-solid fa-user-tie">
+                    </div>
+                    <div>
+                        <h3>Create Admin Account</h3>
+                        <p>Add a new admin or trainer login for the panel.</p>
+                    </div>
+                </div>
+                <div class="staff-form-msg" id="adminFormMsg" style="display:none;"></div>
+                <form id="addAdminForm" autocomplete="off">
+                    <input type="hidden" name="_csrf_token"
+                        value="<?= htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8') ?>">
+                    <input type="hidden" name="account_type" value="admin">
+                    <div class="staff-field">
+                        <label>Full Name</label>
+                        <input type="text" name="full_name" required placeholder="First Last">
+                    </div>
+                    <div class="staff-field">
+                        <label>Email Address</label>
+                        <input type="email" name="email" required placeholder="name@example.com">
+                    </div>
+                    <div class="staff-field">
+                        <label>Password</label>
+                        <input type="password" name="password" required minlength="8" placeholder="Min. 8 characters">
+                    </div>
+                    <div class="staff-field">
+                        <label>Role</label>
+                        <select name="role" required>
+                            <option value="admin">Admin</option>
+                            <option value="trainer">Trainer</option>
+                        </select>
+                    </div>
+                    <div class="staff-modal-actions">
+                        <button type="button" class="staff-btn-ghost" data-close="adminModal">Cancel</button>
+                        <button type="submit" class="staff-btn-primary">Create Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Create Counsellor Account Modal -->
+        <div class="modal-overlay staff-modal" id="counsellorModal">
+            <div class="staff-modal-card">
+                <button type="button" class="staff-modal-close" data-close="counsellorModal" aria-label="Close">
+                    <img src="../icons/xmark-solid-full.svg" class="fa-solid fa-xmark">
+                </button>
+                <div class="staff-modal-head">
+                    <div class="staff-modal-icon">
+                        <img src="../icons/clipboard-user-solid-full.svg" class="fa-solid fa-clipboard-user">
+                    </div>
+                    <div>
+                        <h3>Create Counsellor Account</h3>
+                        <p>Add a new counsellor login for the panel.</p>
+                    </div>
+                </div>
+                <div class="staff-form-msg" id="counsellorFormMsg" style="display:none;"></div>
+                <form id="addCounsellorForm" autocomplete="off">
+                    <input type="hidden" name="_csrf_token"
+                        value="<?= htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8') ?>">
+                    <input type="hidden" name="account_type" value="counsellor">
+                    <div class="staff-field">
+                        <label>Full Name</label>
+                        <input type="text" name="full_name" required placeholder="First Last">
+                    </div>
+                    <div class="staff-field">
+                        <label>Email Address</label>
+                        <input type="email" name="email" required placeholder="name@example.com">
+                    </div>
+                    <div class="staff-field">
+                        <label>Password</label>
+                        <input type="password" name="password" required minlength="8" placeholder="Min. 8 characters">
+                    </div>
+                    <div class="staff-modal-actions">
+                        <button type="button" class="staff-btn-ghost" data-close="counsellorModal">Cancel</button>
+                        <button type="submit" class="staff-btn-primary">Create Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <script>
         // Global Events Array
@@ -1745,6 +2129,82 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
             });
         });
     </script>
+
+    <?php if ($can_manage_staff): ?>
+        <!-- Create staff login accounts (Add Admin / Add Counsellor) -->
+        <script>
+            (function () {
+                const configs = [
+                    { btn: 'openAdminModalBtn', modal: 'adminModal', form: 'addAdminForm', msg: 'adminFormMsg' },
+                    { btn: 'openCounsellorModalBtn', modal: 'counsellorModal', form: 'addCounsellorForm', msg: 'counsellorFormMsg' },
+                ];
+
+                function showMsg(box, text, ok) {
+                    box.textContent = text;
+                    box.style.display = 'block';
+                    box.style.background = ok ? '#d1fae5' : '#fee2e2';
+                    box.style.color = ok ? '#065f46' : '#b91c1c';
+                }
+
+                function clearFields(form) {
+                    form.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]')
+                        .forEach(i => { i.value = ''; });
+                    const sel = form.querySelector('select');
+                    if (sel) sel.selectedIndex = 0;
+                }
+
+                configs.forEach(cfg => {
+                    const openBtn = document.getElementById(cfg.btn);
+                    const modal = document.getElementById(cfg.modal);
+                    const form = document.getElementById(cfg.form);
+                    const msgBox = document.getElementById(cfg.msg);
+                    if (!openBtn || !modal || !form) return;
+
+                    const submitBtn = form.querySelector('.staff-btn-primary');
+                    const close = () => modal.classList.remove('active');
+
+                    openBtn.addEventListener('click', () => {
+                        clearFields(form);
+                        msgBox.style.display = 'none';
+                        modal.classList.add('active');
+                    });
+
+                    modal.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', close));
+                    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+                    form.addEventListener('submit', e => {
+                        e.preventDefault();
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Creating…';
+                        msgBox.style.display = 'none';
+
+                        fetch('../handlers/create_staff_account.php', { method: 'POST', body: new FormData(form) })
+                            .then(r => r.json())
+                            .then(data => {
+                                if (data.success) {
+                                    showMsg(msgBox, data.message, true);
+                                    clearFields(form);
+                                } else {
+                                    showMsg(msgBox, data.message || 'Could not create the account.', false);
+                                }
+                            })
+                            .catch(() => showMsg(msgBox, 'Could not reach the server. Please try again.', false))
+                            .finally(() => {
+                                submitBtn.disabled = false;
+                                submitBtn.textContent = 'Create Account';
+                            });
+                    });
+                });
+
+                // Esc closes any open create-account modal
+                document.addEventListener('keydown', e => {
+                    if (e.key === 'Escape') {
+                        document.querySelectorAll('.staff-modal.active').forEach(m => m.classList.remove('active'));
+                    }
+                });
+            })();
+        </script>
+    <?php endif; ?>
 </body>
 
 </html>
