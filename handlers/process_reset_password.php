@@ -51,7 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Note: We don't check reset_token_hash here anymore because verify_otp_handler.php already did.
     // We just clear it out.
     $sql = "UPDATE user_data SET password = ?, reset_token_hash = NULL, reset_token_expires_at = NULL WHERE email = ?";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ss", $new_password_hash, $email);
     if ($stmt->execute() && $stmt->errno === 0) {

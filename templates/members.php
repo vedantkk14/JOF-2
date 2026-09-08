@@ -19,6 +19,10 @@ $conn->query("
         (NOT EXISTS (SELECT 1 FROM member_payments mp3 WHERE mp3.member_id = m.id)
          AND m.created_at < DATE_SUB(NOW(), INTERVAL 30 DAY))
     )
+    AND NOT EXISTS (
+        SELECT 1 FROM membership_pauses mpz
+        WHERE mpz.member_id = m.id AND CURDATE() BETWEEN mpz.pause_start AND mpz.pause_end
+    )
 ");
 
 // === AUTO-EXPIRY FOR PT: Sync PT expiration with membership expiration ===
@@ -86,8 +90,11 @@ $sql = "SELECT
              WHERE mp.member_id = m.id AND mp.balance_pending > 0) as payment_due_date,
             (SELECT installments_count FROM member_payments mp WHERE mp.member_id = m.id ORDER BY mp.created_at DESC LIMIT 1) as total_installments,
             (SELECT COUNT(*) FROM installment_payments ip WHERE ip.payment_id = (SELECT payment_id FROM member_payments WHERE member_id = m.id ORDER BY created_at DESC LIMIT 1)) as extra_installments_paid,
-            (SELECT balance_pending FROM member_payments mp WHERE mp.member_id = m.id ORDER BY created_at DESC LIMIT 1) as balance_pending
-        FROM members m 
+            (SELECT balance_pending FROM member_payments mp WHERE mp.member_id = m.id ORDER BY created_at DESC LIMIT 1) as balance_pending,
+            (SELECT payment_id FROM member_payments mp WHERE mp.member_id = m.id ORDER BY created_at DESC LIMIT 1) as latest_payment_id,
+            (SELECT COALESCE(SUM(days),0) FROM membership_pauses mpz WHERE mpz.member_id = m.id) as total_paused_days,
+            (SELECT MAX(pause_end) FROM membership_pauses mpz WHERE mpz.member_id = m.id AND CURDATE() BETWEEN mpz.pause_start AND mpz.pause_end) as active_pause_end
+        FROM members m
         WHERE m.status = 'active'";
 
 $types = "";
@@ -224,6 +231,21 @@ $result = $stmt->get_result();
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Pause membership */
+        .page-members .btn-pause {
+            border: none; cursor: pointer; border-radius: 8px;
+            width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+            background: #EEF2FF; color: #4338CA; transition: all .2s;
+        }
+        .page-members .btn-pause:hover { background: #E0E7FF; transform: translateY(-1px); }
+        .page-members .btn-pause img { width: 13px; height: 13px; }
+        .page-members .status-pill.paused { background: #E0E7FF; color: #3730A3; }
+        .page-members .status-pill.paused::before { background: #6366F1; }
+        .page-members .paused-hint {
+            display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 600;
+            color: #4338CA; background: #EEF2FF; border-radius: 999px; padding: 2px 7px;
         }
     </style>
 </head>
@@ -368,6 +390,15 @@ $result = $stmt->get_result();
                                     $notificationBtn = '<a href="notify_member.php?id=' . $rows['id'] . '&type=expiry_soon" class="btn-notify due-soon" title="Membership Renewal"><img src="../icons/bell-solid-full.svg" class="fa-solid fa-bell"></a>';
                                 }
 
+                                // --- 3b. PAUSE OVERRIDE: if inside an active pause window, show "Paused" ---
+                                $paused_until = !empty($rows['active_pause_end']) ? $rows['active_pause_end'] : null;
+                                $total_paused_days = (int) ($rows['total_paused_days'] ?? 0);
+                                if ($paused_until) {
+                                    $status = 'Paused until ' . date('d M', strtotime($paused_until));
+                                    $statusClass = 'paused';
+                                    $notificationBtn = ''; // no expiry nagging while frozen
+                                }
+
                                 // --- 4. DETERMINE STATUS CATEGORY FOR FILTERING ---
                                 $statusCategory = $rows['membership'];
 
@@ -416,12 +447,22 @@ $result = $stmt->get_result();
                                         <span class="status-pill <?= $statusClass ?>">
                                             <?= $status ?>
                                         </span>
+                                        <?php if (!$paused_until && $total_paused_days > 0): ?>
+                                            <span class="paused-hint" title="Membership extended by paused days">+<?= $total_paused_days ?>d paused</span>
+                                        <?php endif; ?>
                                     </td>
 
                                     <td data-label="Actions">
                                         <div class="action-cell">
                                             <?= $notificationBtn ?>
 
+                                            <?php if (!empty($rows['latest_payment_id']) && !empty($rows['latest_expiry'])): ?>
+                                                <button type="button" class="btn-pause"
+                                                    onclick="openPauseModal(<?= (int) $rows['id'] ?>, '<?= htmlspecialchars(addslashes($rows['full_name']), ENT_QUOTES) ?>', '<?= htmlspecialchars($rows['latest_expiry']) ?>')"
+                                                    title="Pause membership">
+                                                    <img src="../icons/pause-solid-full.svg" class="fa-solid fa-pause">
+                                                </button>
+                                            <?php endif; ?>
 
                                             <a href="person_info.php?id=<?= $rows['id'] ?>" class="btn-view"
                                                 title="View Profile">
@@ -586,6 +627,21 @@ $result = $stmt->get_result();
         
         observer.observe(document.body, { childList: true, subtree: true });
     </script>
+
+    <?php $pause_redirect = 'members.php'; include '_pause_modal.php'; ?>
+
+    <?php if (isset($_GET['pause_ok']) || isset($_GET['pause_err'])): ?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            <?php if (isset($_GET['pause_ok'])): ?>
+            alert('Membership paused. <?= (int) $_GET['pause_ok'] ?> day(s) added to the plan end date.');
+            <?php else: ?>
+            alert(<?= json_encode($_GET['pause_err']) ?>);
+            <?php endif; ?>
+            history.replaceState(null, '', 'members.php');
+        });
+    </script>
+    <?php endif; ?>
 </body>
 
 

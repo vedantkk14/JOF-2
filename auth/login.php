@@ -57,12 +57,18 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 }
 
 // ── DB Lookup ─────────────────────────────────────────────────────
-$stmt = mysqli_prepare($conn, "SELECT id, full_name, password, role FROM user_data WHERE email = ? LIMIT 1");
+$stmt = mysqli_prepare($conn, "SELECT id, full_name, password, role, is_active FROM user_data WHERE email = ? LIMIT 1");
 mysqli_stmt_bind_param($stmt, 's', $email);
 mysqli_stmt_execute($stmt);
 $user = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
 $valid_roles = ['admin', 'trainer', 'user', 'counsellor'];
+
+// ── Suspended account check ──────────────────────────────────────
+if ($user && password_verify($password, $user['password']) && (int) $user['is_active'] !== 1) {
+    echo json_encode(['success' => false, 'message' => 'Your account has been suspended. Please contact an administrator.']);
+    exit;
+}
 
 if ($user && password_verify($password, $user['password']) && in_array($user['role'], $valid_roles, true)) {
     // Success — clear failed attempts

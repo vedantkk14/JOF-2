@@ -65,6 +65,24 @@ $report_path = $is_reports_dir ? '' : 'reports/';
             </div>
         </div>
 
+        <?php if (in_array(($_SESSION['user_role'] ?? ''), ['admin', 'trainer'], true)): ?>
+        <div
+            class="nav-item-dropdown <?php echo is_active_page(['user_info.php', 'user_details.php', 'user_recycle_bin.php']); ?>">
+            <a href="<?php echo $base_path; ?>user_info.php"
+                class="nav-link <?php echo is_active_page(['user_info.php', 'user_details.php', 'user_recycle_bin.php']); ?>">
+                <img src="<?php echo $icon_path; ?>shield-halved-solid-full.svg" alt="User Information" width="20">
+                <span>User Information</span>
+                <img src="<?php echo $icon_path; ?>chevron-right-solid-full.svg" class="fa-solid fa-chevron-right ms-auto nav-arrow">
+            </a>
+            <div class="sidebar-submenu">
+                <a href="<?php echo $base_path; ?>user_info.php"
+                    class="<?php echo is_active_page(['user_info.php', 'user_details.php']); ?>">All Users</a>
+                <a href="<?php echo $base_path; ?>user_recycle_bin.php"
+                    class="<?php echo is_active_page('user_recycle_bin.php'); ?>">Recycle Bin</a>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <div
             class="nav-item-dropdown <?php echo is_active_page(['members.php', 'add_member.php', 'inactive_members.php', 'RecycleBin.php', 'person_info.php', 'edit_member.php']); ?>">
             <a href="<?php echo $base_path; ?>members.php"
