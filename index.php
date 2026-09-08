@@ -25,6 +25,9 @@ if (empty($_SESSION['_csrf_token'])) {
     $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
 }
 $csrf_token = $_SESSION['_csrf_token'];
+
+// "Continue with Google" client ID (empty string = feature disabled)
+require_once __DIR__ . '/auth/google_config.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -90,6 +93,30 @@ $csrf_token = $_SESSION['_csrf_token'];
 
                     <button type="submit" class="btn-primary" id="loginBtn">Sign In</button>
                 </form>
+
+                <?php if (GOOGLE_CLIENT_ID !== ''): ?>
+                    <div class="oauth-divider"><span>or</span></div>
+                    <div class="gbtn" id="gbtnCustom" role="button" tabindex="0" aria-label="Continue with Google">
+                        <span class="gbtn-icon">
+                            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+                                <path fill="#EA4335"
+                                    d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                                <path fill="#4285F4"
+                                    d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                                <path fill="#FBBC05"
+                                    d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                                <path fill="#34A853"
+                                    d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                            </svg>
+                        </span>
+                        <span class="gbtn-label">Continue with Google<small>Sign in with your Google account</small></span>
+                        <svg class="gbtn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                        <span class="gbtn-gis" id="gbtnGis"></span>
+                    </div>
+                <?php endif; ?>
 
                 <div class="switch-form">
                     Don't have an account? <a href="templates/registration_page.php">Sign Up</a>
@@ -162,6 +189,71 @@ $csrf_token = $_SESSION['_csrf_token'];
                 });
         });
     </script>
+
+    <?php if (GOOGLE_CLIENT_ID !== ''): ?>
+        <script>
+            // Google sign-in: send the ID token to the server, then go to the returned dashboard
+            window.handleGoogleCredential = function (response) {
+                showMessage('Signing you in with Google…', 'success');
+
+                const body = new URLSearchParams();
+                body.set('credential', response.credential);
+                body.set('_csrf_token', <?= json_encode($csrf_token) ?>);
+
+                fetch('auth/google_auth.php', { method: 'POST', body: body })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            showMessage('Login successful! Redirecting...', 'success');
+                            setTimeout(() => { window.location.href = data.redirect; }, 800);
+                        } else {
+                            showMessage(data.message || 'Google sign-in failed. Please try again.', 'error');
+                        }
+                    })
+                    .catch(() => showMessage('Could not reach the server. Check your connection.', 'error'));
+            };
+
+            // Drive our custom-designed button with an invisible real Google button on top
+            window.onGoogleLibraryLoad = function () {
+                const host = document.getElementById('gbtnGis');
+                const btn = document.getElementById('gbtnCustom');
+                if (!host || !btn || typeof google === 'undefined') return;
+
+                google.accounts.id.initialize({
+                    client_id: <?= json_encode(GOOGLE_CLIENT_ID) ?>,
+                    callback: window.handleGoogleCredential,
+                    auto_select: false,
+                    cancel_on_tap_outside: true
+                });
+
+                const render = () => {
+                    host.innerHTML = '';
+                    const w = Math.max(200, Math.min(400, Math.round(btn.clientWidth || 360)));
+                    google.accounts.id.renderButton(host, {
+                        type: 'standard', theme: 'outline', size: 'large',
+                        text: 'continue_with', shape: 'rectangular', width: w
+                    });
+                };
+                render();
+
+                let t;
+                window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(render, 200); });
+
+                // Forward keyboard + any stray clicks to the real Google button
+                const fire = () => {
+                    const real = host.querySelector('div[role="button"], button, iframe');
+                    if (real && real.click) real.click();
+                };
+                btn.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fire(); }
+                });
+                btn.addEventListener('click', (e) => { if (!host.contains(e.target)) fire(); });
+                btn.addEventListener('focus', () => btn.classList.add('is-focus'));
+                btn.addEventListener('blur', () => btn.classList.remove('is-focus'));
+            };
+        </script>
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <?php endif; ?>
 
 </body>
 
