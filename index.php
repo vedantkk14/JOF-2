@@ -1,5 +1,16 @@
 <?php
-session_start();
+// Match the cookie params used by /auth/login.php and /auth/auth_check.php
+// so the login form and the login handler share ONE session.
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    session_start();
+}
 
 // Destroy stale sessions that are missing user_role (pre-role-auth legacy sessions)
 // Without this, old browser sessions would bypass the login form entirely
@@ -191,7 +202,8 @@ $csrf_token = $_SESSION['_csrf_token'];
 
             fetch('auth/login.php', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                credentials: 'same-origin'
             })
             .then(res => res.json())
             .then(data => {
@@ -203,6 +215,10 @@ $csrf_token = $_SESSION['_csrf_token'];
                     setTimeout(() => {
                         window.location.href = data.redirect || 'templates/dashboard.php';
                     }, 1500);
+
+                } else if (data.reload) {
+                    // Session/token got out of sync — reload to pick up a fresh token, then the user retries
+                    window.location.reload();
 
                 } else {
                     // Show error in popup briefly, then hide

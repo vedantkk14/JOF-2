@@ -1,5 +1,16 @@
 <?php
-session_start();
+// Keep the session cookie on the site root so index.php, /auth/ and /templates/
+// all read & write the SAME session (prevents "Security token mismatch").
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    session_start();
+}
 require '../config.php';
 
 header('Content-Type: application/json');
@@ -21,10 +32,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $submitted = $_POST['_csrf_token'] ?? '';
 $stored    = $_SESSION['_csrf_token'] ?? '';
 if (!$stored || !hash_equals($stored, $submitted)) {
-    echo json_encode(['success' => false, 'message' => 'Security token mismatch. Please refresh and try again.']);
+    // Issue a fresh token so the reloaded login form works on the next try
+    $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+    echo json_encode([
+        'success'  => false,
+        'message'  => 'Session expired. Refreshing — please try again.',
+        'reload'   => true,
+    ]);
     exit;
 }
-unset($_SESSION['_csrf_token']); // rotate after use
+// NOTE: token is intentionally NOT consumed here — it stays valid for the
+// whole login form so wrong-password retries don't break. It is rotated
+// only on a successful login (via session_regenerate_id below).
 
 // ── Rate Limiting (5 failed attempts per 10 min per IP) ───────────
 $ip       = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
@@ -71,8 +90,9 @@ if ($user && password_verify($password, $user['password']) && (int) $user['is_ac
 }
 
 if ($user && password_verify($password, $user['password']) && in_array($user['role'], $valid_roles, true)) {
-    // Success — clear failed attempts
+    // Success — clear failed attempts + consume the CSRF token
     unset($_SESSION[$rl_key]);
+    unset($_SESSION['_csrf_token']);
 
     session_regenerate_id(true);
     $_SESSION['user_id']   = $user['id'];
