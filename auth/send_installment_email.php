@@ -23,13 +23,13 @@ function sendInstallmentEmail($member_name, $email, $payment_id, $payment_data, 
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'vedantkolhapure111@gmail.com';
-        $mail->Password = 'tzhiwibunjrfgfjj';
+        $mail->Username = 'iglmembershipid@gmail.com';
+        $mail->Password = 'hclvlxtfmfxnywwm';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
         $mail->CharSet = 'UTF-8';
 
-        $mail->setFrom('vedantkolhapure111@gmail.com', 'JOF INDIA');
+        $mail->setFrom('iglmembershipid@gmail.com', 'JOF INDIA');
         $mail->addAddress($email, $member_name);
         $mail->isHTML(true);
         $mail->Subject = 'Payment Received: Installment Receipt | JOF INDIA';
@@ -171,7 +171,7 @@ function sendInstallmentEmail($member_name, $email, $payment_id, $payment_data, 
                             </tr>
                             <tr>
                                 <td class='footer'>
-                                    <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vedantkolhapure111@gmail.com</p>
+                                    <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ iglmembershipid@gmail.com</p>
                                     <p class='footer-text'>© 2026 JOF INDIA. All rights reserved.</p>
                                     <p class='footer-text'>Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra</p>
                                 </td>
@@ -294,7 +294,7 @@ function generateInstallmentInvoicePDF($payment_id, $payment_data, $installment_
             $pdf->SetY($logoBottomY);
         }
         $pdf->SetX(15);
-        $addressHtml = '<span style="font-size:9px; color:#555;">Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra<br>vedantkolhapure111@gmail.com</span>';
+        $addressHtml = '<span style="font-size:9px; color:#555;">Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra<br>iglmembershipid@gmail.com</span>';
         $pdf->writeHTML($addressHtml, true, false, true, false, '');
 
         // Rest of the invoice body

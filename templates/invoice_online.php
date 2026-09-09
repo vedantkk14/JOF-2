@@ -133,7 +133,7 @@ if ($data['balance_pending'] <= 0.1) {
                     <div>
                         <p><b>JOF INDIA</b></p>
                         <p>Pune, Maharashtra - India</p>
-                        <p>vedantkolhapure111@gmail.com</p>
+                        <p>iglmembershipid@gmail.com</p>
                     </div>
                 </div>
             </div>

@@ -28,13 +28,13 @@ if (mysqli_num_rows($result) > 0) {
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'vedantkolhapure111@gmail.com';
-        $mail->Password = 'tzhiwibunjrfgfjj';
+        $mail->Username = 'iglmembershipid@gmail.com';
+        $mail->Password = 'hclvlxtfmfxnywwm';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
         $mail->CharSet = 'UTF-8';
 
-        $mail->setFrom('vedantkolhapure111@gmail.com', 'JOF INDIA');
+        $mail->setFrom('iglmembershipid@gmail.com', 'JOF INDIA');
         $mail->isHTML(true);
 
         while ($row = mysqli_fetch_assoc($result)) {
@@ -114,7 +114,7 @@ if (mysqli_num_rows($result) > 0) {
                                 </tr>
                                 <tr>
                                     <td class='footer'>
-                                        <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vedantkolhapure111@gmail.com</p>
+                                        <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ iglmembershipid@gmail.com</p>
                                         <p class='footer-text'>© 2026 JOF INDIA. All rights reserved.</p>
                                         <p class='footer-text'>Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra</p>
                                     </td>

@@ -26,15 +26,15 @@ function sendEnquiryEmail($full_name, $email)
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'vedantkolhapure111@gmail.com';
-        $mail->Password = 'tzhiwibunjrfgfjj';
+        $mail->Username = 'iglmembershipid@gmail.com';
+        $mail->Password = 'hclvlxtfmfxnywwm';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
         $mail->Port = 465;
         $mail->CharSet = 'UTF-8';
 
         // Email Settings
-        $mail->setFrom('vedantkolhapure111@gmail.com', 'JOF INDIA');
-        $mail->addReplyTo('vedantkolhapure111@gmail.com', 'JOF INDIA Support');
+        $mail->setFrom('iglmembershipid@gmail.com', 'JOF INDIA');
+        $mail->addReplyTo('iglmembershipid@gmail.com', 'JOF INDIA Support');
         $mail->addAddress($email, $full_name);
         $mail->isHTML(true);
         $mail->Subject = 'Thank You for Reaching Out to JOF INDIA!';
@@ -111,7 +111,7 @@ function sendEnquiryEmail($full_name, $email)
                             </tr>
                             <tr>
                                 <td class='footer'>
-                                    <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vedantkolhapure111@gmail.com</p>
+                                    <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ iglmembershipid@gmail.com</p>
                                     <p class='footer-text'>© " . date("Y") . " JOF INDIA. All rights reserved.</p>
                                     <p class='footer-text'>Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra</p>
                                 </td>

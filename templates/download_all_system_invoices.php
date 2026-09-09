@@ -209,7 +209,7 @@ $inst_stmt->close();
                         <img src="../icons/images/logo-invoice.jpeg" alt="JOF"
                             style="width:80px; height:auto; margin-bottom:8px;"><br>
                         <span style="font-size:11px; color:#555;">Aurelia, Pancard Road, Baner, Pune-411045,
-                            Maharashtra<br>vedantkolhapure111@gmail.com</span>
+                            Maharashtra<br>iglmembershipid@gmail.com</span>
                     </td>
                     <td width="40%" align="right" valign="top">
                         <h2 style="color:#555; margin:0 0 5px 0;">INVOICE</h2>
@@ -332,7 +332,7 @@ $inst_stmt->close();
                         <img src="../icons/images/logo-invoice.jpeg" alt="JOF"
                             style="width:80px; height:auto; margin-bottom:8px;"><br>
                         <span style="font-size:11px; color:#555;">Aurelia, Pancard Road, Baner, Pune-411045,
-                            Maharashtra<br>vedantkolhapure111@gmail.com</span>
+                            Maharashtra<br>iglmembershipid@gmail.com</span>
                     </td>
                     <td width="40%" align="right" valign="top">
                         <h2 style="color:#555; margin:0 0 5px 0;"><?= $title_text ?></h2>

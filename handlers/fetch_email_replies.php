@@ -18,8 +18,8 @@ require '../config.php';
 
 // ── IMAP Config ──────────────────────────────────────────────────────────────
 $imap_host = '{imap.gmail.com:993/imap/ssl}INBOX';
-$imap_user = 'vedantkolhapure111@gmail.com';
-$imap_pass = 'tzhiwibunjrfgfjj';
+$imap_user = 'iglmembershipid@gmail.com';
+$imap_pass = 'hclvlxtfmfxnywwm';
 
 if (!function_exists('imap_open')) {
     echo json_encode(['status' => 'warning', 'message' => 'PHP IMAP extension not enabled.', 'new' => 0]);
@@ -73,7 +73,7 @@ if ($emails) {
         $fromName = ($fromObj && isset($fromObj->personal)) ? imap_utf8($fromObj->personal) : $fromEmail;
 
         // Skip emails sent by your own system
-        if (strpos($fromEmail, 'vedantkolhapure111@gmail.com') !== false || strpos($fromEmail, 'no-reply') !== false) {
+        if (strpos($fromEmail, 'iglmembershipid@gmail.com') !== false || strpos($fromEmail, 'no-reply') !== false) {
             continue;
         }
 
