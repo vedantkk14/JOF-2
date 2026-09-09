@@ -5,9 +5,16 @@ $user = get_session_user();
 
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../auth/workout_helper.php';
+require_once __DIR__ . '/../../auth/profile_helper.php';
 
-$streak = workout_streak_stats($conn, (int) $user['id']);
-$csrf   = generate_csrf_token();
+$streak   = workout_streak_stats($conn, (int) $user['id']);
+$pstatus  = user_profile_status($conn, (int) $user['id']);
+$csrf     = generate_csrf_token();
+
+$acctName = html_entity_decode($user['name'], ENT_QUOTES) ?: 'Member';
+$acctInit = strtoupper(substr(preg_replace('/[^A-Za-z ]/', '', $acctName), 0, 1)
+    . (strpos(trim($acctName), ' ') !== false ? substr(strrchr(trim($acctName), ' '), 1, 1) : ''));
+$acctInit = $acctInit ?: 'U';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,6 +54,17 @@ $csrf   = generate_csrf_token();
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            min-width: 0;
+        }
+
+        html,
+        body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        img {
+            max-width: 100%;
         }
 
         body {
@@ -435,7 +453,7 @@ $csrf   = generate_csrf_token();
         /* ===== Grid ===== */
         .grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 18px;
         }
 
@@ -825,7 +843,7 @@ $csrf   = generate_csrf_token();
         /* ===== Responsive ===== */
         @media (max-width: 1080px) {
             .grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .grid .span-2 {
@@ -1094,7 +1112,7 @@ $csrf   = generate_csrf_token();
 
         .streak-stats {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 12px;
         }
 
@@ -1120,12 +1138,150 @@ $csrf   = generate_csrf_token();
 
         @media (max-width: 560px) {
             .streak-stats {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .streak-log-btn {
                 margin-left: 0;
             }
+        }
+
+        /* ===== Complete-your-profile alert ===== */
+        .profile-alert {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 18px;
+            margin-bottom: 20px;
+            border-radius: var(--radius);
+            background: linear-gradient(120deg, #FF7A57 0%, #EF4B2C 100%);
+            color: #fff;
+            box-shadow: var(--shadow);
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+
+        .profile-alert:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 28px -10px rgba(239, 75, 44, .5);
+        }
+
+        .profile-alert .pa-ic {
+            width: 40px;
+            height: 40px;
+            border-radius: 11px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, .22);
+        }
+
+        .profile-alert .pa-ic svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .profile-alert .pa-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .profile-alert .pa-body b {
+            display: block;
+            font-size: 14.5px;
+            font-weight: 800;
+            margin-bottom: 2px;
+        }
+
+        .profile-alert .pa-body span {
+            font-size: 12.5px;
+            opacity: .95;
+            line-height: 1.45;
+        }
+
+        .profile-alert .pa-cta {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, .18);
+            padding: 9px 14px;
+            border-radius: 10px;
+        }
+
+        .profile-alert .pa-cta svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .nav-item.needs-attn {
+            color: var(--coral-dark);
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--coral);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .nav-item.active .nav-badge {
+            background: #fff;
+            color: var(--coral-dark);
+        }
+
+        @media (max-width: 560px) {
+            .profile-alert {
+                flex-wrap: wrap;
+            }
+
+            .profile-alert .pa-cta {
+                margin-left: 52px;
+            }
+        }
+
+        /* ════════ Mobile hardening ════════ */
+        @media (max-width: 640px) {
+            .main { padding: 14px 13px 44px; }
+            .topbar { gap: 10px; }
+            .topbar-right { gap: 10px; }
+            .profile-chip .profile-name {
+                max-width: 92px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .welcome-card { padding: 20px; }
+            .welcome-left h1 { font-size: 20px; }
+            .welcome-stats { gap: 14px; }
+            .welcome-stat .num { font-size: 19px; }
+            .card { padding: 18px; }
+            .streak-top { gap: 16px; }
+            .streak-num { font-size: 34px; }
+            .streak-log-btn { width: 100%; justify-content: center; margin-left: 0; }
+            .btn-row { flex-direction: column; }
+            .btn-row .btn { width: 100%; }
+            .profile-alert { align-items: flex-start; padding: 14px; gap: 12px; }
+            .session-info b { font-size: 13.5px; }
+        }
+
+        @media (max-width: 380px) {
+            .page-title { font-size: 16px; }
+            .welcome-left h1 { font-size: 18px; }
+            .streak-num { font-size: 30px; }
+            .welcome-stats { flex-wrap: wrap; gap: 12px 20px; }
+            .profile-chip > div:last-child { display: none; }
+            .streak-stats { grid-template-columns: minmax(0, 1fr); }
         }
     </style>
 </head>
@@ -1157,7 +1313,7 @@ $csrf   = generate_csrf_token();
             </div>
 
             <nav class="nav-group">
-                <a class="nav-item active" href="#">
+                <a class="nav-item active" href="user_dashboard.php">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="9" rx="1.5" />
@@ -1167,15 +1323,16 @@ $csrf   = generate_csrf_token();
                     </svg>
                     <span class="nav-label">Dashboard</span>
                 </a>
-                <a class="nav-item" href="#">
+                <a class="nav-item <?= $pstatus['complete'] ? '' : 'needs-attn' ?>" href="my_profile.php">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
                         <circle cx="12" cy="8" r="4" />
                         <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" />
                     </svg>
                     <span class="nav-label">My Profile</span>
+                    <?php if (!$pstatus['complete']): ?><span class="nav-badge">!</span><?php endif; ?>
                 </a>
-                <a class="nav-item" href="#">
+                <a class="nav-item" href="diet_plans.php">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
                         <path d="M4 3h12l4 4v14H4z" />
@@ -1244,14 +1401,37 @@ $csrf   = generate_csrf_token();
                         <span class="unread-dot" id="unreadDot"></span>
                     </button>
                     <div class="profile-chip">
-                        <div class="avatar">RS</div>
+                        <div class="avatar"><?= htmlspecialchars($acctInit, ENT_QUOTES, 'UTF-8') ?></div>
                         <div>
-                            <div class="profile-name">Rohan Sharma</div>
-                            <div class="profile-role">Premium Member</div>
+                            <div class="profile-name"><?= htmlspecialchars($acctName, ENT_QUOTES, 'UTF-8') ?></div>
+                            <div class="profile-role">Member</div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <?php if (!$pstatus['complete']): ?>
+                <a class="profile-alert" href="my_profile.php">
+                    <span class="pa-ic">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 9v4M12 17h.01" />
+                            <path d="M10.3 4L2 18a2 2 0 001.7 3h16.6A2 2 0 0022 18L13.7 4a2 2 0 00-3.4 0z" />
+                        </svg>
+                    </span>
+                    <span class="pa-body">
+                        <b>Complete your profile — do this first</b>
+                        <span>You're <?= (int) $pstatus['percent'] ?>% done. Still needed:
+                            <?= htmlspecialchars(implode(', ', $pstatus['missing']), ENT_QUOTES, 'UTF-8') ?>.</span>
+                    </span>
+                    <span class="pa-cta">Complete now
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                    </span>
+                </a>
+            <?php endif; ?>
 
             <!-- Welcome banner -->
             <?php
