@@ -83,13 +83,19 @@ $user = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
 $valid_roles = ['admin', 'trainer', 'user', 'counsellor'];
 
+// Normalise the stored role: lower-case, trimmed, and map spelling variants
+$user_role = $user ? strtolower(trim($user['role'] ?? '')) : '';
+if ($user_role === 'councillor') {
+    $user_role = 'counsellor';
+}
+
 // ── Suspended account check ──────────────────────────────────────
 if ($user && password_verify($password, $user['password']) && (int) $user['is_active'] !== 1) {
     echo json_encode(['success' => false, 'message' => 'Your account has been suspended. Please contact an administrator.']);
     exit;
 }
 
-if ($user && password_verify($password, $user['password']) && in_array($user['role'], $valid_roles, true)) {
+if ($user && password_verify($password, $user['password']) && in_array($user_role, $valid_roles, true)) {
     // Success — clear failed attempts + consume the CSRF token
     unset($_SESSION[$rl_key]);
     unset($_SESSION['_csrf_token']);
@@ -97,9 +103,9 @@ if ($user && password_verify($password, $user['password']) && in_array($user['ro
     session_regenerate_id(true);
     $_SESSION['user_id']   = $user['id'];
     $_SESSION['user_name'] = $user['full_name'];
-    $_SESSION['user_role'] = $user['role'];
+    $_SESSION['user_role'] = $user_role;
 
-    echo json_encode(['success' => true, 'redirect' => _redirect($user['role'])]);
+    echo json_encode(['success' => true, 'redirect' => _redirect($user_role)]);
 } else {
     // Failed — increment counter
     $rl_data['count']++;
