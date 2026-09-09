@@ -226,17 +226,10 @@ function sendDietPlanEmail($member_email, $member_name, $pdf_content, $plan_name
     $mail = new PHPMailer(true);
 
     try {
-        // SMTP Config
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = 'iglmembershipid@gmail.com';
-        $mail->Password = 'hclvlxtfmfxnywwm'; // Prod password
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
-        $mail->CharSet = 'UTF-8';
+        // Shared SMTP credentials (auth/mail_config.php → .env)
+        require_once __DIR__ . '/mail_config.php';
+        jof_configure_mailer($mail);
 
-        $mail->setFrom('iglmembershipid@gmail.com', 'JOF INDIA');
         $mail->addAddress($member_email, $member_name);
         $mail->isHTML(true);
         $mail->Subject = 'Your Diet Plan - JOF INDIA';

@@ -238,16 +238,11 @@ $email_html = "
 // 5. Send via PHPMailer
 try {
     $mail = new PHPMailer(true);
-    $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com';
-    $mail->SMTPAuth = true;
-    $mail->Username = 'iglmembershipid@gmail.com';
-    $mail->Password = 'hclvlxtfmfxnywwm';
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-    $mail->Port = 587;
-    $mail->CharSet = 'UTF-8';
 
-    $mail->setFrom('iglmembershipid@gmail.com', 'JOF INDIA');
+    // Shared SMTP credentials (auth/mail_config.php → .env)
+    require_once __DIR__ . '/../auth/mail_config.php';
+    jof_configure_mailer($mail);
+
     $mail->addAddress($member['email'], $member['full_name']);
     $mail->isHTML(true);
     $mail->Subject = '🏋️ Your Upcoming PT Sessions – JOF INDIA';

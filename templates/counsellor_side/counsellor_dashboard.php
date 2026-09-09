@@ -23,12 +23,12 @@ $user = get_session_user();
             --ink: #1E2230;
             --ink-soft: #6B7280;
             --ink-faint: #9CA3AF;
-            --coral: #E8703A;
-            --coral-dark: #C85A29;
-            --coral-tint: #FDECE1;
+            --coral: #FF6B47;
+            --coral-dark: #E5502B;
+            --coral-tint: #FFEDE7;
             --green: #1FA971;
             --green-tint: #E7F8F0;
-            --amber: #D98A1F;
+            --amber: #F0A93A;
             --amber-tint: #FDF3E2;
             --red: #E5484D;
             --red-tint: #FCEBEC;
@@ -36,7 +36,7 @@ $user = get_session_user();
             --blue-tint: #EAF2FF;
             --shadow: 0 1px 2px rgba(20, 20, 30, .04), 0 8px 24px -12px rgba(20, 20, 30, .08);
             --radius: 18px;
-            --sidebar-w: 258px;
+            --sidebar-w: 264px;
             --sidebar-w-collapsed: 84px;
         }
 
@@ -92,7 +92,7 @@ $user = get_session_user();
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            padding: 20px 14px;
+            padding: 22px 16px;
             transition: width .28s ease, transform .28s ease;
             position: relative;
             z-index: 40;
@@ -106,22 +106,27 @@ $user = get_session_user();
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 6px 8px 24px 8px;
+            padding: 6px 10px 26px 10px;
         }
 
         .brand-mark {
-            width: 42px;
-            height: 42px;
+            width: 40px;
+            height: 40px;
             flex-shrink: 0;
-            background: var(--navy);
+            background: #fff;
+            border: 1px solid var(--border);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--coral);
-            font-weight: 800;
-            font-size: 16px;
-            font-family: 'Sora', sans-serif;
+            overflow: hidden;
+        }
+
+        .brand-mark img {
+            width: 26px;
+            height: 26px;
+            object-fit: contain;
+            display: block;
         }
 
         .brand-text {
@@ -130,7 +135,7 @@ $user = get_session_user();
         }
 
         .brand-name {
-            font-size: 15.5px;
+            font-size: 16px;
             font-weight: 700;
             line-height: 1.15;
         }
@@ -173,7 +178,7 @@ $user = get_session_user();
             display: flex;
             align-items: center;
             gap: 14px;
-            padding: 11px 14px;
+            padding: 12px 14px;
             border-radius: 12px;
             color: var(--ink-soft);
             font-weight: 600;
@@ -214,32 +219,66 @@ $user = get_session_user();
             margin-top: 10px;
         }
 
-        .collapse-btn {
+        /* Sidebar rail toggle — collapses the rail (desktop) / closes the drawer (mobile) */
+        .rail-toggle {
+            position: absolute;
+            top: 16px;
+            right: 12px;
+            z-index: 3;
+            width: 30px;
+            height: 30px;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            margin-top: 10px;
-            padding: 10px;
             border: 1px solid var(--border);
-            background: var(--bg);
-            border-radius: 12px;
+            background: var(--card);
+            border-radius: 9px;
             color: var(--ink-soft);
-            font-size: 13px;
-            font-weight: 600;
-            width: 100%;
+            cursor: pointer;
+            transition: background .15s ease, color .15s ease, border-color .15s ease;
         }
 
-        .collapse-btn svg {
+        .rail-toggle:hover {
+            background: var(--coral-tint);
+            color: var(--coral-dark);
+            border-color: var(--coral);
+        }
+
+        .rail-toggle svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .rail-toggle .ic-close {
+            display: none;
+        }
+
+        .rail-toggle .ic-collapse {
             transition: transform .28s ease;
         }
 
-        .shell.collapsed .collapse-btn svg {
+        .shell.collapsed .rail-toggle .ic-collapse {
             transform: rotate(180deg);
         }
 
-        .shell.collapsed .collapse-label {
-            display: none;
+        /* keep the brand text clear of the toggle */
+        .brand {
+            padding-right: 46px;
+        }
+
+        /* collapsed rail: stack the toggle above the centred brand mark */
+        .shell.collapsed .brand {
+            flex-direction: column;
+            gap: 10px;
+            padding: 50px 8px 24px;
+            align-items: center;
+        }
+
+        .shell.collapsed .rail-toggle {
+            top: 14px;
+            right: 50%;
+            transform: translateX(50%);
         }
 
         /* ===== Mobile drawer ===== */
@@ -572,7 +611,7 @@ $user = get_session_user();
 
         .pill.amber {
             background: var(--amber-tint);
-            color: var(--amber);
+            color: #B87814;
         }
 
         .pill.green {
@@ -1204,11 +1243,44 @@ $user = get_session_user();
             }
 
             .shell.collapsed .sidebar {
-                width: 270px;
+                width: 280px;
             }
 
-            .collapse-btn {
+            /* the mobile drawer is always fully expanded, even if "collapsed" was left on */
+            .shell.collapsed .brand {
+                flex-direction: row;
+                align-items: center;
+                gap: 12px;
+                padding: 6px 46px 26px 10px;
+            }
+
+            .shell.collapsed .brand-text,
+            .shell.collapsed .nav-label {
+                display: block;
+            }
+
+            .shell.collapsed .role-badge {
+                display: flex;
+            }
+
+            .shell.collapsed .nav-item {
+                justify-content: flex-start;
+                padding: 12px 14px;
+            }
+
+            .rail-toggle,
+            .shell.collapsed .rail-toggle {
+                top: 18px;
+                right: 14px;
+                transform: none;
+            }
+
+            .rail-toggle .ic-collapse {
                 display: none;
+            }
+
+            .rail-toggle .ic-close {
+                display: block;
             }
 
             .hamburger {
@@ -1287,8 +1359,18 @@ $user = get_session_user();
 
         <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
+            <button class="rail-toggle" id="railToggle" type="button" aria-label="Toggle sidebar">
+                <svg class="ic-collapse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 18l-6-6 6-6" />
+                </svg>
+                <svg class="ic-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+            </button>
             <div class="brand">
-                <div class="brand-mark">JO</div>
+                <div class="brand-mark"><img src="../../icons/logo-dark(1).png" alt="JOF logo"></div>
                 <div class="brand-text">
                     <div class="brand-name">JOF India</div>
                     <div class="brand-sub">Counsellor Portal</div>
@@ -1368,13 +1450,6 @@ $user = get_session_user();
                     </svg>
                     <span class="nav-label">Logout</span>
                 </a>
-                <button class="collapse-btn" id="collapseBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 18l-6-6 6-6" />
-                    </svg>
-                    <span class="collapse-label">Collapse</span>
-                </button>
             </div>
         </aside>
 
@@ -1956,20 +2031,45 @@ $user = get_session_user();
             showToast('Note added', `Consultation note saved for ${m.name}.`);
         });
 
-        /* ===== Sidebar collapse / drawer ===== */
+        /* ===== Sidebar: collapse (desktop) + drawer (mobile) ===== */
         const shell = document.getElementById('shell');
-        document.getElementById('collapseBtn').addEventListener('click', () => shell.classList.toggle('collapsed'));
         const overlay = document.getElementById('overlay');
-        function openDrawer() { shell.classList.add('drawer-open'); overlay.classList.add('show'); }
-        function closeDrawer() { shell.classList.remove('drawer-open'); overlay.classList.remove('show'); }
-        document.getElementById('hamburgerBtn').addEventListener('click', openDrawer);
-        overlay.addEventListener('click', closeDrawer);
+        const railToggle = document.getElementById('railToggle');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const isMobile = () => window.matchMedia('(max-width: 860px)').matches;
+
+        function openDrawer() {
+            shell.classList.add('drawer-open');
+            overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeDrawer() {
+            shell.classList.remove('drawer-open');
+            overlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        if (hamburgerBtn) hamburgerBtn.addEventListener('click', openDrawer);
+        if (overlay) overlay.addEventListener('click', closeDrawer);
+        if (railToggle) railToggle.addEventListener('click', () => {
+            if (isMobile()) closeDrawer();
+            else shell.classList.toggle('collapsed');
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && shell.classList.contains('drawer-open')) closeDrawer();
+        });
+        window.addEventListener('resize', () => { if (!isMobile()) closeDrawer(); });
+
         document.querySelectorAll('.sidebar .nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
+                const href = item.getAttribute('href');
+                // Let real links (e.g. Logout) navigate normally
+                if (href && href !== '#') return;
                 e.preventDefault();
                 document.querySelectorAll('.sidebar .nav-item').forEach(n => n.classList.remove('active'));
                 item.classList.add('active');
-                if (window.innerWidth <= 860) closeDrawer();
+                if (isMobile()) closeDrawer();
             });
         });
 
@@ -1997,11 +2097,7 @@ $user = get_session_user();
 
         document.getElementById('notifBtn').addEventListener('click', () => {
             unreadDot.style.display = 'none';
-            showToast('Membership expiring', 'Vikram Nair\\'s membership expires in 2 days.');
-  });
-
-        window.addEventListener('load', () => {
-            setTimeout(() => showToast('New consultation booked', 'Ananya Verma booked a 9:00 AM slot today.'), 1500);
+            showToast('Membership expiring', "Vikram Nair's membership expires in 2 days.");
         });
     </script>
 

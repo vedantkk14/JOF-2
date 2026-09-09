@@ -2,6 +2,12 @@
 require_once __DIR__ . '/../../auth/auth_check.php';
 require_role(['user']);
 $user = get_session_user();
+
+require_once __DIR__ . '/../../config.php';
+require_once __DIR__ . '/../../auth/workout_helper.php';
+
+$streak = workout_streak_stats($conn, (int) $user['id']);
+$csrf   = generate_csrf_token();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -106,15 +112,20 @@ $user = get_session_user();
             width: 40px;
             height: 40px;
             flex-shrink: 0;
-            background: linear-gradient(155deg, var(--coral), var(--coral-dark));
+            background: #fff;
+            border: 1px solid var(--border);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
-            font-weight: 800;
-            font-size: 17px;
-            font-family: 'Sora', sans-serif;
+            overflow: hidden;
+        }
+
+        .brand-mark img {
+            width: 26px;
+            height: 26px;
+            object-fit: contain;
+            display: block;
         }
 
         .brand-text {
@@ -191,31 +202,66 @@ $user = get_session_user();
             margin-top: 10px;
         }
 
-        .collapse-btn {
+        /* Sidebar rail toggle — collapses the rail (desktop) / closes the drawer (mobile) */
+        .rail-toggle {
+            position: absolute;
+            top: 16px;
+            right: 12px;
+            z-index: 3;
+            width: 30px;
+            height: 30px;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            margin-top: 10px;
-            padding: 10px;
             border: 1px solid var(--border);
-            background: var(--bg);
-            border-radius: 12px;
+            background: var(--card);
+            border-radius: 9px;
             color: var(--ink-soft);
-            font-size: 13px;
-            font-weight: 600;
+            cursor: pointer;
+            transition: background .15s ease, color .15s ease, border-color .15s ease;
         }
 
-        .collapse-btn svg {
+        .rail-toggle:hover {
+            background: var(--coral-tint);
+            color: var(--coral-dark);
+            border-color: var(--coral);
+        }
+
+        .rail-toggle svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .rail-toggle .ic-close {
+            display: none;
+        }
+
+        .rail-toggle .ic-collapse {
             transition: transform .28s ease;
         }
 
-        .shell.collapsed .collapse-btn svg {
+        .shell.collapsed .rail-toggle .ic-collapse {
             transform: rotate(180deg);
         }
 
-        .shell.collapsed .collapse-label {
-            display: none;
+        /* keep the brand text clear of the toggle */
+        .brand {
+            padding-right: 46px;
+        }
+
+        /* collapsed rail: stack the toggle above the centred brand mark */
+        .shell.collapsed .brand {
+            flex-direction: column;
+            gap: 10px;
+            padding: 50px 8px 24px;
+            align-items: center;
+        }
+
+        .shell.collapsed .rail-toggle {
+            top: 14px;
+            right: 50%;
+            transform: translateX(50%);
         }
 
         /* ===== Mobile drawer ===== */
@@ -802,11 +848,40 @@ $user = get_session_user();
             }
 
             .shell.collapsed .sidebar {
-                width: 270px;
+                width: 280px;
             }
 
-            .collapse-btn {
+            /* the mobile drawer is always fully expanded, even if "collapsed" was left on */
+            .shell.collapsed .brand {
+                flex-direction: row;
+                align-items: center;
+                gap: 12px;
+                padding: 6px 46px 26px 10px;
+            }
+
+            .shell.collapsed .brand-text,
+            .shell.collapsed .nav-label {
+                display: block;
+            }
+
+            .shell.collapsed .nav-item {
+                justify-content: flex-start;
+                padding: 12px 14px;
+            }
+
+            .rail-toggle,
+            .shell.collapsed .rail-toggle {
+                top: 18px;
+                right: 14px;
+                transform: none;
+            }
+
+            .rail-toggle .ic-collapse {
                 display: none;
+            }
+
+            .rail-toggle .ic-close {
+                display: block;
             }
 
             .hamburger {
@@ -870,6 +945,188 @@ $user = get_session_user();
                 transition-duration: .001s !important;
             }
         }
+
+        /* ===== Workout streak card ===== */
+        .streak-top {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .streak-flame {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .streak-flame .fl {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: linear-gradient(155deg, var(--coral), var(--coral-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .streak-flame .fl svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .streak-num {
+            font-family: 'Sora', sans-serif;
+            font-size: 40px;
+            font-weight: 800;
+            line-height: 1;
+            color: var(--coral-dark);
+        }
+
+        .streak-cap {
+            font-size: 12.5px;
+            color: var(--ink-soft);
+            margin-top: 3px;
+        }
+
+        .streak-log-btn {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 14px;
+            background: var(--coral);
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background .18s ease, transform .18s ease;
+        }
+
+        .streak-log-btn:hover {
+            background: var(--coral-dark);
+            transform: translateY(-1px);
+        }
+
+        .streak-log-btn:disabled {
+            opacity: .6;
+            cursor: default;
+            transform: none;
+        }
+
+        .streak-log-btn.done {
+            background: var(--green-tint);
+            color: var(--green);
+        }
+
+        .streak-log-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .streak-strip {
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            margin-bottom: 18px;
+        }
+
+        .sd {
+            flex: 1 0 32px;
+            min-width: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 0;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background .15s ease;
+        }
+
+        .sd:hover {
+            background: var(--bg);
+        }
+
+        .sd-dow {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--ink-faint);
+        }
+
+        .sd-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: #fff;
+            transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .sd.on .sd-dot {
+            background: var(--coral);
+            border-color: var(--coral);
+        }
+
+        .sd.is-today .sd-dot {
+            box-shadow: 0 0 0 3px var(--coral-tint);
+        }
+
+        .sd.is-today .sd-day {
+            color: var(--coral-dark);
+            font-weight: 700;
+        }
+
+        .sd-day {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--ink-soft);
+        }
+
+        .streak-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .streak-stats>div {
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 12px 10px;
+            text-align: center;
+        }
+
+        .streak-stats span {
+            display: block;
+            font-family: 'Sora', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--ink);
+        }
+
+        .streak-stats small {
+            font-size: 10.5px;
+            color: var(--ink-soft);
+        }
+
+        @media (max-width: 560px) {
+            .streak-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .streak-log-btn {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
 
@@ -881,8 +1138,18 @@ $user = get_session_user();
 
         <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
+            <button class="rail-toggle" id="railToggle" type="button" aria-label="Toggle sidebar">
+                <svg class="ic-collapse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 18l-6-6 6-6" />
+                </svg>
+                <svg class="ic-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+            </button>
             <div class="brand">
-                <div class="brand-mark">JO</div>
+                <div class="brand-mark"><img src="../../icons/logo-dark(1).png" alt="JOF logo"></div>
                 <div class="brand-text">
                     <div class="brand-name">JOF India</div>
                     <div class="brand-sub">Member Portal</div>
@@ -915,13 +1182,6 @@ $user = get_session_user();
                         <path d="M9 8h6M9 12h6M9 16h4" />
                     </svg>
                     <span class="nav-label">Diet Plans</span>
-                </a>
-                <a class="nav-item" href="#">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M6.5 6.5l11 11M4 9l3-3 3 3-3 3zM17 22l-3-3 3-3 3 3zM2 2l2.5 2.5M22 22l-2.5-2.5" />
-                    </svg>
-                    <span class="nav-label">PT Sessions</span>
                 </a>
                 <a class="nav-item" href="#">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -959,13 +1219,6 @@ $user = get_session_user();
                     </svg>
                     <span class="nav-label">Logout</span>
                 </a>
-                <button class="collapse-btn" id="collapseBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 18l-6-6 6-6" />
-                    </svg>
-                    <span class="collapse-label">Collapse</span>
-                </button>
             </div>
         </aside>
 
@@ -1001,24 +1254,33 @@ $user = get_session_user();
             </div>
 
             <!-- Welcome banner -->
+            <?php
+            $firstName = trim(explode(' ', html_entity_decode($user['name'], ENT_QUOTES))[0]) ?: 'there';
+            $wkMsg = $streak['current_streak'] > 0
+                ? "You're on a {$streak['current_streak']}-day streak — keep it going!"
+                : ($streak['total_workouts'] > 0
+                    ? "Your streak reset. Log today's workout to start a new one."
+                    : "Log your first workout to start building a streak.");
+            ?>
             <div class="welcome-card">
                 <div class="welcome-left">
-                    <h1>Welcome back, Rohan</h1>
-                    <p>You've completed 4 of 5 sessions this week. One more push and you'll hit a new personal streak.
+                    <h1>Welcome back, <?= htmlspecialchars($firstName, ENT_QUOTES, 'UTF-8') ?></h1>
+                    <p><?= htmlspecialchars($wkMsg, ENT_QUOTES, 'UTF-8') ?> You've worked out
+                        <?= (int) $streak['this_week'] ?> day<?= $streak['this_week'] == 1 ? '' : 's' ?> in the last week.
                     </p>
                 </div>
                 <div class="welcome-stats">
                     <div class="welcome-stat">
-                        <div class="num">18</div>
+                        <div class="num" id="wsStreak"><?= (int) $streak['current_streak'] ?></div>
                         <div class="lbl">Day streak</div>
                     </div>
                     <div class="welcome-stat">
-                        <div class="num">42</div>
-                        <div class="lbl">Sessions done</div>
+                        <div class="num" id="wsTotal"><?= (int) $streak['total_workouts'] ?></div>
+                        <div class="lbl">Workouts done</div>
                     </div>
                     <div class="welcome-stat">
-                        <div class="num">6</div>
-                        <div class="lbl">Months active</div>
+                        <div class="num" id="wsBest"><?= (int) $streak['longest_streak'] ?></div>
+                        <div class="lbl">Best streak</div>
                     </div>
                 </div>
             </div>
@@ -1136,38 +1398,66 @@ $user = get_session_user();
                     </div>
                 </div>
 
-                <!-- Progress summary -->
-                <div class="card span-2">
+                <!-- Workout streak -->
+                <div class="card span-2" id="streakCard" data-csrf="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
                     <div class="card-head">
                         <div class="card-title">
-                            <div class="card-icon" style="background:#F1EBFF; color:#7B4FE0;">
+                            <div class="card-icon" style="background:var(--coral-tint); color:var(--coral-dark);">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                     stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 20V10M18 20V4M6 20v-4" />
+                                    <path
+                                        d="M12 2s4 4 4 8a4 4 0 01-8 0c0-1 .3-2 .8-2.8C8 9 8 12 8 12s-2-1.5-2-4C6 5 12 2 12 2z" />
                                 </svg>
                             </div>
-                            Fitness Progress
+                            Workout Streak
                         </div>
-                        <span class="sub-line">This month</span>
+                        <span class="sub-line">Tap any day to log it</span>
                     </div>
-                    <div class="progress-ring-wrap">
-                        <div class="ring">
-                            <svg width="96" height="96" viewBox="0 0 96 96">
-                                <circle cx="48" cy="48" r="42" stroke="#ECEEF1" stroke-width="10" fill="none" />
-                                <circle cx="48" cy="48" r="42" stroke="#FF6B47" stroke-width="10" fill="none"
-                                    stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="66" />
-                            </svg>
-                            <div class="ring-label">
-                                <div class="pct">75%</div>
-                                <div class="txt">Goal met</div>
+
+                    <div class="streak-top">
+                        <div class="streak-flame">
+                            <div class="fl">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M12 2s5 4.5 5 9a5 5 0 11-10 0c0-1.2.4-2.3 1-3.2C7.5 10 7 12.5 7 12.5S5 10.7 5 7.5C5 4 12 2 12 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="streak-num" id="streakNum"><?= (int) $streak['current_streak'] ?></div>
+                                <div class="streak-cap" id="streakCap">
+                                    day<?= $streak['current_streak'] == 1 ? '' : 's' ?> in a row
+                                </div>
                             </div>
                         </div>
-                        <div class="progress-stats">
-                            <div class="progress-stat-row"><span>Sessions attended</span><span>15 / 20</span></div>
-                            <div class="progress-stat-row"><span>Weight change</span><span>−2.4 kg</span></div>
-                            <div class="progress-stat-row"><span>Diet adherence</span><span>88%</span></div>
-                            <div class="progress-stat-row"><span>Current streak</span><span>18 days</span></div>
-                        </div>
+                        <button type="button" class="streak-log-btn <?= $streak['logged_today'] ? 'done' : '' ?>"
+                            id="logTodayBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 6L9 17l-5-5" />
+                            </svg>
+                            <span class="tx"><?= $streak['logged_today'] ? 'Logged today' : "Log today's workout" ?></span>
+                        </button>
+                    </div>
+
+                    <div class="streak-strip" id="streakStrip">
+                        <?php foreach ($streak['strip'] as $d): ?>
+                            <button type="button" class="sd <?= $d['done'] ? 'on' : '' ?> <?= $d['today'] ? 'is-today' : '' ?>"
+                                data-date="<?= $d['date'] ?>" title="<?= $d['date'] ?>">
+                                <span class="sd-dow"><?= substr($d['label'], 0, 1) ?></span>
+                                <span class="sd-dot"></span>
+                                <span class="sd-day"><?= $d['day'] ?></span>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div class="streak-stats">
+                        <div><span id="stLongest"><?= (int) $streak['longest_streak'] ?></span><small>Longest
+                                streak</small></div>
+                        <div><span id="stWeek"><?= (int) $streak['this_week'] ?></span><small>This week</small></div>
+                        <div><span id="stGap"><?= (int) $streak['longest_gap'] ?></span><small>Longest gap</small></div>
+                        <div><span
+                                id="stSince"><?= $streak['days_since_last'] === null ? '—' : (int) $streak['days_since_last'] ?></span><small>Days
+                                since last</small></div>
                     </div>
                 </div>
 
@@ -1182,7 +1472,7 @@ $user = get_session_user();
 
     <script>
         const shell = document.getElementById('shell');
-        const collapseBtn = document.getElementById('collapseBtn');
+        const railToggle = document.getElementById('railToggle');
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const overlay = document.getElementById('overlay');
         const notifBtn = document.getElementById('notifBtn');
@@ -1190,23 +1480,38 @@ $user = get_session_user();
         const unreadDot = document.getElementById('unreadDot');
         const toastContainer = document.getElementById('toastContainer');
 
-        // Desktop collapse
-        collapseBtn.addEventListener('click', () => {
-            shell.classList.toggle('collapsed');
+        const isMobile = () => window.matchMedia('(max-width: 860px)').matches;
+
+        function openDrawer() {
+            shell.classList.add('drawer-open');
+            overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeDrawer() {
+            shell.classList.remove('drawer-open');
+            overlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        if (hamburgerBtn) hamburgerBtn.addEventListener('click', openDrawer);
+        if (overlay) overlay.addEventListener('click', closeDrawer);
+        if (railToggle) railToggle.addEventListener('click', () => {
+            if (isMobile()) closeDrawer();
+            else shell.classList.toggle('collapsed');
         });
 
-        // Mobile drawer
-        function openDrawer() { shell.classList.add('drawer-open'); overlay.classList.add('show'); }
-        function closeDrawer() { shell.classList.remove('drawer-open'); overlay.classList.remove('show'); }
-        hamburgerBtn.addEventListener('click', openDrawer);
-        overlay.addEventListener('click', closeDrawer);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && shell.classList.contains('drawer-open')) closeDrawer();
+        });
+        window.addEventListener('resize', () => { if (!isMobile()) closeDrawer(); });
+
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 // Only intercept placeholder # links — allow real hrefs (like logout) to navigate normally
                 if (item.getAttribute('href') === '#' || !item.getAttribute('href')) {
                     e.preventDefault();
                 }
-                if (window.innerWidth <= 860) closeDrawer();
+                if (isMobile()) closeDrawer();
             });
         });
 
@@ -1249,6 +1554,80 @@ $user = get_session_user();
         });
 
         // Auto-notification removed — toasts will only show on real events
+
+
+        // ══════════════════════════════════════════════════
+        //  WORKOUT STREAK
+        // ══════════════════════════════════════════════════
+        (function () {
+            const card = document.getElementById('streakCard');
+            if (!card) return;
+
+            const CSRF = card.dataset.csrf;
+            const logBtn = document.getElementById('logTodayBtn');
+            const strip = document.getElementById('streakStrip');
+            let busy = false;
+
+            function todayLocal() {
+                const n = new Date();
+                return n.getFullYear() + '-' +
+                    String(n.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(n.getDate()).padStart(2, '0');
+            }
+
+            function render(s) {
+                document.getElementById('streakNum').textContent = s.current_streak;
+                document.getElementById('streakCap').textContent =
+                    (s.current_streak === 1 ? 'day' : 'days') + ' in a row';
+                document.getElementById('stLongest').textContent = s.longest_streak;
+                document.getElementById('stWeek').textContent = s.this_week;
+                document.getElementById('stGap').textContent = s.longest_gap;
+                document.getElementById('stSince').textContent =
+                    s.days_since_last === null ? '—' : s.days_since_last;
+
+                logBtn.classList.toggle('done', s.logged_today);
+                logBtn.querySelector('.tx').textContent =
+                    s.logged_today ? 'Logged today' : "Log today's workout";
+
+                strip.innerHTML = s.strip.map(d =>
+                    `<button type="button" class="sd ${d.done ? 'on' : ''} ${d.today ? 'is-today' : ''}"` +
+                    ` data-date="${d.date}" title="${d.date}">` +
+                    `<span class="sd-dow">${d.label[0]}</span><span class="sd-dot"></span>` +
+                    `<span class="sd-day">${d.day}</span></button>`
+                ).join('');
+
+                const ws = document.getElementById('wsStreak');
+                const wt = document.getElementById('wsTotal');
+                const wb = document.getElementById('wsBest');
+                if (ws) ws.textContent = s.current_streak;
+                if (wt) wt.textContent = s.total_workouts;
+                if (wb) wb.textContent = s.longest_streak;
+            }
+
+            function toggleDay(date) {
+                if (busy) return;
+                busy = true;
+                logBtn.disabled = true;
+
+                fetch('../../handlers/workout_log.php', {
+                    method: 'POST',
+                    body: new URLSearchParams({ _csrf_token: CSRF, date: date })
+                })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.success) render(d.stats);
+                        else showToast('Could not save', d.message || 'Please try again.');
+                    })
+                    .catch(() => showToast('Offline', 'Could not reach the server.'))
+                    .finally(() => { busy = false; logBtn.disabled = false; });
+            }
+
+            logBtn.addEventListener('click', () => toggleDay(todayLocal()));
+            strip.addEventListener('click', (e) => {
+                const b = e.target.closest('.sd');
+                if (b) toggleDay(b.dataset.date);
+            });
+        })();
     </script>
 
 </body>
