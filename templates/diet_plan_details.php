@@ -33,14 +33,70 @@ $stmt_hist->bind_param("s", $search_name);
 $stmt_hist->execute();
 $all_phases = $stmt_hist->get_result();
 
-// Helper to format text
+// Helper to format text — orange sub-headings + orange time-of-day badges
 function formatDietText($text)
 {
-    if (empty($text))
+    if (empty($text) || trim($text) === '')
         return '<span class="text-muted">Not specified</span>';
-    $text = htmlspecialchars($text);
-    $text = preg_replace('/\*\*(.*?)\*\*/', '<div class="meal-subhead">$1</div>', $text);
-    return nl2br($text);
+    $text = str_replace(["\r\n", "\r"], "\n", $text);
+    // single time (6 AM, 1130 AM, 8:30 PM) OR range (5pm-6pm, 6:30–7:00 AM, 6-7 PM)
+    $timeRe = '/^('
+        . '(?:\d{3,4}|\d{1,2}(?:[:.]\d{2})?)\s*(?:[AP]\.?M\.?)?\s*[-\x{2013}\x{2014}~]\s*(?:\d{3,4}|\d{1,2}(?:[:.]\d{2})?)\s*[AP]\.?M\.?'
+        . '|(?:\d{3,4}|\d{1,2}(?:[:.]\d{2})?)\s*[AP]\.?M\.?'
+        . ')\b[\s\-\x{2013}\x{2014}:]*(.*)$/iu';
+    $niceTime = function ($raw) {
+        $t = preg_replace('/\s*([ap])\.?\s*m\.?/iu', ' $1m', $raw);
+        $t = preg_replace('/\s*[-\x{2013}\x{2014}~]\s*/u', ' - ', $t);
+        return strtoupper(preg_replace('/\s+/', ' ', trim($t)));
+    };
+
+    $out = [];
+    $lastWasHeading = false;
+    $inNumberedList = false;
+    foreach (explode("\n", $text) as $line) {
+        $line = trim($line);
+        // A stray blank line (accidental extra Enter) has no effect at all — never rendered,
+        // never treated as "end of point". Only a new "N. " line closes the previous point.
+        if ($line === '') { continue; }
+
+        if (preg_match('/\*\*\s*(.+?)\s*\*\*/', $line, $sm)) {
+            $out[] = '<div class="meal-subhead">' . htmlspecialchars(rtrim(trim($sm[1]), ' :') . ' :') . '</div>';
+            $lastWasHeading = true;
+            $inNumberedList = false;
+            continue;
+        }
+        $line = str_replace('**', '', $line);
+
+        if (preg_match($timeRe, $line, $tm)) {
+            $rest  = trim($tm[2]);
+            $badge = '<span class="time-badge">' . htmlspecialchars($niceTime(trim($tm[1]))) . '</span>'
+                   . ($rest !== '' ? ' ' . htmlspecialchars($rest) : '');
+            if ($lastWasHeading) {
+                $i = count($out) - 1;
+                $out[$i] = preg_replace('#</div>$#', ' ' . $badge . '</div>', $out[$i]);
+            } else {
+                $out[] = $badge;
+            }
+            $lastWasHeading = false;
+            $inNumberedList = false;
+            continue;
+        }
+
+        // Numbered point ("1. ...", "2) ..."). The blank line goes ONLY before a new numbered
+        // point — never after the point just written — so any line that follows (numbered or
+        // not) that isn't a new "N. " continues that point with no gap, even past a stray blank.
+        if (preg_match('/^\d+[.)]\s+/', $line)) {
+            $out[] = ($inNumberedList ? '<br>' : '') . htmlspecialchars($line);
+            $inNumberedList = true;
+            $lastWasHeading = false;
+            continue;
+        }
+
+        // Plain content line — if a numbered point is open, this continues it (no gap)
+        $out[] = htmlspecialchars($line);
+        $lastWasHeading = false;
+    }
+    return implode("<br>\n", $out);
 }
 
 // Visual Theme Logic

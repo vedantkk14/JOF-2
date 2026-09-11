@@ -35,6 +35,18 @@ $stmt_hist->bind_param("s", $search_name);
 $stmt_hist->execute();
 $all_phases = $stmt_hist->get_result();
 
+// Copy out id+label pairs for the reference-panel dropdown, then rewind for the
+// existing "Week Phase" dropdown below, which reads $all_phases itself.
+$all_client_phases = [];
+while ($ph = $all_phases->fetch_assoc()) {
+    $ph_parts = explode(" - ", $ph['plan_name']);
+    $all_client_phases[] = [
+        'id'    => $ph['id'],
+        'label' => isset($ph_parts[1]) ? trim($ph_parts[1]) : $ph['plan_name'],
+    ];
+}
+$all_phases->data_seek(0);
+
 // Fetch reusable diet templates (guard: table may not exist yet on this server)
 $dp_templates = [];
 $dp_tpl_check = $conn->query("SHOW TABLES LIKE 'diet_plan_templates'");
@@ -189,13 +201,136 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" size="16x16" href="../icons/favicon-dark-logo.png" type="image/png">
     <title>Edit Diet Plan | JOF Fitness</title>
-    <link rel="stylesheet" href="../static/root.css">
+    <link rel="stylesheet" href="../static/root.css?v=<?= @filemtime(__DIR__ . '/../static/root.css') ?: time() ?>">
     <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"> -->
+    <style>
+        /* Split-screen: previous-phase reference on the left, the form on the right — equal
+           width columns, and both stretch to the same height (the form card already caps its
+           body at 70vh with its own scrollbar; the reference pane matches that automatically). */
+        body.page-create_diet_plan { align-items: stretch; }
+        .phase-split {
+            display: flex;
+            gap: 24px;
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+            align-items: stretch;
+        }
+        .phase-reference-pane {
+            flex: 1 1 0;
+            min-width: 0;
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .phase-reference-pane .ref-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #EEE;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .phase-reference-pane .ref-header label {
+            font-weight: 700;
+            font-size: 13px;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .phase-reference-pane select {
+            width: 100%;
+            padding: 9px 10px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #fff;
+        }
+        .phase-reference-pane iframe {
+            flex: 1 1 auto;
+            width: 100%;
+            min-height: 400px;
+            border: none;
+            background: #F3F4F6;
+        }
+        .phase-form-col {
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .phase-form-col .container { margin: 0; width: 100%; }
+        @media (max-width: 1100px) {
+            .phase-split { flex-direction: column; align-items: stretch; }
+            .phase-reference-pane { flex: none; height: 55vh; min-height: 340px; }
+        }
+        /* Daily Schedule: always one meal field per row inside the split-screen form,
+           and guarantee the textareas are user-resizable, regardless of viewport width. */
+        .meal-grid {
+            display: block !important;
+            grid-template-columns: none !important;
+            columns: auto !important;
+            column-count: auto !important;
+            width: 100% !important;
+        }
+        .meal-grid .meal-row {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            float: none !important;
+            clear: both !important;
+            grid-column: auto !important;
+            margin: 0 0 20px 0 !important;
+        }
+        .meal-grid .meal-label {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            width: 100% !important;
+            padding-top: 0 !important;
+            margin-bottom: 8px !important;
+        }
+        .meal-grid .meal-input-area {
+            display: block !important;
+            width: 100% !important;
+        }
+        .meal-grid textarea.form-input {
+            resize: vertical !important;
+            min-height: 100px !important;
+            width: 100% !important;
+        }
+    </style>
 
 </head>
 
 <body class="page-create_diet_plan">
 
+    <div class="phase-split">
+
+        <div class="phase-reference-pane">
+            <div class="ref-header">
+                <label>
+                    <img src="../icons/layer-group-solid-full.svg" width="14" alt="">
+                    Previous phases &mdash; <?= htmlspecialchars($client_name) ?>
+                </label>
+                <select id="refPhaseSelect">
+                    <?php foreach ($all_client_phases as $ph): ?>
+                        <option value="<?= (int) $ph['id'] ?>" <?= $ph['id'] == $plan_id ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($ph['label']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <iframe id="refPhaseFrame" src="print_combined_plan.php?id=<?= (int) $plan_id ?>&single=1"
+                title="Selected phase reference"></iframe>
+        </div>
+
+    <div class="phase-form-col">
     <div class="container">
         <div class="card-header">
             <div class="brand-area">
@@ -317,87 +452,87 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 <div class="section-title"><img src="../icons/utensils-solid-full.svg"><span>Daily Schedule</span></div>
 
-                <div class="meal-grid">
+                <div class="meal-grid" style="display:block; width:100%;">
 
-                    <div class="meal-row">
-                        <div class="meal-label"><img src="../icons/sun-solid-full.svg" alt="sun" width="20"
+                    <div class="meal-row" style="display:block; width:100%; margin-bottom:20px; float:none; clear:both;">
+                        <div class="meal-label" style="display:flex; align-items:center; gap:10px; width:100%; padding-top:0; margin-bottom:8px;"><img src="../icons/sun-solid-full.svg" alt="sun" width="20"
                                 style="filter: brightness(0) saturate(100%) invert(67%) sepia(87%) saturate(2159%) hue-rotate(352deg) brightness(105%) contrast(93%);">
                             Wake Up</div>
-                        <div class="meal-input-area">
-                            <textarea name="wake_up" class="form-input"><?= htmlspecialchars($val_wakeup) ?></textarea>
+                        <div class="meal-input-area" style="display:block; width:100%;">
+                            <textarea name="wake_up" class="form-input" style="resize:vertical; min-height:100px; width:100%;"><?= htmlspecialchars($val_wakeup) ?></textarea>
                         </div>
                     </div>
 
-                    <div class="meal-row">
-                        <div class="meal-label"><img src="../icons/dumbbell-solid-full.svg" alt="dumbbell" width="20"
+                    <div class="meal-row" style="display:block; width:100%; margin-bottom:20px; float:none; clear:both;">
+                        <div class="meal-label" style="display:flex; align-items:center; gap:10px; width:100%; padding-top:0; margin-bottom:8px;"><img src="../icons/dumbbell-solid-full.svg" alt="dumbbell" width="20"
                                 style="filter: brightness(0) saturate(100%) invert(43%) sepia(61%) saturate(3025%) hue-rotate(205deg) brightness(101%) contrast(94%);">
                             Post Workout
                         </div>
-                        <div class="meal-input-area">
+                        <div class="meal-input-area" style="display:block; width:100%;">
                             <textarea name="post_workout"
-                                class="form-input"><?= htmlspecialchars($val_postworkout) ?></textarea>
+                                class="form-input" style="resize:vertical; min-height:100px; width:100%;"><?= htmlspecialchars($val_postworkout) ?></textarea>
                         </div>
                     </div>
 
-                    <div class="meal-row">
-                        <div class="meal-label"><img src="../icons/mug-hot-solid-full.svg" alt="mug-hot" width="20"
+                    <div class="meal-row" style="display:block; width:100%; margin-bottom:20px; float:none; clear:both;">
+                        <div class="meal-label" style="display:flex; align-items:center; gap:10px; width:100%; padding-top:0; margin-bottom:8px;"><img src="../icons/mug-hot-solid-full.svg" alt="mug-hot" width="20"
                                 style="filter: brightness(0) saturate(100%) invert(42%) sepia(88%) saturate(1636%) hue-rotate(1deg) brightness(101%) contrast(92%);">
                             Breakfast
                         </div>
-                        <div class="meal-input-area">
+                        <div class="meal-input-area" style="display:block; width:100%;">
                             <textarea name="breakfast"
-                                class="form-input"><?= htmlspecialchars($val_breakfast) ?></textarea>
+                                class="form-input" style="resize:vertical; min-height:100px; width:100%;"><?= htmlspecialchars($val_breakfast) ?></textarea>
                         </div>
                     </div>
 
-                    <div class="meal-row">
-                        <div class="meal-label"><img src="../icons/bowl-rice-solid-full.svg" alt="bowl-rice" width="20"
+                    <div class="meal-row" style="display:block; width:100%; margin-bottom:20px; float:none; clear:both;">
+                        <div class="meal-label" style="display:flex; align-items:center; gap:10px; width:100%; padding-top:0; margin-bottom:8px;"><img src="../icons/bowl-rice-solid-full.svg" alt="bowl-rice" width="20"
                                 style="filter: brightness(0) saturate(100%) invert(58%) sepia(62%) saturate(497%) hue-rotate(113deg) brightness(98%) contrast(85%);">
                             Lunch</div>
-                        <div class="meal-input-area">
-                            <textarea name="lunch" class="form-input"><?= htmlspecialchars($val_lunch) ?></textarea>
+                        <div class="meal-input-area" style="display:block; width:100%;">
+                            <textarea name="lunch" class="form-input" style="resize:vertical; min-height:100px; width:100%;"><?= htmlspecialchars($val_lunch) ?></textarea>
                         </div>
                     </div>
 
-                    <div class="meal-row">
-                        <div class="meal-label"><img src="../icons/apple-whole-solid-full.svg" alt="apple-whole"
+                    <div class="meal-row" style="display:block; width:100%; margin-bottom:20px; float:none; clear:both;">
+                        <div class="meal-label" style="display:flex; align-items:center; gap:10px; width:100%; padding-top:0; margin-bottom:8px;"><img src="../icons/apple-whole-solid-full.svg" alt="apple-whole"
                                 width="20"
                                 style="filter: brightness(0) saturate(100%) invert(43%) sepia(50%) saturate(1476%) hue-rotate(319deg) brightness(92%) contrast(100%);">
                             Mid Meal
                         </div>
-                        <div class="meal-input-area">
-                            <textarea name="snack" class="form-input"><?= htmlspecialchars($val_snack) ?></textarea>
+                        <div class="meal-input-area" style="display:block; width:100%;">
+                            <textarea name="snack" class="form-input" style="resize:vertical; min-height:100px; width:100%;"><?= htmlspecialchars($val_snack) ?></textarea>
                         </div>
                     </div>
 
-                    <div class="meal-row">
-                        <div class="meal-label"><img src="../icons/moon-solid-full.svg" alt="moon" width="20"
+                    <div class="meal-row" style="display:block; width:100%; margin-bottom:20px; float:none; clear:both;">
+                        <div class="meal-label" style="display:flex; align-items:center; gap:10px; width:100%; padding-top:0; margin-bottom:8px;"><img src="../icons/moon-solid-full.svg" alt="moon" width="20"
                                 style="filter: brightness(0) saturate(100%) invert(41%) sepia(88%) saturate(1661%) hue-rotate(224deg) brightness(99%) contrast(91%);">
                             Dinner</div>
-                        <div class="meal-input-area">
-                            <textarea name="dinner" class="form-input"><?= htmlspecialchars($val_dinner) ?></textarea>
+                        <div class="meal-input-area" style="display:block; width:100%;">
+                            <textarea name="dinner" class="form-input" style="resize:vertical; min-height:100px; width:100%;"><?= htmlspecialchars($val_dinner) ?></textarea>
                         </div>
                     </div>
 
-                    <div class="meal-row">
-                        <div class="meal-label"><img src="../icons/bed-solid-full.svg" alt="bed" width="20"
+                    <div class="meal-row" style="display:block; width:100%; margin-bottom:20px; float:none; clear:both;">
+                        <div class="meal-label" style="display:flex; align-items:center; gap:10px; width:100%; padding-top:0; margin-bottom:8px;"><img src="../icons/bed-solid-full.svg" alt="bed" width="20"
                                 style="filter: brightness(0) saturate(100%) invert(43%) sepia(35%) saturate(3015%) hue-rotate(231deg) brightness(96%) contrast(99%);">
                             Pre-Sleep</div>
-                        <div class="meal-input-area">
+                        <div class="meal-input-area" style="display:block; width:100%;">
                             <textarea name="pre_sleep"
-                                class="form-input"><?= htmlspecialchars($val_presleep) ?></textarea>
+                                class="form-input" style="resize:vertical; min-height:100px; width:100%;"><?= htmlspecialchars($val_presleep) ?></textarea>
                         </div>
                     </div>
 
-                    <div class="meal-row full-width">
-                        <div class="meal-label"><img src="../icons/list-check-solid-full.svg" alt="list-check"
+                    <div class="meal-row full-width" style="display:block; width:100%; margin-bottom:20px; float:none; clear:both;">
+                        <div class="meal-label" style="display:flex; align-items:center; gap:10px; width:100%; padding-top:0; margin-bottom:8px;"><img src="../icons/list-check-solid-full.svg" alt="list-check"
                                 width="20"
                                 style="filter: brightness(0) saturate(100%) invert(47%) sepia(13%) saturate(382%) hue-rotate(178deg) brightness(94%) contrast(90%);">
                             Guidelines
                         </div>
-                        <div class="meal-input-area">
+                        <div class="meal-input-area" style="display:block; width:100%;">
                             <textarea name="guidelines"
-                                class="form-input"><?= htmlspecialchars($val_guidelines) ?></textarea>
+                                class="form-input" style="resize:vertical; min-height:100px; width:100%;"><?= htmlspecialchars($val_guidelines) ?></textarea>
                         </div>
                     </div>
                 </div>
@@ -416,6 +551,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </form>
         </div>
     </div>
+    </div><!-- /.phase-form-col -->
+
+    </div><!-- /.phase-split -->
 
     <div id="successToast" class="success-toast" aria-hidden="true">
         <div class="success-card">
@@ -428,6 +566,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 
     <script>
+        // ---- Reference pane: swap the preview iframe to whichever phase is picked ----
+        (function () {
+            const sel = document.getElementById('refPhaseSelect');
+            const frame = document.getElementById('refPhaseFrame');
+            if (sel && frame) {
+                sel.addEventListener('change', function () {
+                    frame.src = 'print_combined_plan.php?id=' + encodeURIComponent(this.value) + '&single=1';
+                });
+            }
+        })();
+
         // ---- Use a template: split the packed meal columns back into the 8 fields ----
         function unpackDiet(b, l, s, d) {
             b = b || ''; l = l || ''; s = s || ''; d = d || '';
@@ -501,6 +650,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 })
                 .catch(() => { });
         }, 600000); // 10 minutes
+
+        // Force the Daily Schedule meal fields to stack one below the other.
+        // Runs last so nothing in the stylesheet can override it.
+        (function stackMealFields() {
+            var grid = document.querySelector('.meal-grid');
+            if (!grid) return;
+            grid.style.setProperty('display', 'block', 'important');
+            grid.style.setProperty('grid-template-columns', 'none', 'important');
+            grid.style.setProperty('column-count', 'auto', 'important');
+            grid.querySelectorAll('.meal-row').forEach(function (row) {
+                row.style.setProperty('display', 'block', 'important');
+                row.style.setProperty('width', '100%', 'important');
+                row.style.setProperty('float', 'none', 'important');
+                row.style.setProperty('margin', '0 0 20px 0', 'important');
+            });
+            grid.querySelectorAll('.meal-input-area').forEach(function (area) {
+                area.style.setProperty('display', 'block', 'important');
+                area.style.setProperty('width', '100%', 'important');
+            });
+            grid.querySelectorAll('textarea').forEach(function (ta) {
+                ta.style.setProperty('width', '100%', 'important');
+                ta.style.setProperty('resize', 'vertical', 'important');
+                ta.style.setProperty('min-height', '100px', 'important');
+            });
+        })();
     </script>
 </body>
 

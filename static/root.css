@@ -22843,6 +22843,11 @@ textarea.form-control {
     display: inline;
 }
 
+.page-diet_plan_details .time-badge {
+    color: #F25C2A;
+    font-weight: 700;
+}
+
 .page-diet_plan_details .meal-content {
     line-height: 1.6;
     color: #374151;

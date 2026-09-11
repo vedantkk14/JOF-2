@@ -63,41 +63,101 @@ function generateDietPlanPDF($current_plan_id)
     // Use a font that supports standard characters securely without rendering ? boxes
     $pdf->SetFont('dejavusans', '', 10);
 
-    // 4. Format Text Function (Crucial for fixing the chaotic layout)
+    // 4. Format Text Function — mirrors the Print History layout
+    //    - **Section labels** (WAKE UP :, LUNCH :, ...)  -> bold orange, spaced above
+    //    - Any line that starts with a time (6 AM, 1130 AM, 8:30 PM, 2 PM - ...) -> time in bold orange,
+    //      rest normal, and one blank line after it so each timing entry is visually separated
+    //    - Everything else -> normal text
     $formatText = function ($text) {
-        if (empty($text))
+        if (empty($text) || trim($text) === '')
             return '<span style="color:#999;">Not specified</span>';
 
         // Remove Emojis and unwanted characters that break TCPDF
         $text = preg_replace('/[\x{10000}-\x{10FFFF}]/u', '', $text);
 
-        // Clean up bad CSV/database string artifacts if present
+        // Clean up bad CSV/database string artifacts + normalise newlines
         $text = trim($text, '"\' ');
         $text = str_replace(['","', '", "'], "\n", $text);
+        $text = str_replace(["\r\n", "\r"], "\n", $text);
 
-        $lines = explode("\n", $text);
+        // Matches a single time (6 AM, 1130 AM, 8:30 PM) OR a time range (5pm-6pm, 6:30–7:00 AM, 6-7 PM)
+        $timeRe = '/^('
+            . '(?:\d{3,4}|\d{1,2}(?:[:.]\d{2})?)\s*(?:[AP]\.?M\.?)?\s*[-\x{2013}\x{2014}~]\s*(?:\d{3,4}|\d{1,2}(?:[:.]\d{2})?)\s*[AP]\.?M\.?'
+            . '|(?:\d{3,4}|\d{1,2}(?:[:.]\d{2})?)\s*[AP]\.?M\.?'
+            . ')\b[\s\-\x{2013}\x{2014}:]*(.*)$/iu';
+
+        // "5pm-6pm" -> "5 PM - 6 PM"
+        $niceTime = function ($raw) {
+            $t = preg_replace('/\s*([ap])\.?\s*m\.?/iu', ' $1m', $raw);       // pad meridiems
+            $t = preg_replace('/\s*[-\x{2013}\x{2014}~]\s*/u', ' - ', $t);     // normalise range dash
+            return strtoupper(preg_replace('/\s+/', ' ', trim($t)));
+        };
+
         $formatted = [];
-
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line))
+        $lastWasHeading = false;
+        $inNumberedList = false;
+        foreach (explode("\n", $text) as $line) {
+            $line = trim(ltrim($line, "? \t"));
+            // A stray blank line (accidental extra Enter) has no effect at all — never rendered,
+            // never treated as "end of point". Only a new "N. " line closes the previous point.
+            if ($line === '')
                 continue;
 
-            // Strip leading question marks (failed emojis)
-            $line = ltrim($line, '? ');
-            // Strip markdown bold markers (** prefix/suffix)
-            $line = preg_replace('/\*\*([^*]*)\*\*/', '$1', $line);
-            $line = str_replace('**', '', $line);
-            $safe_line = htmlspecialchars($line, ENT_QUOTES, 'UTF-8');
-
-            // Detect Headings: If line is ALL CAPS or ends with a colon (e.g. WAKE UP (6 AM):)
-            if (preg_match('/^[A-Z0-9\s\(\)\-\&]+:/', $line) || (strlen($line) > 3 && strtoupper($line) === $line)) {
-                $prefix = empty($formatted) ? '' : '<br><br>';
-                // Bold and Orange text for headers
-                $formatted[] = $prefix . '<b style="color:#F25C2A; font-size:11px;">' . $safe_line . '</b>';
-            } else {
-                $formatted[] = '<span style="color:#333333; font-size:10px;">' . $safe_line . '</span>';
+            // 1. Section label — was wrapped in **...** in the stored plan
+            if (preg_match('/\*\*\s*(.+?)\s*\*\*/', $line, $sm)) {
+                $label = htmlspecialchars(rtrim(trim($sm[1]), ' :') . ' :', ENT_QUOTES, 'UTF-8');
+                $last  = $formatted ? $formatted[count($formatted) - 1] : '';
+                $prefix = empty($formatted) ? '' : (substr($last, -4) === '<br>' ? '<br>' : '<br><br>');
+                $formatted[] = $prefix . '<b style="color:#F25C2A; font-size:11px;">' . $label . '</b>';
+                $lastWasHeading = true;
+                $inNumberedList = false;
+                continue;
             }
+
+            $line = str_replace('**', '', $line);
+
+            // 2. Line that is / starts with a time or time-range -> time in bold orange, rest normal
+            if (preg_match($timeRe, $line, $tm)) {
+                $timeTxt  = htmlspecialchars($niceTime(trim($tm[1])), ENT_QUOTES, 'UTF-8');
+                $rest     = trim($tm[2]);
+                $out = '<b style="color:#F25C2A; font-size:10px;">' . $timeTxt . '</b>';
+                if ($rest !== '') {
+                    $out .= ' <span style="color:#333333; font-size:10px;">'
+                          . htmlspecialchars($rest, ENT_QUOTES, 'UTF-8') . '</span>';
+                }
+
+                if ($lastWasHeading) {
+                    // put the time right after the heading:  "MID MEAL : 4:30 PM"  then a blank line
+                    $i = count($formatted) - 1;
+                    $formatted[$i] = $formatted[$i] . ' ' . $out . '<br>';
+                } else {
+                    // standalone timing: one blank line before and after
+                    $last    = $formatted ? $formatted[count($formatted) - 1] : '';
+                    $leadGap = (empty($formatted) || substr($last, -4) !== '<br>') ? '<br>' : '';
+                    $formatted[] = $leadGap . $out . '<br>';
+                }
+                $lastWasHeading = false;
+                $inNumberedList = false;
+                continue;
+            }
+
+            // 3. Numbered point ("1. ...", "2) ..."). A blank line goes ONLY before a new numbered
+            //    point — never after the point that was just written. So any line that follows
+            //    (numbered or not) that ISN'T a new "N. " is treated as that point continuing,
+            //    with no gap, even if the admin left a stray blank line before it.
+            if (preg_match('/^\d+[.)]\s+/', $line)) {
+                $entry = '<span style="color:#333333; font-size:10px;">'
+                       . htmlspecialchars($line, ENT_QUOTES, 'UTF-8') . '</span>';
+                $formatted[] = ($inNumberedList ? '<br>' : '') . $entry;
+                $inNumberedList = true;
+                $lastWasHeading = false;
+                continue;
+            }
+
+            // 4. Plain content line — if a numbered point is open, this continues it (no gap)
+            $formatted[] = '<span style="color:#333333; font-size:10px;">'
+                         . htmlspecialchars($line, ENT_QUOTES, 'UTF-8') . '</span>';
+            $lastWasHeading = false;
         }
 
         return implode("<br>\n", $formatted);
