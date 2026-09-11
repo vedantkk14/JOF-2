@@ -5,9 +5,86 @@ $user = get_session_user();
 
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../auth/workout_helper.php';
+require_once __DIR__ . '/../../auth/diet_plan_schema.php';
 
-$streak = workout_streak_stats($conn, (int) $user['id']);
+$uid = (int) $user['id'];
+
+// Current assigned diet plan (latest), for the dashboard card
+$current_diet_plan = null;
+$current_diet_meals = [];
+$mstmt2 = $conn->prepare("SELECT id, membership FROM members WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+$mstmt2->bind_param('i', $uid);
+$mstmt2->execute();
+$mrow2 = $mstmt2->get_result()->fetch_assoc();
+if ($mrow2) {
+    $dpstmt = $conn->prepare("SELECT dp.* FROM diet_plans dp
+                               JOIN diet_plan_assignments dpa ON dpa.plan_id = dp.id
+                               WHERE dpa.member_id = ?
+                               ORDER BY dp.created_at DESC LIMIT 1");
+    $current_member_id = (int) $mrow2['id'];
+    $dpstmt->bind_param('i', $current_member_id);
+    $dpstmt->execute();
+    $current_diet_plan = $dpstmt->get_result()->fetch_assoc();
+    if ($current_diet_plan) {
+        $current_diet_meals = diet_plan_meal_summary($current_diet_plan);
+    }
+}
+
+// Current membership (latest CONFIRMED payment row = source of truth — a 'Pending Setup'
+// placeholder from an unverified subscribe/renewal request must never override what's
+// actually active, so it's explicitly excluded here; see auth/membership_helper.php)
+require_once __DIR__ . '/../../auth/membership_helper.php';
+$latest_payment = null;
+$pending_plan_request = null;
+if ($mrow2) {
+    $paystmt = $conn->prepare("SELECT * FROM member_payments
+                                WHERE member_id = ? AND membership_type != 'Pending Setup'
+                                ORDER BY created_at DESC LIMIT 1");
+    $paystmt->bind_param('i', $current_member_id);
+    $paystmt->execute();
+    $latest_payment = $paystmt->get_result()->fetch_assoc();
+
+    $pending_plan_request = membership_pending_request($conn, $current_member_id);
+}
+$membership_info = membership_status_info($conn, $latest_payment, $mrow2['membership'] ?? '');
+$current_plan_name = $membership_info['plan_name'];
+$membership_days_remaining = $membership_info['days_remaining'];
+$membership_status = $membership_info['status'];
+$pc = $conn->query("SELECT full_name, email, profile_completed, profile_pic FROM user_data WHERE id = $uid")->fetch_assoc();
+$profile_incomplete = !$pc || (int) $pc['profile_completed'] !== 1;
+$pfp_url = (!empty($pc['profile_pic']) && is_file(__DIR__ . '/../../uploads/profile_pics/' . $pc['profile_pic']))
+    ? '../../uploads/profile_pics/' . rawurlencode($pc['profile_pic'])
+    : null;
+$u_name = $user['name'] ?: 'Member';
+$u_initials = strtoupper(mb_substr($u_name, 0, 1) . (str_contains($u_name, ' ') ? mb_substr(strrchr($u_name, ' '), 1, 1) : ''));
+
+$streak = workout_streak_stats($conn, $uid);
 $csrf   = generate_csrf_token();
+
+// ── When the profile is not done, prep the vars the wizard partial needs ──
+if ($profile_incomplete) {
+    $DIETS   = ['non-veg' => 'Non-Vegetarian', 'veg' => 'Vegetarian', 'vegan' => 'Vegan', 'eggetarian' => 'Eggetarian', 'keto' => 'Keto / Low Carb'];
+    $GENDERS = ['Male', 'Female', 'Other'];
+    $email   = $pc['email'];
+    $done    = false;
+    $errors  = [];
+    $has_payment_step = true;
+    $first_bad_step   = 1;
+    $measure = null;
+    $img_base = '../../uploads/progress_photos/';
+    $pic = $pc['profile_pic'] ?? null;
+    $has_pic = $pic && is_file(__DIR__ . '/../../uploads/profile_pics/' . $pic);
+    $avatar  = $has_pic
+        ? '../../uploads/profile_pics/' . rawurlencode($pic)
+        : 'https://ui-avatars.com/api/?name=' . urlencode($u_name) . '&background=FF6B47&color=fff&size=160&bold=true';
+    $v = [
+        'full_name' => $pc['full_name'] ?: '', 'phone_number' => '', 'gender' => '', 'diet_type' => '',
+        'personal_training' => 1, 'age' => '', 'height' => '', 'weight' => '', 'medical_issues' => '',
+        'mood' => 5, 'sleep_quality' => 5, 'hunger_craving' => 5, 'energy_level' => 5,
+        'chest' => '', 'waist' => '', 'hip' => '', 'thigh' => '',
+        'transaction_id' => '', 'payer_name' => '',
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -54,6 +131,7 @@ $csrf   = generate_csrf_token();
             background: var(--bg);
             color: var(--ink);
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
 
         h1,
@@ -383,6 +461,98 @@ $csrf   = generate_csrf_token();
             color: var(--ink-soft);
         }
 
+        /* ===== Messages/notification dropdowns ===== */
+        .shell-dropdown-container { position: relative; }
+        .shell-dropdown {
+            display: none;
+            position: absolute;
+            top: 52px;
+            right: 0;
+            width: 340px;
+            max-width: 88vw;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 18px 40px -18px rgba(20,20,30,.35);
+            z-index: 60;
+            overflow: hidden;
+        }
+        .shell-dropdown.active { display: block; }
+        .shell-dropdown-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 13.5px; }
+        .shell-dropdown-head button { background: none; border: none; color: var(--ink-faint); cursor: pointer; }
+        .shell-dropdown-list { max-height: 320px; overflow-y: auto; }
+        .shell-dropdown-item { display: block; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+        .shell-dropdown-item:hover { background: var(--coral-tint); }
+        .shell-dropdown-item .n { font-size: 13px; font-weight: 700; }
+        .shell-dropdown-item .m { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+        .shell-dropdown-item .t { font-size: 10.5px; color: var(--ink-faint); margin-top: 4px; }
+        .shell-dropdown-empty { padding: 30px 16px; text-align: center; color: var(--ink-faint); font-size: 12.5px; }
+
+        /* ===== Profile-incomplete warning ===== */
+        .profile-warning {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: var(--amber-tint);
+            border: 1px solid #F3D9A6;
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+        }
+
+        .pw-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: #fff;
+            color: #B87814;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .pw-text {
+            flex: 1;
+            font-size: 13.5px;
+            color: #7A5417;
+            line-height: 1.4;
+        }
+
+        .pw-text b {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 2px;
+            color: #5C3F10;
+        }
+
+        .pw-btn {
+            flex-shrink: 0;
+            background: var(--coral);
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            white-space: nowrap;
+        }
+
+        .pw-btn:hover {
+            background: var(--coral-dark);
+        }
+
+        @media (max-width: 560px) {
+            .profile-warning {
+                flex-wrap: wrap;
+            }
+
+            .pw-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
         /* ===== Welcome banner ===== */
         .welcome-card {
             background: linear-gradient(120deg, #FF7A57 0%, #FF5B39 60%, #EF4B2C 100%);
@@ -449,13 +619,23 @@ $csrf   = generate_csrf_token();
             padding: 22px;
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
+            min-width: 0;
         }
 
         .card-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            row-gap: 8px;
             margin-bottom: 16px;
+        }
+
+        .card-head > div:last-child:not(:only-child) {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            row-gap: 6px;
         }
 
         .card-title {
@@ -895,15 +1075,68 @@ $csrf   = generate_csrf_token();
             .welcome-card {
                 flex-direction: column;
                 align-items: flex-start;
+                padding: 20px;
+            }
+
+            .welcome-left h1 {
+                font-size: 20px;
             }
 
             .welcome-stats {
                 width: 100%;
                 justify-content: space-between;
+                gap: 10px;
             }
 
             .grid {
                 grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            .session-block {
+                padding: 12px;
+                gap: 12px;
+            }
+
+            /* Bump up the smaller text sizes — desktop sizes read too small on a phone screen */
+            .card-title {
+                font-size: 16px;
+            }
+
+            .sub-line,
+            .kv-row,
+            .meal-row,
+            .session-info span {
+                font-size: 14.5px;
+            }
+
+            .session-info b {
+                font-size: 15.5px;
+            }
+
+            .status-pill {
+                font-size: 12.5px;
+                padding: 6px 12px;
+            }
+
+            .btn {
+                font-size: 14.5px;
+                padding: 13px 18px;
+            }
+
+            .welcome-left p {
+                font-size: 14.5px;
+            }
+
+            .welcome-stat .lbl {
+                font-size: 12px;
+            }
+
+            .plan-tag {
+                font-size: 12.5px;
             }
 
             .grid .span-2 {
@@ -922,6 +1155,29 @@ $csrf   = generate_csrf_token();
             }
         }
 
+        @media (max-width: 640px) {
+            .topbar-right {
+                gap: 8px;
+            }
+
+            .icon-btn {
+                width: 38px;
+                height: 38px;
+            }
+
+            .profile-chip {
+                padding: 4px 10px 4px 4px;
+                gap: 8px;
+            }
+
+            .profile-chip .profile-name {
+                max-width: 88px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        }
+
         @media (max-width:420px) {
             .page-title {
                 font-size: 17px;
@@ -929,6 +1185,38 @@ $csrf   = generate_csrf_token();
 
             .welcome-left h1 {
                 font-size: 19px;
+            }
+
+            .profile-chip > div:last-child {
+                display: none;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .welcome-card {
+                padding: 18px;
+            }
+
+            .welcome-stats {
+                gap: 8px;
+            }
+
+            .welcome-stat .num {
+                font-size: 19px;
+            }
+
+            .btn-row {
+                flex-direction: column;
+            }
+
+            .big-line {
+                font-size: 22px;
+            }
+
+            .amount-due {
+                font-size: 22px;
             }
         }
 
@@ -1031,10 +1319,13 @@ $csrf   = generate_csrf_token();
 
         .streak-strip {
             display: flex;
+            width: 100%;
+            max-width: 100%;
             gap: 5px;
             overflow-x: auto;
             padding-bottom: 4px;
             margin-bottom: 18px;
+            -webkit-overflow-scrolling: touch;
         }
 
         .sd {
@@ -1127,6 +1418,49 @@ $csrf   = generate_csrf_token();
                 margin-left: 0;
             }
         }
+
+        @media (max-width: 860px) {
+            .streak-cap {
+                font-size: 13.5px;
+            }
+
+            .streak-log-btn {
+                font-size: 14.5px;
+                padding: 13px 20px;
+            }
+
+            .streak-stats small {
+                font-size: 11.5px;
+            }
+
+            .streak-stats span {
+                font-size: 19px;
+            }
+
+            .sd-day {
+                font-size: 12px;
+            }
+
+            .sd-dow {
+                font-size: 10.5px;
+            }
+
+            .sd-dot {
+                width: 26px;
+                height: 26px;
+            }
+
+            .sd {
+                flex-basis: 36px;
+                min-width: 36px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .streak-num {
+                font-size: 32px;
+            }
+        }
     </style>
 </head>
 
@@ -1167,15 +1501,16 @@ $csrf   = generate_csrf_token();
                     </svg>
                     <span class="nav-label">Dashboard</span>
                 </a>
-                <a class="nav-item" href="#">
+                <a class="nav-item" href="user_profile.php">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
                         <circle cx="12" cy="8" r="4" />
                         <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" />
                     </svg>
                     <span class="nav-label">My Profile</span>
+                    <?php if ($profile_incomplete): ?><span style="margin-left:auto;width:8px;height:8px;border-radius:50%;background:#FF6B47;flex-shrink:0;"></span><?php endif; ?>
                 </a>
-                <a class="nav-item" href="#">
+                <a class="nav-item" href="user_diet_plans.php">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
                         <path d="M4 3h12l4 4v14H4z" />
@@ -1183,7 +1518,7 @@ $csrf   = generate_csrf_token();
                     </svg>
                     <span class="nav-label">Diet Plans</span>
                 </a>
-                <a class="nav-item" href="#">
+                <a class="nav-item" href="user_membership.php">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
                         <rect x="3" y="5" width="18" height="14" rx="2" />
@@ -1191,7 +1526,7 @@ $csrf   = generate_csrf_token();
                     </svg>
                     <span class="nav-label">Membership</span>
                 </a>
-                <a class="nav-item" href="#">
+                <a class="nav-item" href="user_payments.php">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
                         <path d="M4 4h16v16H4z" />
@@ -1235,6 +1570,24 @@ $csrf   = generate_csrf_token();
                     <div class="page-title">Dashboard</div>
                 </div>
                 <div class="topbar-right">
+                    <div class="shell-dropdown-container">
+                        <button class="icon-btn" id="msgBellBtn" aria-label="Messages" title="Messages from your trainer">
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                            </svg>
+                            <span class="unread-dot" id="msgUnreadDot" style="display:none;"></span>
+                        </button>
+                        <div class="shell-dropdown" id="msgDropdown">
+                            <div class="shell-dropdown-head">
+                                <span>Messages</span>
+                                <button type="button" id="msgDropdownClose">✕</button>
+                            </div>
+                            <div class="shell-dropdown-list" id="msgDropdownList">
+                                <div class="shell-dropdown-empty">Loading…</div>
+                            </div>
+                        </div>
+                    </div>
                     <button class="icon-btn" id="notifBtn" aria-label="Notifications">
                         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1243,15 +1596,47 @@ $csrf   = generate_csrf_token();
                         </svg>
                         <span class="unread-dot" id="unreadDot"></span>
                     </button>
-                    <div class="profile-chip">
-                        <div class="avatar">RS</div>
+                    <a class="profile-chip" href="user_profile.php" style="text-decoration:none;color:inherit;">
+                        <?php if ($pfp_url): ?>
+                            <div class="avatar" style="padding:0;overflow:hidden;"><img src="<?= htmlspecialchars($pfp_url) ?>" alt="" style="width:100%;height:100%;object-fit:cover;"></div>
+                        <?php else: ?>
+                            <div class="avatar"><?= htmlspecialchars($u_initials) ?></div>
+                        <?php endif; ?>
                         <div>
-                            <div class="profile-name">Rohan Sharma</div>
-                            <div class="profile-role">Premium Member</div>
+                            <div class="profile-name"><?= htmlspecialchars($u_name) ?></div>
+                            <div class="profile-role"><?= $profile_incomplete ? 'Profile incomplete' : 'Member' ?></div>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </div>
+
+            <?php if ($profile_incomplete): ?>
+                <div class="profile-warning">
+                    <div class="pw-icon">⚠</div>
+                    <div class="pw-text">
+                        <b>Your profile is incomplete.</b>
+                        Please complete it so your trainer can set up the right plan for you.
+                    </div>
+                    <a class="pw-btn" href="user_profile.php">Complete Profile</a>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($membership_status === 'expiring' || $membership_status === 'expired'): ?>
+                <div class="profile-warning" style="<?= $membership_status === 'expired' ? 'background:var(--red-tint);border-color:#F3B9BB;' : '' ?>">
+                    <div class="pw-icon" style="<?= $membership_status === 'expired' ? 'color:var(--red);' : '' ?>">⏰</div>
+                    <div class="pw-text" style="<?= $membership_status === 'expired' ? 'color:#8A2A2D;' : '' ?>">
+                        <b style="<?= $membership_status === 'expired' ? 'color:#6B1618;' : '' ?>">
+                            <?= $membership_status === 'expired'
+                                ? 'Your membership has expired.'
+                                : 'Your membership is expiring in ' . (int) $membership_days_remaining . ' day' . ($membership_days_remaining == 1 ? '' : 's') . '.' ?>
+                        </b>
+                        <?= $membership_status === 'expired'
+                            ? 'It expired ' . htmlspecialchars(date('d M Y', strtotime($membership_info['valid_until']))) . '. Renew now to keep access to your plans and sessions.'
+                            : 'It ends on ' . htmlspecialchars(date('d M Y', strtotime($membership_info['valid_until']))) . '. Renew now to avoid any interruption.' ?>
+                    </div>
+                    <a class="pw-btn" href="user_membership.php" style="<?= $membership_status === 'expired' ? 'background:var(--red);' : '' ?>">Renew Now</a>
+                </div>
+            <?php endif; ?>
 
             <!-- Welcome banner -->
             <?php
@@ -1301,16 +1686,48 @@ $csrf   = generate_csrf_token();
                             </div>
                             Membership
                         </div>
-                        <span class="status-pill green"><span class="dot"></span>Active</span>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <?php if ($pending_plan_request): ?>
+                                <span class="status-pill" style="background:#EEF2FF; color:#4338CA;" title="<?= $pending_plan_request['plan_name'] !== '' ? htmlspecialchars($pending_plan_request['plan_name']) : 'New plan requested' ?> — awaiting your trainer's verification">+ New Plan Pending</span>
+                            <?php endif; ?>
+                            <?php if ($membership_status === 'active'): ?>
+                                <span class="status-pill green"><span class="dot"></span>Active</span>
+                            <?php elseif ($membership_status === 'expiring'): ?>
+                                <span class="status-pill amber"><span class="dot"></span>Expiring Soon</span>
+                            <?php elseif ($membership_status === 'expired'): ?>
+                                <span class="status-pill red"><span class="dot"></span>Expired</span>
+                            <?php else: ?>
+                                <span class="status-pill amber"><span class="dot"></span>Inactive</span>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                    <div class="big-line">Premium Plan</div>
-                    <div class="sub-line">Valid until 24 Nov 2026</div>
-                    <div class="divider"></div>
-                    <div class="kv-row"><span>Plan type</span><b>12-month, Premium</b></div>
-                    <div class="kv-row"><span>Days remaining</span><b>79 days</b></div>
-                    <div class="btn-row">
-                        <button class="btn btn-primary">Renew Plan</button>
-                    </div>
+                    <?php if ($current_plan_name !== ''): ?>
+                        <div class="big-line"><?= htmlspecialchars($current_plan_name) ?></div>
+                        <div class="sub-line">
+                            <?= $membership_info['valid_until']
+                                ? 'Valid until ' . htmlspecialchars(date('d M Y', strtotime($membership_info['valid_until'])))
+                                : 'No expiry on record' ?>
+                        </div>
+                        <div class="divider"></div>
+                        <?php if (!empty($latest_payment['start_date'])): ?>
+                            <div class="kv-row"><span>Member since</span><b><?= htmlspecialchars(date('d M Y', strtotime($latest_payment['start_date']))) ?></b></div>
+                        <?php endif; ?>
+                        <?php if ($membership_days_remaining !== null): ?>
+                            <div class="kv-row">
+                                <span><?= $membership_status === 'expired' ? 'Days overdue' : 'Days remaining' ?></span>
+                                <b><?= abs($membership_days_remaining) ?> days</b>
+                            </div>
+                        <?php endif; ?>
+                        <div class="btn-row">
+                            <button class="btn btn-primary" onclick="location.href='user_membership.php'">View Membership</button>
+                        </div>
+                    <?php else: ?>
+                        <div class="big-line">No plan yet</div>
+                        <div class="sub-line">Talk to your trainer to get started.</div>
+                        <div class="btn-row">
+                            <button class="btn btn-primary" onclick="location.href='user_membership.php'">Explore Plans</button>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- PT Session -->
@@ -1357,20 +1774,32 @@ $csrf   = generate_csrf_token();
                             Current Diet Plan
                         </div>
                     </div>
-                    <span class="plan-tag">Week 6 · Lean Muscle Phase</span>
-                    <div class="meal-list">
-                        <div class="meal-row"><span class="meal-name">Breakfast</span><span class="meal-time">7:30
-                                AM</span></div>
-                        <div class="meal-row"><span class="meal-name">Lunch</span><span class="meal-time">1:00 PM</span>
+                    <?php if ($current_diet_plan):
+                        $__dp_parts = explode(' - ', $current_diet_plan['plan_name']);
+                        $__dp_phase = $__dp_parts[1] ?? $current_diet_plan['plan_name'];
+                    ?>
+                        <span class="plan-tag"><?= htmlspecialchars($__dp_phase) ?> · <?= htmlspecialchars($current_diet_plan['goal']) ?></span>
+                        <div class="meal-list">
+                            <?php if ($current_diet_meals): ?>
+                                <?php foreach ($current_diet_meals as $__meal): ?>
+                                    <div class="meal-row">
+                                        <span class="meal-name"><?= htmlspecialchars($__meal['label']) ?></span>
+                                        <span class="meal-time"><?= $__meal['time'] !== '' ? htmlspecialchars($__meal['time']) : '—' ?></span>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="sub-line">See the full plan for meal-by-meal details.</div>
+                            <?php endif; ?>
                         </div>
-                        <div class="meal-row"><span class="meal-name">Post-workout</span><span class="meal-time">6:00
-                                PM</span></div>
-                        <div class="meal-row"><span class="meal-name">Dinner</span><span class="meal-time">8:30
-                                PM</span></div>
-                    </div>
-                    <div class="btn-row">
-                        <button class="btn btn-primary">View Full Plan</button>
-                    </div>
+                        <div class="btn-row">
+                            <button class="btn btn-primary" onclick="location.href='user_diet_plans.php?open_plan=<?= (int) $current_diet_plan['id'] ?>'">View Full Plan</button>
+                        </div>
+                    <?php else: ?>
+                        <div class="sub-line" style="margin-top:6px;">No diet plan assigned yet — check back soon.</div>
+                        <div class="btn-row">
+                            <button class="btn btn-ghost" onclick="location.href='user_diet_plans.php'">View Diet Plans</button>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Payment status -->
@@ -1555,6 +1984,95 @@ $csrf   = generate_csrf_token();
 
         // Auto-notification removed — toasts will only show on real events
 
+        // ══════════════════════════════════════════════════
+        //  MESSAGES BELL (trainer replies on diet plan chats)
+        // ══════════════════════════════════════════════════
+        (function () {
+            let msgOpen = false;
+            const msgBtn = document.getElementById('msgBellBtn');
+            const msgDrop = document.getElementById('msgDropdown');
+            const msgDot = document.getElementById('msgUnreadDot');
+            const msgList = document.getElementById('msgDropdownList');
+            const msgClose = document.getElementById('msgDropdownClose');
+            if (!msgBtn) return;
+
+            function escHtmlM(str) {
+                return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+            function timeAgoM(dateStr) {
+                const past = new Date(dateStr.replace(' ', 'T'));
+                if (isNaN(past.getTime())) return '';
+                let diff = Math.floor((Date.now() - past.getTime()) / 1000);
+                if (diff < 0) diff = 0;
+                if (diff < 60) return diff + 's ago';
+                if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+                if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+                return Math.floor(diff / 86400) + 'd ago';
+            }
+
+            msgBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                msgOpen = !msgOpen;
+                msgDrop.classList.toggle('active', msgOpen);
+                if (msgOpen) openMsgPanel();
+            });
+            if (msgClose) {
+                msgClose.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    msgOpen = false;
+                    msgDrop.classList.remove('active');
+                });
+            }
+            document.addEventListener('click', function (e) {
+                if (msgOpen && msgDrop && !msgDrop.contains(e.target) && e.target !== msgBtn) {
+                    msgOpen = false;
+                    msgDrop.classList.remove('active');
+                }
+            });
+
+            function renderMsgList(items) {
+                if (!items || !items.length) {
+                    msgList.innerHTML = '<div class="shell-dropdown-empty">No messages yet.<br>Ask a question from your Diet Plans page!</div>';
+                    return;
+                }
+                msgList.innerHTML = items.map(n => `
+                    <a class="shell-dropdown-item" href="user_diet_plans.php?open_plan=${n.plan_id}">
+                        <div class="n">${escHtmlM(n.phase)}</div>
+                        <div class="m">${escHtmlM((n.message || '').slice(0, 70))}${n.message.length > 70 ? '…' : ''}</div>
+                        <div class="t">${timeAgoM(n.created_at)}</div>
+                    </a>
+                `).join('');
+            }
+
+            function openMsgPanel() {
+                msgList.innerHTML = '<div class="shell-dropdown-empty">Loading…</div>';
+                fetch('../../handlers/get_user_diet_notifications.php', { cache: 'no-store' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            renderMsgList(data.notifications);
+                            fetch('../../handlers/mark_user_diet_messages_seen.php', { method: 'POST', cache: 'no-store' });
+                            updateMsgDot(0);
+                        }
+                    })
+                    .catch(() => { msgList.innerHTML = '<div class="shell-dropdown-empty">Could not load messages.</div>'; });
+            }
+
+            function updateMsgDot(count) {
+                if (!msgDot) return;
+                msgDot.style.display = count > 0 ? 'block' : 'none';
+            }
+
+            function pollMsgBadge() {
+                fetch('../../handlers/get_user_diet_notifications.php', { cache: 'no-store' })
+                    .then(res => res.json())
+                    .then(data => { if (data.status === 'success' && !msgOpen) updateMsgDot(data.unread_count); })
+                    .catch(() => { });
+            }
+            pollMsgBadge();
+            setInterval(pollMsgBadge, 10000);
+        })();
+
 
         // ══════════════════════════════════════════════════
         //  WORKOUT STREAK
@@ -1629,7 +2147,6 @@ $csrf   = generate_csrf_token();
             });
         })();
     </script>
-
 </body>
 
 </html>
