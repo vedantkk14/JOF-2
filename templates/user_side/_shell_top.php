@@ -2,7 +2,7 @@
 /**
  * templates/user_side/_shell_top.php
  * Shared sidebar/topbar shell for member-portal pages.
- * The including page must set $ACTIVE_NAV ('dashboard'|'profile'|'diet'|'membership'|'payments'|'notifications')
+ * The including page must set $ACTIVE_NAV ('dashboard'|'profile'|'membership'|'diet'|'payments')
  * and $PAGE_TITLE before requiring this file, then require _shell_bottom.php after its own content.
  */
 
@@ -10,12 +10,13 @@ require_once __DIR__ . '/../../auth/auth_check.php';
 require_role(['user']);
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../auth/diet_plan_schema.php';
+require_once __DIR__ . '/../../auth/profile_helper.php';
 
 $user = get_session_user();
 $uid  = (int) $user['id'];
 
 $pc = $conn->query("SELECT full_name, email, profile_completed, profile_pic FROM user_data WHERE id = $uid")->fetch_assoc();
-$profile_incomplete = !$pc || (int) $pc['profile_completed'] !== 1;
+$profile_incomplete = !$pc || !user_profile_status($conn, $uid)['complete'];
 $pfp_url = (!empty($pc['profile_pic']) && is_file(__DIR__ . '/../../uploads/profile_pics/' . $pc['profile_pic']))
     ? '../../uploads/profile_pics/' . rawurlencode($pc['profile_pic'])
     : null;
@@ -557,14 +558,6 @@ function shell_nav_active($key, $active) { return $key === $active ? ' active' :
                     <span class="nav-label">My Profile</span>
                     <?php if ($profile_incomplete): ?><span style="margin-left:auto;width:8px;height:8px;border-radius:50%;background:#FF6B47;flex-shrink:0;"></span><?php endif; ?>
                 </a>
-                <a class="nav-item<?= shell_nav_active('diet', $ACTIVE_NAV) ?>" href="user_diet_plans.php">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M4 3h12l4 4v14H4z" />
-                        <path d="M9 8h6M9 12h6M9 16h4" />
-                    </svg>
-                    <span class="nav-label">Diet Plans</span>
-                </a>
                 <a class="nav-item<?= shell_nav_active('membership', $ACTIVE_NAV) ?>" href="user_membership.php">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
@@ -573,6 +566,14 @@ function shell_nav_active($key, $active) { return $key === $active ? ' active' :
                     </svg>
                     <span class="nav-label">Membership</span>
                 </a>
+                <a class="nav-item<?= shell_nav_active('diet', $ACTIVE_NAV) ?>" href="user_diet_plans.php">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M4 3h12l4 4v14H4z" />
+                        <path d="M9 8h6M9 12h6M9 16h4" />
+                    </svg>
+                    <span class="nav-label">Diet Plan</span>
+                </a>
                 <a class="nav-item<?= shell_nav_active('payments', $ACTIVE_NAV) ?>" href="user_payments.php">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
@@ -580,14 +581,6 @@ function shell_nav_active($key, $active) { return $key === $active ? ' active' :
                         <path d="M8 9h8M8 13h8M8 17h4" />
                     </svg>
                     <span class="nav-label">Payments &amp; Invoices</span>
-                </a>
-                <a class="nav-item<?= shell_nav_active('notifications', $ACTIVE_NAV) ?>" href="user_notification.php" id="notifNavItem">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-                        <path d="M13.7 21a2 2 0 01-3.4 0" />
-                    </svg>
-                    <span class="nav-label">Notifications</span>
                 </a>
             </nav>
 

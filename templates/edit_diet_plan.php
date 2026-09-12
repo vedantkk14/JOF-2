@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../auth/auth_check.php';
 require_role(['admin', 'trainer']);
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/diet_plan_schema.php';
 
 $error = "";
 $success = "";
@@ -95,6 +96,15 @@ if (preg_match('/\*\*GUIDELINES\s*(?:\([^)]*\))?\s*:?\s*\*\*\s*(.*)/su', $db_din
     $val_guidelines = trim($m[1]);
 }
 
+// 5. Resources (JSON-encoded list of {name, link})
+$val_resources = [];
+if (!empty($plan['resources'])) {
+    $decoded = json_decode($plan['resources'], true);
+    if (is_array($decoded)) {
+        $val_resources = $decoded;
+    }
+}
+
 
 // 3. Handle Submission (Update Only)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -145,11 +155,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($in_guide)
         $final_dinner .= "📝 **GUIDELINES:**\n" . $in_guide;
 
+    $post_resource_names = $_POST['resource_name'] ?? [];
+    $post_resource_links = $_POST['resource_link'] ?? [];
+    $new_resources = [];
+    foreach ($post_resource_names as $i => $rname) {
+        $rname = trim($rname);
+        $rlink = trim($post_resource_links[$i] ?? '');
+        if ($rname !== '' && $rlink !== '') {
+            $new_resources[] = ['name' => $rname, 'link' => $rlink];
+        }
+    }
+    $final_resources = $new_resources ? json_encode($new_resources) : null;
+
     try {
         // UPDATE existing plan
-        $sql = "UPDATE diet_plans SET plan_name=?, diet_type=?, goal=?, duration=?, calories=?, trainer_name=?, breakfast=?, lunch=?, snack=?, dinner=? WHERE id=?";
+        $sql = "UPDATE diet_plans SET plan_name=?, diet_type=?, goal=?, duration=?, calories=?, trainer_name=?, breakfast=?, lunch=?, snack=?, dinner=?, resources=? WHERE id=?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssiisssssi", $new_plan_name, $diet_type, $goal, $duration, $calories, $trainer_name, $final_breakfast, $final_lunch, $final_snack, $final_dinner, $plan_id);
+        $stmt->bind_param("sssiissssssi", $new_plan_name, $diet_type, $goal, $duration, $calories, $trainer_name, $final_breakfast, $final_lunch, $final_snack, $final_dinner, $final_resources, $plan_id);
         if ($stmt->execute()) {
             $success = "updated";
             // Update local vars to show latest data
@@ -162,6 +184,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $val_dinner = $in_dinner;
             $val_presleep = $in_pre;
             $val_guidelines = $in_guide;
+            $val_resources = $new_resources;
         }
     } catch (Exception $e) {
         $error = "Error: " . $e->getMessage();
@@ -372,6 +395,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                 </div>
 
+                <div class="section-title"><img src="../icons/cart-shopping-solid-full.svg" onerror="this.style.display='none'"><span>Resources & Recommended Products</span></div>
+
+                <div id="resourceRows" class="resource-rows">
+                    <?php if (!empty($val_resources)): ?>
+                        <?php foreach ($val_resources as $r): ?>
+                            <div class="resource-row" style="display:flex; gap:10px; margin-bottom:10px;">
+                                <input type="text" name="resource_name[]" class="form-input" value="<?= htmlspecialchars($r['name'] ?? '') ?>" placeholder="e.g. Whey Protein (Blinkit)" style="flex:1;">
+                                <input type="url" name="resource_link[]" class="form-input" value="<?= htmlspecialchars($r['link'] ?? '') ?>" placeholder="https://blinkit.com/..." style="flex:1;">
+                                <button type="button" class="btn btn-secondary remove-resource-row" style="flex:0 0 auto;">Remove</button>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="resource-row" style="display:flex; gap:10px; margin-bottom:10px;">
+                            <input type="text" name="resource_name[]" class="form-input" placeholder="e.g. Whey Protein (Blinkit)" style="flex:1;">
+                            <input type="url" name="resource_link[]" class="form-input" placeholder="https://blinkit.com/..." style="flex:1;">
+                            <button type="button" class="btn btn-secondary remove-resource-row" style="flex:0 0 auto;">Remove</button>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <button type="button" id="addResourceRow" class="btn btn-secondary" style="margin-bottom:20px;">+ Add Resource</button>
+
                 <div
                     style="display:flex; justify-content: space-between; align-items:center; padding: 20px 0 5px 0; gap:15px;">
                     <a href="diet_plan_details.php?id=<?= $plan_id ?>" class="btn btn-secondary"
@@ -399,6 +443,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const resourceRows = document.getElementById('resourceRows');
+            const addResourceRow = document.getElementById('addResourceRow');
+
+            function bindRemove(row) {
+                const btn = row.querySelector('.remove-resource-row');
+                btn.addEventListener('click', function () {
+                    if (resourceRows.querySelectorAll('.resource-row').length > 1) {
+                        row.remove();
+                    } else {
+                        row.querySelectorAll('input').forEach(i => i.value = '');
+                    }
+                });
+            }
+            resourceRows.querySelectorAll('.resource-row').forEach(bindRemove);
+
+            if (addResourceRow) {
+                addResourceRow.addEventListener('click', function () {
+                    const row = document.createElement('div');
+                    row.className = 'resource-row';
+                    row.style.cssText = 'display:flex; gap:10px; margin-bottom:10px;';
+                    row.innerHTML = `
+                        <input type="text" name="resource_name[]" class="form-input" placeholder="e.g. Whey Protein (Blinkit)" style="flex:1;">
+                        <input type="url" name="resource_link[]" class="form-input" placeholder="https://blinkit.com/..." style="flex:1;">
+                        <button type="button" class="btn btn-secondary remove-resource-row" style="flex:0 0 auto;">Remove</button>
+                    `;
+                    resourceRows.appendChild(row);
+                    bindRemove(row);
+                });
+            }
+
             const isSuccess = "<?= $success ?>";
             if (isSuccess === "updated") {
                 document.getElementById('successToast').classList.add('visible');

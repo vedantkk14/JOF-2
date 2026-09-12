@@ -38,6 +38,7 @@ $membership_info   = membership_status_info($conn, $latest_payment, $member['mem
 $current_plan_name = $membership_info['plan_name'];
 $days_remaining    = $membership_info['days_remaining'];
 $expiry_status      = $membership_info['status'];
+$membership_pause   = $member_id ? membership_pause_info($conn, $member_id) : null;
 
 // Full plan catalog, same ordering as the admin page
 $plans = [];
@@ -282,7 +283,9 @@ require __DIR__ . '/_shell_top.php';
     <div class="current-hero <?= $expiry_status === 'none' ? 'none' : ($expiry_status === 'expired' ? 'expired' : '') ?>">
         <div class="current-hero-row">
             <div>
-                <?php if ($expiry_status === 'active'): ?>
+                <?php if ($membership_pause): ?>
+                    <div class="tag" style="background:#FDF3E2;color:#B87814;">⏸ Paused</div>
+                <?php elseif ($expiry_status === 'active'): ?>
                     <div class="tag">● Active membership</div>
                 <?php elseif ($expiry_status === 'expiring'): ?>
                     <div class="tag">⚠ Expiring soon</div>
@@ -296,7 +299,9 @@ require __DIR__ . '/_shell_top.php';
                 <?php endif; ?>
                 <h2><?= $current_plan_name !== '' ? e($current_plan_name) : 'No membership yet' ?></h2>
                 <div class="sub">
-                    <?php if ($membership_info['valid_until']): ?>
+                    <?php if ($membership_pause): ?>
+                        Paused until <?= e(date('d M Y', strtotime($membership_pause['pause_end']))) ?> — it will resume automatically after that.
+                    <?php elseif ($membership_info['valid_until']): ?>
                         Valid until <?= e(date('d M Y', strtotime($membership_info['valid_until']))) ?>
                     <?php else: ?>
                         Talk to your trainer to get started on a plan.

@@ -105,9 +105,9 @@ $report_path = $is_reports_dir ? '' : 'reports/';
         </div>
 
         <div
-            class="nav-item-dropdown <?php echo is_active_page(['diet-plans.php', 'create_diet_plan.php', 'assign_diet_plan.php', 'diet_plan_details.php', 'edit_diet_plan.php']); ?>">
+            class="nav-item-dropdown <?php echo is_active_page(['diet-plans.php', 'create_diet_plan.php', 'assign_diet_plan.php', 'diet_plan_details.php', 'edit_diet_plan.php', 'diet_messages.php']); ?>">
             <a href="<?php echo $base_path; ?>diet-plans.php"
-                class="nav-link <?php echo is_active_page(['diet-plans.php', 'create_diet_plan.php', 'assign_diet_plan.php', 'diet_plan_details.php', 'edit_diet_plan.php']); ?>">
+                class="nav-link <?php echo is_active_page(['diet-plans.php', 'create_diet_plan.php', 'assign_diet_plan.php', 'diet_plan_details.php', 'edit_diet_plan.php', 'diet_messages.php']); ?>">
                 <img src="<?php echo $icon_path; ?>balanced-diet.png" alt="Diet Plans" width="20">
                 <span>Diet Plans</span>
                 <img src="<?php echo $icon_path; ?>chevron-right-solid-full.svg" class="fa-solid fa-chevron-right ms-auto nav-arrow">
@@ -117,6 +117,8 @@ $report_path = $is_reports_dir ? '' : 'reports/';
                     class="<?php echo is_active_page('create_diet_plan.php'); ?>">Create Diet Plan</a>
                 <a href="<?php echo $base_path; ?>assign_diet_plan.php"
                     class="<?php echo is_active_page('assign_diet_plan.php'); ?>">Assign</a>
+                <a href="<?php echo $base_path; ?>diet_messages.php"
+                    class="<?php echo is_active_page('diet_messages.php'); ?>">Diet Messages</a>
             </div>
         </div>
 

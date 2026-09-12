@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../auth/auth_check.php';
 require_role(['admin', 'trainer']);
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/diet_plan_schema.php';
 
 // 2. Handle Deletion (All phases for a specific client)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_client'])) {
@@ -45,6 +46,15 @@ if ($result && $result->num_rows > 0) {
         } else {
             $client_groups[$client_name]['history_count']++;
         }
+    }
+}
+
+// Assigned-member counts per plan id (for the badge on each card)
+$assigned_counts = [];
+$ac_res = $conn->query("SELECT plan_id, COUNT(*) AS c FROM diet_plan_assignments GROUP BY plan_id");
+if ($ac_res) {
+    while ($ac_row = $ac_res->fetch_assoc()) {
+        $assigned_counts[(int) $ac_row['plan_id']] = (int) $ac_row['c'];
     }
 }
 ?>
@@ -342,6 +352,14 @@ if ($result && $result->num_rows > 0) {
                                         <?= $history ?> Phases
                                     </div>
                                 </div>
+
+                                <?php $assigned_n = $assigned_counts[(int) $row['id']] ?? 0; ?>
+                                <p class="desc" style="font-size:12px; margin-top:8px;">
+                                    <span style="display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px;
+                                                 background:<?= $assigned_n > 0 ? '#DCFCE7' : '#F1F5F9' ?>; color:<?= $assigned_n > 0 ? '#166534' : '#64748B' ?>; font-weight:600;">
+                                        Assigned to <?= $assigned_n ?> member<?= $assigned_n === 1 ? '' : 's' ?>
+                                    </span>
+                                </p>
                             </div>
 
                             <div class="diet-card-footer">
