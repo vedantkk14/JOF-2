@@ -45,16 +45,26 @@ $conn->query("UPDATE members SET status = 'recycled' WHERE status = 'inactive' A
 // === SEARCH ===
 $search_val = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-$sql = "SELECT 
-            m.id, m.full_name, m.email, m.created_at, m.inactive_date,
+// A currently-active member whose latest payment row is still an unverified 'Pending Setup'
+// placeholder has submitted a renewal request without their ongoing membership being disrupted
+// (see handlers/subscribe_payment.php) — surface them here too, alongside genuinely inactive
+// members, so admin can verify/activate the renewal. Their real members.status stays 'active'
+// the whole time; m.status is selected below so the template can tell the two cases apart.
+$sql = "SELECT
+            m.id, m.full_name, m.email, m.created_at, m.inactive_date, m.status AS member_status,
             (SELECT COUNT(*) FROM member_payments mp_count WHERE mp_count.member_id = m.id) as payment_count,
             (SELECT MAX(end_date) FROM member_payments mp_exp WHERE mp_exp.member_id = m.id) as latest_expiry,
             COALESCE(
                 (SELECT membership_type FROM member_payments mp_plan WHERE mp_plan.member_id = m.id ORDER BY mp_plan.created_at DESC LIMIT 1),
                 m.membership
             ) as membership
-        FROM members m 
-        WHERE m.status = 'inactive'";
+        FROM members m
+        WHERE m.status = 'inactive'
+           OR (m.status = 'active' AND (
+                SELECT mp_latest.membership_type FROM member_payments mp_latest
+                WHERE mp_latest.member_id = m.id
+                ORDER BY mp_latest.created_at DESC, mp_latest.payment_id DESC LIMIT 1
+           ) = 'Pending Setup')";
 
 $types = "";
 $params = [];
@@ -141,15 +151,18 @@ $result = $stmt->get_result();
                         <?php if ($result->num_rows > 0): ?>
                             <?php while ($row = $result->fetch_assoc()): ?>
                                 <tr>
+                                    <?php $is_active_renewal = $row['member_status'] === 'active'; ?>
                                     <td data-label="Name" class="nowrap">
                                         <strong><?= htmlspecialchars($row['full_name']) ?></strong>
-                                        <?php if (empty($row['membership']) || $row['membership'] === 'Pending Setup' || $row['payment_count'] == 0): ?>
+                                        <?php if (!$is_active_renewal && (empty($row['membership']) || $row['membership'] === 'Pending Setup' || $row['payment_count'] == 0)): ?>
                                             <span class="badge-new">NEW</span>
                                         <?php endif; ?>
                                     </td>
                                     <td data-label="Email" class="text-muted"><?= htmlspecialchars($row['email'] ?? '-') ?></td>
                                     <td data-label="Status" class="nowrap">
-                                        <?php if (empty($row['membership']) || $row['membership'] === 'Pending Setup' || $row['payment_count'] == 0): ?>
+                                        <?php if ($is_active_renewal): ?>
+                                            <span class="status-pill" style="background:#EEF2FF;color:#4338CA;">🔄 Renewal Requested</span>
+                                        <?php elseif (empty($row['membership']) || $row['membership'] === 'Pending Setup' || $row['payment_count'] == 0): ?>
                                             <span class="status-pill status-pill-pending">Pending Payment</span>
                                         <?php elseif ($row['payment_count'] > 0): ?>
                                             <span class="status-pill expired" title="Expired on: <?= date("d M Y", strtotime($row['latest_expiry'])) ?>">Membership Expired</span>
@@ -161,8 +174,9 @@ $result = $stmt->get_result();
                                         <?= date("d M Y", strtotime($row['created_at'])) ?>
                                     </td>
                                     <td data-label="Recycle In">
-                                        <?php
-                                        if ($row['inactive_date']) {
+                                        <?php if ($is_active_renewal): ?>
+                                            <span class="days-left-pill safe">Still Active</span>
+                                        <?php elseif ($row['inactive_date']):
                                             $inactive_ts = strtotime($row['inactive_date']);
                                             $recycle_ts = strtotime('+15 days', $inactive_ts);
                                             $days_left = floor(($recycle_ts - time()) / (60 * 60 * 24));
@@ -173,9 +187,9 @@ $result = $stmt->get_result();
                                             } else {
                                                 echo '<span class="days-left-pill safe">' . $days_left . ' days</span>';
                                             }
-                                        } else {
+                                        else:
                                             echo '<span class="days-left-pill safe">New</span>';
-                                        }
+                                        endif;
                                         ?>
                                     </td>
                                     <td data-label="Actions">
@@ -195,10 +209,12 @@ $result = $stmt->get_result();
                                                 <img src="../icons/eye-solid-full.svg" class="fa-solid fa-eye">
                                             </a>
 
-                                            <button onclick="confirmDelete('inactive_members.php?delete_id=<?= $row['id'] ?>')"
-                                                class="btn-delete" style="border:none;cursor:pointer;" title="Delete">
-                                                <img src="../icons/trash-solid-full.svg" class="fa-solid fa-trash">
-                                            </button>
+                                            <?php if (!$is_active_renewal): ?>
+                                                <button onclick="confirmDelete('inactive_members.php?delete_id=<?= $row['id'] ?>')"
+                                                    class="btn-delete" style="border:none;cursor:pointer;" title="Delete">
+                                                    <img src="../icons/trash-solid-full.svg" class="fa-solid fa-trash">
+                                                </button>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>

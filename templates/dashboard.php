@@ -970,6 +970,30 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
                             </div>
                         </div>
                     </div>
+                    <!-- Diet Plan Questions Notification Button -->
+                    <div class="enquiry-notif-container" id="dietNotifContainer">
+                        <button class="enquiry-notif-btn" id="dietNotifBtn" title="Diet Plan Questions">
+                            <img src="../icons/balanced-diet.png" alt="Diet Questions" width="22">
+                            <span class="enquiry-notif-badge hidden" id="dietNotifBadge">0</span>
+                        </button>
+                        <div class="enquiry-dropdown" id="dietDropdown">
+                            <div class="enq-header">
+                                <h4><img src="../icons/comment-dots-regular-full.svg" class="fa-solid fa-comment-dots"
+                                        style="color:#F25C2A;"> Diet Plan Questions</h4>
+                                <button class="close-enq-btn" id="closeDietBtn">
+                                    <img src="../icons/xmark-solid-full.svg" class="fa-solid fa-xmark">
+                                </button>
+                            </div>
+                            <div class="enq-list" id="dietNotifList">
+                                <div class="enq-empty"><img src="../icons/inbox-solid-full.svg"
+                                        class="fa-solid fa-inbox"><br>Loading...</div>
+                            </div>
+                            <div class="enq-footer">
+                                <a href="diet_messages.php"><img src="../icons/arrow-right-solid-full.svg"
+                                        class="fa-solid fa-arrow-right"> View All Diet Messages</a>
+                            </div>
+                        </div>
+                    </div>
                     <div class="notification-container">
                         <button class="notification-btn" id="notificationBtn" title="Email Notifications">
                             <img src="../icons/email.png" alt="Reports" width="25">
@@ -1633,6 +1657,121 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
             // Kick off enquiry polling on load
             pollEnquiryBadge();
             setInterval(pollEnquiryBadge, 10000);  // Poll every 10 seconds
+
+            // ══════════════════════════════════════════════════
+            //  DIET PLAN QUESTIONS NOTIFICATION SYSTEM
+            // ══════════════════════════════════════════════════
+            let dietOpen = false;
+            const dietBtn = document.getElementById('dietNotifBtn');
+            const dietDrop = document.getElementById('dietDropdown');
+            const dietBadge = document.getElementById('dietNotifBadge');
+            const dietList = document.getElementById('dietNotifList');
+            const closeDietBtn = document.getElementById('closeDietBtn');
+
+            if (dietBtn) {
+                dietBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    dietOpen = !dietOpen;
+                    dietDrop.classList.toggle('active', dietOpen);
+                    if (dietOpen) openDietPanel();
+                });
+            }
+
+            if (closeDietBtn) {
+                closeDietBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    dietOpen = false;
+                    dietDrop.classList.remove('active');
+                });
+            }
+
+            document.addEventListener('click', function (e) {
+                if (dietOpen && dietDrop && !dietDrop.contains(e.target) && e.target !== dietBtn) {
+                    dietOpen = false;
+                    dietDrop.classList.remove('active');
+                }
+            });
+
+            async function openDietPanel() {
+                dietList.innerHTML = '<div class="enq-empty" style="padding:30px 20px;">' +
+                    '<svg class="notif-spinner" width="40" height="40" viewBox="0 0 40 40" style="animation:spin 1s linear infinite;">' +
+                    '<circle cx="20" cy="20" r="16" stroke="#F25C2A" stroke-width="4" fill="none" stroke-dasharray="80" stroke-dashoffset="60"></circle>' +
+                    '</svg>' +
+                    '<p style="margin-top:14px;font-size:0.85rem;color:#6B7280;">Loading messages...</p>' +
+                    '</div>';
+                try {
+                    var res = await fetch('../handlers/get_diet_notifications.php', { cache: 'no-store' });
+                    var data = await res.json();
+                    if (data.status === 'success') {
+                        renderDietNotifications(data.notifications);
+                        await fetch('../handlers/mark_diet_messages_seen.php', { method: 'POST', cache: 'no-store' });
+                        updateDietBadge(0);
+                    }
+                } catch (err) {
+                    dietList.innerHTML = '<div class="enq-empty"><img src="../icons/triangle-exclamation-solid-full.svg" class="fa-solid fa-triangle-exclamation"><br>Could not load messages.</div>';
+                    console.error('Diet notification error:', err);
+                }
+            }
+
+            function renderDietNotifications(items) {
+                if (!items || items.length === 0) {
+                    dietList.innerHTML = '<div class="enq-empty"><img src="../icons/inbox-solid-full.svg" class="fa-solid fa-inbox"><br>No diet plan questions yet.<br><small>Member questions appear here.</small></div>';
+                    return;
+                }
+                var html = '';
+                items.forEach(function (n) {
+                    var name = n.member_name || 'Member';
+                    var initials = name.split(' ').map(function (w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
+                    var ago = timeAgo(n.created_at);
+                    var preview = (n.message || '').slice(0, 60);
+                    html += '<a href="diet_messages.php?plan_id=' + n.plan_id + '&member_id=' + n.member_id + '" class="enq-item unseen">' +
+                        '<div class="enq-avatar">' + initials + '</div>' +
+                        '<div class="enq-body">' +
+                        '<div class="enq-name">' + escHtml(name) + ' <span style="font-weight:500;color:#9CA3AF;">· ' + escHtml(n.phase) + '</span></div>' +
+                        '<div class="enq-contact">&#128172; ' + escHtml(preview) + (n.message.length > 60 ? '…' : '') + '</div>' +
+                        '<div class="enq-time"><img src="../icons/clock-solid-full.svg" class="fa-solid fa-clock"> ' + ago + '</div>' +
+                        '</div></a>';
+                });
+                dietList.innerHTML = html;
+            }
+
+            function updateDietBadge(count) {
+                if (!dietBadge) return;
+                if (count > 0) {
+                    dietBadge.textContent = '+' + (count > 99 ? '99' : count);
+                    dietBadge.classList.remove('hidden');
+                } else {
+                    dietBadge.classList.add('hidden');
+                }
+            }
+
+            async function pollDietBadge() {
+                try {
+                    var res = await fetch('../handlers/get_diet_notifications.php', { cache: 'no-store' });
+                    var data = await res.json();
+                    if (data.status === 'success') {
+                        var newCount = data.unread_count;
+                        var oldCount = parseInt(dietBadge && !dietBadge.classList.contains('hidden') ? dietBadge.textContent.replace('+', '') : '0') || 0;
+
+                        if (newCount > oldCount && newCount > 0) {
+                            if (dietBadge) {
+                                dietBadge.classList.add('badge-pop');
+                                setTimeout(function () { dietBadge.classList.remove('badge-pop'); }, 800);
+                            }
+                            if (dietOpen) {
+                                openDietPanel();
+                            }
+                        }
+
+                        if (!dietOpen) {
+                            updateDietBadge(newCount);
+                        }
+                    }
+                } catch (e) { }
+            }
+
+            pollDietBadge();
+            setInterval(pollDietBadge, 10000);
 
 
             function timeAgo(dateStr) {

@@ -1,5 +1,16 @@
 <?php
-session_start();
+// Keep the session cookie on the site root so index.php, /auth/ and /templates/
+// all read & write the SAME session (prevents "Security token mismatch").
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    session_start();
+}
 require '../config.php';
 
 header('Content-Type: application/json');
@@ -64,23 +75,36 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 }
 
 // ── DB Lookup ─────────────────────────────────────────────────────
-$stmt = mysqli_prepare($conn, "SELECT id, full_name, password, role FROM user_data WHERE email = ? LIMIT 1");
+$stmt = mysqli_prepare($conn, "SELECT id, full_name, password, role, is_active FROM user_data WHERE email = ? LIMIT 1");
 mysqli_stmt_bind_param($stmt, 's', $email);
 mysqli_stmt_execute($stmt);
 $user = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
 $valid_roles = ['admin', 'trainer', 'user', 'counsellor'];
 
-if ($user && password_verify($password, $user['password']) && in_array($user['role'], $valid_roles, true)) {
-    // Success — clear failed attempts
+// Normalise the stored role: lower-case, trimmed, and map spelling variants
+$user_role = $user ? strtolower(trim($user['role'] ?? '')) : '';
+if ($user_role === 'councillor') {
+    $user_role = 'counsellor';
+}
+
+// ── Suspended account check ──────────────────────────────────────
+if ($user && password_verify($password, $user['password']) && (int) $user['is_active'] !== 1) {
+    echo json_encode(['success' => false, 'message' => 'Your account has been suspended. Please contact an administrator.', 'csrf_token' => $new_csrf]);
+    exit;
+}
+
+if ($user && password_verify($password, $user['password']) && in_array($user_role, $valid_roles, true)) {
+    // Success — clear failed attempts + consume the CSRF token
     unset($_SESSION[$rl_key]);
+    unset($_SESSION['_csrf_token']);
 
     session_regenerate_id(true);
     $_SESSION['user_id']   = $user['id'];
     $_SESSION['user_name'] = $user['full_name'];
-    $_SESSION['user_role'] = $user['role'];
+    $_SESSION['user_role'] = $user_role;
 
-    echo json_encode(['success' => true, 'redirect' => _redirect($user['role'])]);
+    echo json_encode(['success' => true, 'redirect' => _redirect($user_role)]);
 } else {
     // Failed — increment counter
     $rl_data['count']++;

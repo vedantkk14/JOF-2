@@ -134,33 +134,45 @@ function _auth_destroy_session(): void
 }
 
 /**
+ * Number of "../" needed to get from the currently-executing script's directory
+ * back to the project root — computed by comparing real filesystem paths
+ * (this file always lives at <project root>/auth/auth_check.php), so it works
+ * no matter what the project's folder is actually named or how deeply nested
+ * the calling script is. Replaces the old approach of matching a hardcoded
+ * list of expected folder names, which silently produced wrong redirect URLs
+ * (and 404s) whenever the project directory didn't match one of those names.
+ */
+function _auth_relative_prefix(): string
+{
+    $project_root = str_replace('\\', '/', rtrim(dirname(__DIR__), '\\/'));
+    $script_path  = $_SERVER['SCRIPT_FILENAME'] ?? '';
+    if ($script_path === '') {
+        return '../'; // best-effort fallback if the server didn't provide it
+    }
+    $script_dir = str_replace('\\', '/', rtrim(dirname($script_path), '\\/'));
+
+    $root_parts   = array_values(array_filter(explode('/', $project_root)));
+    $script_parts = array_values(array_filter(explode('/', $script_dir)));
+
+    $common = 0;
+    while (
+        $common < count($root_parts) && $common < count($script_parts)
+        && strcasecmp($root_parts[$common], $script_parts[$common]) === 0
+    ) {
+        $common++;
+    }
+
+    $levels_below = count($script_parts) - $common;
+    return str_repeat('../', max($levels_below, 0));
+}
+
+/**
  * Determine the correct dashboard URL for a given role.
- * This function is called from within /auth/ or /templates/ subdirs,
- * so we return root-relative absolute paths.
+ * Returns a path relative to the currently-executing script.
  */
 function _auth_dashboard_url(string $role): string
 {
-    // Determine base path dynamically
-    $self = $_SERVER['PHP_SELF'] ?? '';
-    $depth = substr_count(trim($self, '/'), '/');
-
-    // Calculate relative prefix to project root
-    // /jof-phase_2/templates/dashboard.php  → depth=2 → ../
-    // /jof-phase_2/templates/user_side/user_dashboard.php → depth=3 → ../../
-    // /jof-phase_2/auth/login.php → depth=2 → ../
-    $parts = array_filter(explode('/', $self));
-    // Find position of our project folder and calculate depth below it
-    $project_folders = ['jof-phase_2', 'jof-phase_2-main'];
-    $project_idx = null;
-    $parts_indexed = array_values($parts);
-    foreach ($parts_indexed as $i => $part) {
-        if (in_array($part, $project_folders, true)) {
-            $project_idx = $i;
-            break;
-        }
-    }
-    $levels_below = ($project_idx !== null) ? (count($parts_indexed) - $project_idx - 2) : 1;
-    $prefix = str_repeat('../', max($levels_below, 0));
+    $prefix = _auth_relative_prefix();
 
     switch ($role) {
         case 'admin':
@@ -177,18 +189,5 @@ function _auth_dashboard_url(string $role): string
 
 function _auth_login_url(): string
 {
-    $self = $_SERVER['PHP_SELF'] ?? '';
-    $parts = array_filter(explode('/', $self));
-    $project_folders = ['jof-phase_2', 'jof-phase_2-main'];
-    $project_idx = null;
-    $parts_indexed = array_values($parts);
-    foreach ($parts_indexed as $i => $part) {
-        if (in_array($part, $project_folders, true)) {
-            $project_idx = $i;
-            break;
-        }
-    }
-    $levels_below = ($project_idx !== null) ? (count($parts_indexed) - $project_idx - 2) : 1;
-    $prefix = str_repeat('../', max($levels_below, 0));
-    return $prefix . 'index.php';
+    return _auth_relative_prefix() . 'index.php';
 }

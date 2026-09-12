@@ -61,25 +61,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $mail = new PHPMailer\PHPMailer\PHPMailer(true);
 
             try {
-<<<<<<< HEAD
                 // Shared SMTP credentials (auth/mail_config.php → .env)
                 jof_configure_mailer($mail);
 
                 // Recipient
-=======
-                // SMTP Config (Standard)
-                $mail->isSMTP();
-                $mail->Host = 'smtp.gmail.com';
-                $mail->SMTPAuth = true;
-                $mail->Username = 'vrishabhchadchan1@gmail.com';
-                $mail->Password = 'qmhbeaswhyhsjbao'; // App Password
-                $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port = 587;
-                $mail->CharSet = 'UTF-8';
-
-                // Sender & Recipient
-                $mail->setFrom('vrishabhchadchan1@gmail.com', 'JOF INDIA');
->>>>>>> origin/vrishabh
                 $mail->addAddress($email, $member_name);
 
                 // Content

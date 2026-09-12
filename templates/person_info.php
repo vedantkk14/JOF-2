@@ -179,6 +179,19 @@ mysqli_stmt_bind_param($stmt_mem, "i", $member_id);
 mysqli_stmt_execute($stmt_mem);
 $mem_history_result = mysqli_stmt_get_result($stmt_mem);
 
+// Latest plan + pause info for the "Pause Membership" action
+$pauseStmt = mysqli_prepare($conn, "SELECT payment_id, end_date FROM member_payments WHERE member_id = ? ORDER BY created_at DESC LIMIT 1");
+mysqli_stmt_bind_param($pauseStmt, "i", $member_id);
+mysqli_stmt_execute($pauseStmt);
+$latest_plan = mysqli_fetch_assoc(mysqli_stmt_get_result($pauseStmt));
+$can_pause_member = $latest_plan && !empty($latest_plan['end_date']);
+
+$pauseAgg = mysqli_query($conn, "
+    SELECT COALESCE(SUM(days),0) AS total_days,
+           MAX(CASE WHEN CURDATE() BETWEEN pause_start AND pause_end THEN pause_end END) AS active_pause_end
+    FROM membership_pauses WHERE member_id = " . (int) $member_id);
+$pause_info = $pauseAgg ? mysqli_fetch_assoc($pauseAgg) : ['total_days' => 0, 'active_pause_end' => null];
+
 // Fetch ALL measurements for Gallery
 $sql = "SELECT id, front_view_image, side_view_image, back_view_image, recorded_at 
         FROM member_measurements 
@@ -467,7 +480,24 @@ $img_path = '../uploads/progress_photos/';
                     </div>
 
                     <div class="info-card mt-20">
-                        <h3><img src="../icons/id-card-solid-full.svg" class="fa-solid fa-id-card card-icon"> Membership & Plan History</h3>
+                        <div class="card-header-flex flex-between">
+                            <h3><img src="../icons/id-card-solid-full.svg" class="fa-solid fa-id-card card-icon"> Membership & Plan History</h3>
+                            <?php if ($can_pause_member): ?>
+                                <button type="button" class="action-btn btn-small"
+                                    onclick="openPauseModal(<?= (int) $member_id ?>, '<?= htmlspecialchars(addslashes($member['full_name']), ENT_QUOTES) ?>', '<?= htmlspecialchars($latest_plan['end_date']) ?>')">
+                                    <img src="../icons/pause-solid-full.svg" class="fa-solid fa-pause"> Pause
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                        <?php if (!empty($pause_info['active_pause_end'])): ?>
+                            <p style="margin:8px 0 0;font-size:13px;color:#4338CA;font-weight:600;">
+                                Plan currently paused &mdash; resumes <?= date('d M Y', strtotime($pause_info['active_pause_end'])) ?>.
+                            </p>
+                        <?php elseif ((int) $pause_info['total_days'] > 0): ?>
+                            <p style="margin:8px 0 0;font-size:13px;color:#6366F1;font-weight:600;">
+                                +<?= (int) $pause_info['total_days'] ?> paused day<?= (int) $pause_info['total_days'] === 1 ? '' : 's' ?> already added to this plan.
+                            </p>
+                        <?php endif; ?>
                         <div class="plan-history-container mt-15">
                             <?php if (mysqli_num_rows($mem_history_result) > 0): ?>
                                 <?php while ($plan = mysqli_fetch_assoc($mem_history_result)): ?>
@@ -967,6 +997,25 @@ $img_path = '../uploads/progress_photos/';
         
         observer.observe(document.body, { childList: true, subtree: true });
     </script>
+
+    <?php
+    $pause_redirect = 'person_info.php';
+    $pause_redirect_id = (int) $member_id;
+    include '_pause_modal.php';
+    ?>
+
+    <?php if (isset($_GET['pause_ok']) || isset($_GET['pause_err'])): ?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            <?php if (isset($_GET['pause_ok'])): ?>
+            alert('Membership paused. <?= (int) $_GET['pause_ok'] ?> day(s) added to the plan end date.');
+            <?php else: ?>
+            alert(<?= json_encode($_GET['pause_err']) ?>);
+            <?php endif; ?>
+            history.replaceState(null, '', 'person_info.php?id=<?= (int) $member_id ?>');
+        });
+    </script>
+    <?php endif; ?>
 
 </body>
 
