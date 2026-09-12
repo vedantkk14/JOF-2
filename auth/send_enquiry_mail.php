@@ -104,7 +104,7 @@ function sendEnquiryEmail($full_name, $email)
                             </tr>
                             <tr>
                                 <td class='footer'>
-                                    <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vedantkolhapure111@gmail.com</p>
+                                    <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vrishabhchadchan1@gmail.com</p>
                                     <p class='footer-text'>© " . date("Y") . " JOF INDIA. All rights reserved.</p>
                                     <p class='footer-text'>Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra</p>
                                 </td>

@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Position tighter below logo, write address (X shifted slightly to visually align with logo padding)
         $logoBottomY = $headerY + 24;
         $pdf->SetY($logoBottomY);
-        $addressHtml = '<div style="font-size:9px; color:#555; line-height:1.2; margin:0;">Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra<br>vedantkolhapure111@gmail.com</div>';
+        $addressHtml = '<div style="font-size:9px; color:#555; line-height:1.2; margin:0;">Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra<br>vrishabhchadchan1@gmail.com</div>';
         $pdf->writeHTMLCell(0, 0, 13, $logoBottomY, $addressHtml, 0, 1, false, true, 'L', true);
 
         $html = '

@@ -47,6 +47,23 @@ if ($result && $result->num_rows > 0) {
         }
     }
 }
+
+// 4. Fetch Diet Templates (guard against the table not existing yet on this server)
+$templates = [];
+$templates_table_ok = false;
+$tpl_check = $conn->query("SHOW TABLES LIKE 'diet_plan_templates'");
+if ($tpl_check && $tpl_check->num_rows > 0) {
+    $templates_table_ok = true;
+    $tpl_res = $conn->query("SELECT * FROM diet_plan_templates ORDER BY created_at DESC");
+    if ($tpl_res) {
+        while ($t = $tpl_res->fetch_assoc()) {
+            $templates[] = $t;
+        }
+    }
+}
+
+// Which tab opens first
+$active_tab = (($_GET['tab'] ?? '') === 'templates') ? 'templates' : 'plans';
 ?>
 
 <!DOCTYPE html>
@@ -255,7 +272,7 @@ if ($result && $result->num_rows > 0) {
                     <h1>Diet Plans</h1>
                     <p>Manage nutrition schedules. Plans are grouped by client.</p>
                 </div>
-                <div class="header-actions" style="gap:15px; display:flex; align-items:center;">
+                <div class="header-actions" id="clientPlansActions" style="gap:15px; display:flex; align-items:center;">
                     <div class="search-box">
                         <img src="../icons/magnifying-glass-solid-full.svg" alt="search" width="16" class="search-icon">
                         <input type="text" id="dietSearchInput" placeholder="Search member..." class="search-input">
@@ -278,6 +295,22 @@ if ($result && $result->num_rows > 0) {
                 </div>
             <?php endif; ?>
 
+            <!-- Tabs: Client Plans | Templates (mirrors membership.php) -->
+            <div class="tabs-container" style="margin-bottom: 24px;">
+                <div class="tabs-header" style="display:flex; gap:10px; border-bottom:2px solid #E5E7EB;">
+                    <button class="tab-btn" onclick="switchDietTab('plans')" id="plansTab"
+                        style="padding:12px 24px; background:none; border:none; border-bottom:3px solid transparent; color:#6B7280; font-weight:600; cursor:pointer; transition:all .3s;">
+                        <img src="../icons/balanced-diet.png" alt="" width="16" style="vertical-align:middle; margin-bottom:2px; margin-right:6px;"> Client Plans
+                    </button>
+                    <button class="tab-btn" onclick="switchDietTab('templates')" id="templatesTab"
+                        style="padding:12px 24px; background:none; border:none; border-bottom:3px solid transparent; color:#6B7280; font-weight:600; cursor:pointer; transition:all .3s;">
+                        <img src="../icons/clipboard-list-solid-full.svg" alt="" width="16" style="vertical-align:middle; margin-bottom:2px; margin-right:6px;"> Templates
+                    </button>
+                </div>
+            </div>
+
+            <!-- CLIENT PLANS TAB -->
+            <div id="plansContent" class="tab-content">
             <div class="diet-cards-grid">
 
                 <?php if (!empty($client_groups)): ?>
@@ -373,6 +406,86 @@ if ($result && $result->num_rows > 0) {
                 <?php endif; ?>
 
             </div>
+            </div><!-- /#plansContent -->
+
+            <!-- TEMPLATES TAB -->
+            <div id="templatesContent" class="tab-content" style="display:none;">
+                <div style="display:flex; justify-content:flex-end; margin-bottom:18px;">
+                    <a href="create_diet_template.php" class="create-plan-btn sidebar-btn"
+                        style="text-decoration:none; width:auto;">
+                        <img src="../icons/plus-solid-full.svg" alt="plus" width="20"> Create New Template
+                    </a>
+                </div>
+
+                <?php if (!$templates_table_ok): ?>
+                    <div style="text-align:center; padding:50px; background:#fff; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.05);">
+                        <h3 style="color:#2D3748; margin-bottom:10px;">Templates not set up yet</h3>
+                        <p style="color:#A0AEC0;">The <code>diet_plan_templates</code> table hasn't been created on this server.</p>
+                    </div>
+                <?php elseif (empty($templates)): ?>
+                    <div style="text-align:center; padding:60px; background:#fff; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.05);">
+                        <img src="../icons/clipboard-list-solid-full.svg" alt="" width="26" style="margin-bottom:16px; opacity:0.4;">
+                        <h3 style="color:#2D3748; margin-bottom:10px;">No Templates Yet</h3>
+                        <p style="color:#A0AEC0;">Create a reusable template so you don't have to type every plan from scratch.</p>
+                        <a href="create_diet_template.php" class="create-plan-btn sidebar-btn"
+                            style="display:inline-block; margin-top:20px; text-decoration:none; width:auto;">
+                            <img src="../icons/plus-solid-full.svg" alt="plus" width="20"> Create New Template
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <div class="diet-cards-grid">
+                        <?php foreach ($templates as $tpl):
+                            $tgoal = strtolower($tpl['goal']);
+                            $ttheme = "green";
+                            if (strpos($tgoal, 'loss') !== false) $ttheme = "orange";
+                            elseif (strpos($tgoal, 'muscle') !== false) $ttheme = "purple";
+                            ?>
+                            <div class="diet-card">
+                                <div class="diet-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                                    <div class="diet-card-header-inner">
+                                        <div class="icon-square <?= $ttheme ?>-bg">
+                                            <img src="../icons/clipboard-list-solid-full.svg" style="color: var(--<?= $ttheme ?>-dark);">
+                                        </div>
+                                    </div>
+                                    <form method="POST" action="../handlers/delete_diet_template.php" style="margin:0;"
+                                        onsubmit="return confirm('Delete this template? This does not affect any client plans.');">
+                                        <input type="hidden" name="template_id" value="<?= (int) $tpl['id'] ?>">
+                                        <button type="submit" class="btn-trash" title="Delete Template">
+                                            <img src="../icons/trash-solid-full.svg" alt="Delete" width="12"
+                                                style="filter: invert(36%) sepia(74%) saturate(2469%) hue-rotate(343deg) brightness(98%) contrast(93%);">
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div class="diet-card-body">
+                                    <h3><?= htmlspecialchars($tpl['template_name']) ?></h3>
+                                    <p class="desc" style="font-size:12px; margin-top:4px;">
+                                        Goal: <?= htmlspecialchars($tpl['goal']) ?> &bull; Type: <?= ucfirst($tpl['diet_type']) ?>
+                                    </p>
+                                    <div class="diet-stats">
+                                        <div class="stat">
+                                            <img src="../icons/clock-solid-full.svg" alt="clock" width="20" style="margin-right:5px;">
+                                            <?= (int) $tpl['duration'] ?> Wks
+                                        </div>
+                                        <div class="stat">
+                                            <img src="../icons/fire-solid-full.svg" alt="calories" width="20" style="margin-right:5px;">
+                                            <?= (int) $tpl['calories'] ?> kcal
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="diet-card-footer">
+                                    <a href="edit_diet_template.php?id=<?= (int) $tpl['id'] ?>" class="btn-fill"
+                                        style="text-decoration:none; display:inline-flex; justify-content:center; align-items:center; flex:1;">
+                                        <img src="../icons/pen-solid-full.svg" alt="edit" width="14"
+                                            style="margin-right:6px; filter: brightness(0) invert(1);"> Edit Template
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div><!-- /#templatesContent -->
 
         </main>
     </div>
@@ -465,9 +578,9 @@ if ($result && $result->num_rows > 0) {
                 }
             });
 
-            // Diet Plan Search Filtering
+            // Diet Plan Search Filtering (client-plans tab only)
             const searchInput = document.getElementById('dietSearchInput');
-            const dietCards = document.querySelectorAll('.diet-card');
+            const dietCards = document.querySelectorAll('#plansContent .diet-card');
 
             if (searchInput) {
                 searchInput.addEventListener('input', function (e) {
@@ -485,6 +598,30 @@ if ($result && $result->num_rows > 0) {
                     });
                 });
             }
+
+            // ---- Tab switching: Client Plans | Templates ----
+            const dietTabs = {
+                plans: { btn: document.getElementById('plansTab'), pane: document.getElementById('plansContent') },
+                templates: { btn: document.getElementById('templatesTab'), pane: document.getElementById('templatesContent') }
+            };
+            window.switchDietTab = function (which) {
+                Object.keys(dietTabs).forEach(k => {
+                    const t = dietTabs[k];
+                    const on = (k === which);
+                    if (t.pane) t.pane.style.display = on ? 'block' : 'none';
+                    if (t.btn) {
+                        t.btn.style.borderBottomColor = on ? '#F25C2A' : 'transparent';
+                        t.btn.style.color = on ? '#F25C2A' : '#6B7280';
+                    }
+                });
+                // "Search member" + "Create New Plan" belong to Client Plans only
+                const cpa = document.getElementById('clientPlansActions');
+                if (cpa) cpa.style.display = (which === 'plans') ? 'flex' : 'none';
+                try {
+                    history.replaceState(null, '', which === 'templates' ? '?tab=templates' : location.pathname);
+                } catch (e) { }
+            };
+            switchDietTab('<?= $active_tab ?>');
 
         });
     </script>

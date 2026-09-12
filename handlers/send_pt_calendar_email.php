@@ -223,7 +223,7 @@ $email_html = "
     <!-- Footer -->
     <tr>
         <td style='background:#111827;padding:28px;text-align:center;'>
-            <p style='margin:0 0 8px;font-size:16px;color:#fff;font-weight:700;'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vedantkolhapure111@gmail.com</p>
+            <p style='margin:0 0 8px;font-size:16px;color:#fff;font-weight:700;'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vrishabhchadchan1@gmail.com</p>
             <p style='margin:4px 0;font-size:12px;color:#6B7280;'>© 2026 JOF INDIA. All rights reserved.</p>
             <p style='margin:4px 0;font-size:12px;color:#6B7280;'> Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra</p>
         </td>
@@ -238,11 +238,24 @@ $email_html = "
 // 5. Send via PHPMailer
 try {
     $mail = new PHPMailer(true);
+<<<<<<< HEAD
 
     // Shared SMTP credentials (auth/mail_config.php → .env)
     require_once __DIR__ . '/../auth/mail_config.php';
     jof_configure_mailer($mail);
 
+=======
+    $mail->isSMTP();
+    $mail->Host = 'smtp.gmail.com';
+    $mail->SMTPAuth = true;
+    $mail->Username = 'vrishabhchadchan1@gmail.com';
+    $mail->Password = 'qmhbeaswhyhsjbao';
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port = 587;
+    $mail->CharSet = 'UTF-8';
+
+    $mail->setFrom('vrishabhchadchan1@gmail.com', 'JOF INDIA');
+>>>>>>> origin/vrishabh
     $mail->addAddress($member['email'], $member['full_name']);
     $mail->isHTML(true);
     $mail->Subject = '🏋️ Your Upcoming PT Sessions – JOF INDIA';

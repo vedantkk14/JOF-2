@@ -24,25 +24,91 @@ if (!$current_plan) {
 $name_parts = explode(" - ", $current_plan['plan_name']);
 $client_name = trim($name_parts[0]);
 
-// 3. Fetch HISTORY (Cumulative)
-$history_sql = "SELECT * FROM diet_plans 
-                WHERE plan_name LIKE ? 
-                AND id <= ? 
-                ORDER BY id ASC";
+// 3. Fetch HISTORY (Cumulative) — or just the one selected phase when embedded as a reference
+//    (?single=1), e.g. inside the Add New Phase / Edit Phase split-screen preview.
+$single_mode = isset($_GET['single']) && $_GET['single'] == '1';
 
-$search_name = $client_name . "%"; 
-$stmt_hist = $conn->prepare($history_sql);
-$stmt_hist->bind_param("si", $search_name, $current_plan_id);
+if ($single_mode) {
+    $history_sql = "SELECT * FROM diet_plans WHERE id = ?";
+    $stmt_hist = $conn->prepare($history_sql);
+    $stmt_hist->bind_param("i", $current_plan_id);
+} else {
+    $history_sql = "SELECT * FROM diet_plans
+                    WHERE plan_name LIKE ?
+                    AND id <= ?
+                    ORDER BY id ASC";
+    $search_name = $client_name . " - %";
+    $stmt_hist = $conn->prepare($history_sql);
+    $stmt_hist->bind_param("si", $search_name, $current_plan_id);
+}
 $stmt_hist->execute();
 $all_plans = $stmt_hist->get_result();
 
-// Helper for bold headers formatting
+// Helper for bold headers + time-of-day formatting
 function formatDietText($text) {
-    if (empty($text)) return '<span class="text-muted">Not specified</span>';
-    $text = htmlspecialchars($text);
-    // Style headers like **Header** -> Bold Orange Text
-    $text = preg_replace('/\*\*(.*?)\*\*/', '<div class="meal-subhead">$1</div>', $text);
-    return nl2br($text);
+    if (empty($text) || trim($text) === '') return '<span class="text-muted">Not specified</span>';
+    $text = str_replace(["\r\n", "\r"], "\n", $text);
+    // single time (6 AM, 1130 AM, 8:30 PM) OR range (5pm-6pm, 6:30–7:00 AM, 6-7 PM)
+    $timeRe = '/^('
+        . '(?:\d{3,4}|\d{1,2}(?:[:.]\d{2})?)\s*(?:[AP]\.?M\.?)?\s*[-\x{2013}\x{2014}~]\s*(?:\d{3,4}|\d{1,2}(?:[:.]\d{2})?)\s*[AP]\.?M\.?'
+        . '|(?:\d{3,4}|\d{1,2}(?:[:.]\d{2})?)\s*[AP]\.?M\.?'
+        . ')\b[\s\-\x{2013}\x{2014}:]*(.*)$/iu';
+    $niceTime = function ($raw) {
+        $t = preg_replace('/\s*([ap])\.?\s*m\.?/iu', ' $1m', $raw);
+        $t = preg_replace('/\s*[-\x{2013}\x{2014}~]\s*/u', ' - ', $t);
+        return strtoupper(preg_replace('/\s+/', ' ', trim($t)));
+    };
+
+    $out = [];
+    $lastWasHeading = false;
+    $inNumberedList = false;
+    foreach (explode("\n", $text) as $line) {
+        $line = trim($line);
+        // A stray blank line (accidental extra Enter) has no effect at all — never rendered,
+        // never treated as "end of point". Only a new "N. " line closes the previous point.
+        if ($line === '') { continue; }
+
+        // Section label wrapped in **...**  -> orange sub-heading
+        if (preg_match('/\*\*\s*(.+?)\s*\*\*/', $line, $sm)) {
+            $out[] = '<div class="meal-subhead">' . htmlspecialchars(rtrim(trim($sm[1]), ' :') . ' :') . '</div>';
+            $lastWasHeading = true;
+            $inNumberedList = false;
+            continue;
+        }
+        $line = str_replace('**', '', $line);
+
+        // Line that is / begins with a time  -> time in bold orange, rest normal
+        if (preg_match($timeRe, $line, $tm)) {
+            $rest  = trim($tm[2]);
+            $badge = '<span class="time-badge">' . htmlspecialchars($niceTime(trim($tm[1]))) . '</span>'
+                   . ($rest !== '' ? ' ' . htmlspecialchars($rest) : '');
+            if ($lastWasHeading) {
+                // "MID MEAL : 4:30 PM"  -> put the time inside the heading
+                $i = count($out) - 1;
+                $out[$i] = preg_replace('#</div>$#', ' ' . $badge . '</div>', $out[$i]);
+            } else {
+                $out[] = $badge;
+            }
+            $lastWasHeading = false;
+            $inNumberedList = false;
+            continue;
+        }
+
+        // Numbered point ("1. ...", "2) ..."). The blank line goes ONLY before a new numbered
+        // point — never after the point just written — so any line that follows (numbered or
+        // not) that isn't a new "N. " continues that point with no gap, even past a stray blank.
+        if (preg_match('/^\d+[.)]\s+/', $line)) {
+            $out[] = ($inNumberedList ? '<br>' : '') . htmlspecialchars($line);
+            $inNumberedList = true;
+            $lastWasHeading = false;
+            continue;
+        }
+
+        // Plain content line — if a numbered point is open, this continues it (no gap)
+        $out[] = htmlspecialchars($line);
+        $lastWasHeading = false;
+    }
+    return implode("<br>\n", $out);
 }
 ?>
 
@@ -240,6 +306,8 @@ function formatDietText($text) {
 
         .text-muted { color: #9CA3AF; font-style: italic; font-size: 12px; }
 
+        .time-badge { color: var(--brand-color); font-weight: 700; }
+
         /* --- FOOTER --- */
         .page-footer {
             margin-top: 40px;
@@ -293,15 +361,49 @@ function formatDietText($text) {
             }
         }
     </style>
+    <?php if ($single_mode): ?>
+    <style>
+        /* Reference-preview mode (embedded in a narrow split-screen pane): drop the fixed
+           A4 paper simulation so the content reflows to fit whatever width it's given,
+           instead of being clipped. */
+        body { background: #F3F4F6 !important; padding: 14px !important; }
+        .page-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: auto !important;
+            box-shadow: none !important;
+            border: 1px solid #E5E7EB;
+            margin: 0 !important;
+        }
+        .page-container::before { display: none !important; }
+        .content-layer { padding: 18px !important; }
+        .brand-header { flex-wrap: wrap; gap: 10px; }
+        .brand-logo img { height: 40px; }
+        .client-name { font-size: 18px !important; }
+        .stats-bar { flex-wrap: wrap; gap: 8px 16px; }
+        .meal-row { flex-direction: column; }
+        .meal-label {
+            width: 100% !important;
+            flex-direction: row !important;
+            justify-content: flex-start;
+            gap: 10px;
+            padding: 10px 14px !important;
+        }
+        .meal-icon-circle { margin-bottom: 0 !important; width: 30px; height: 30px; font-size: 13px; flex-shrink: 0; }
+        .meal-content { padding: 14px !important; font-size: 13px !important; }
+    </style>
+    <?php endif; ?>
 </head>
 <body>
 
+    <?php if (!$single_mode): ?>
     <div class="action-bar">
         <span>Generating history for: <b><?= htmlspecialchars($client_name) ?></b></span>
         <button class="btn-print" onclick="window.print()">
             <i class="fa-solid fa-print"></i> Save as PDF
         </button>
     </div>
+    <?php endif; ?>
 
     <?php while ($plan = $all_plans->fetch_assoc()): 
         // Get Phase Name specifically
