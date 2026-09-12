@@ -37,6 +37,27 @@ if ($name_row = $name_res->fetch_assoc()) {
 }
 $name_stmt->close();
 
+// The plan (and installment preference) the member picked when they subscribed via the member
+// portal is recorded in member_payments.remarks as "Member requested: <plan name> (<N>
+// installment(s))" and installments_count (see handlers/subscribe_payment.php). Surface both here
+// so admin can see/pre-select them instead of guessing — still fully editable in case the member
+// picked the wrong plan or installment count by mistake.
+$requested_plan_name = '';
+$requested_installments = 0;
+$rp_stmt = $conn->prepare("SELECT remarks, installments_count FROM member_payments WHERE member_id = ? ORDER BY payment_id DESC LIMIT 1");
+$rp_stmt->bind_param("i", $member_id);
+$rp_stmt->execute();
+$rp_row = $rp_stmt->get_result()->fetch_assoc();
+$rp_stmt->close();
+if ($rp_row && !empty($rp_row['remarks'])) {
+    $remarks_trimmed = trim($rp_row['remarks']);
+    if (preg_match('/^Member requested:\s*(.+?)\s*\(\d+\s+installments?\)$/i', $remarks_trimmed, $rp_match)
+        || preg_match('/^Member requested:\s*(.+)$/i', $remarks_trimmed, $rp_match)) {
+        $requested_plan_name = trim($rp_match[1]);
+        $requested_installments = (int) ($rp_row['installments_count'] ?? 0);
+    }
+}
+
 // 3. Handle Form Submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -372,13 +393,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div class="input-group"><label>Membership Type *</label>
                         <div class="input-wrapper"><select name="membership_type" id="membership_type"
                                 class="form-input" required>
-                                <option value="" disabled selected>Select Plan</option>
+                                <option value="" disabled <?= $requested_plan_name === '' ? 'selected' : '' ?>>Select Plan</option>
                                 <?php
                                 if ($plans_result && $plans_result->num_rows > 0) {
                                     while ($plan = $plans_result->fetch_assoc()):
+                                        $is_requested = $requested_plan_name !== '' && strcasecmp(trim($plan['plan_name']), $requested_plan_name) === 0;
                                         ?>
                                         <option value="<?= htmlspecialchars($plan['plan_name']) ?>"
-                                            data-price="<?= $plan['price'] ?>">
+                                            data-price="<?= $plan['price'] ?>" <?= $is_requested ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($plan['plan_name']) ?> - ₹<?= number_format($plan['price']) ?>
                                         </option>
                                         <?php
@@ -389,6 +411,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 ?>
                             </select><img src="../icons/users-solid-full.svg"
                                 class="fa-solid fa-users input-icon text-primary"></div>
+                        <?php if ($requested_plan_name !== ''): ?>
+                            <p style="font-size:12px;color:#6B7280;margin-top:6px;">
+                                📋 Member selected this plan when subscribing — change it above if that was a mistake.
+                            </p>
+                        <?php endif; ?>
                     </div>
                     <div class="input-group"><label>Duration</label>
                         <div class="input-wrapper"><select name="duration" class="form-input" required>
@@ -424,12 +451,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                     <div class="input-group"><label>No. of Installments</label>
                         <div class="input-wrapper"><select name="installments" id="installments" class="form-input">
-                                <option value="1">1 (Full Payment)</option>
-                                <option value="2">2 Installments</option>
-                                <option value="3">3 Installments</option>
-                                <option value="4">4 Installments</option>
+                                <option value="1" <?= $requested_installments === 1 ? 'selected' : '' ?>>1 (Full Payment)</option>
+                                <option value="2" <?= $requested_installments === 2 ? 'selected' : '' ?>>2 Installments</option>
+                                <option value="3" <?= $requested_installments === 3 ? 'selected' : '' ?>>3 Installments</option>
+                                <option value="4" <?= $requested_installments === 4 ? 'selected' : '' ?>>4 Installments</option>
                             </select><img src="../icons/layer-group-solid-full.svg"
                                 class="fa-solid fa-layer-group input-icon text-primary"></div>
+                        <?php if ($requested_installments > 1): ?>
+                            <p style="font-size:12px;color:#6B7280;margin-top:6px;">
+                                📋 Member requested <?= $requested_installments ?> installments — adjust if needed.
+                            </p>
+                        <?php endif; ?>
                     </div>
                     <div class="input-group"><label>Min. Due Per Installment (₹)</label>
                         <div class="input-wrapper"><input type="text" id="per_installment_view"
@@ -607,7 +639,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         receivedInput.addEventListener('input', calculateMetrics);
 
         // Auto-fill price when membership is selected
-        document.getElementById('membership_type').addEventListener('change', function () {
+        const membershipTypeSelect = document.getElementById('membership_type');
+        membershipTypeSelect.addEventListener('change', function () {
             const selectedOption = this.options[this.selectedIndex];
             const price = selectedOption.getAttribute('data-price');
             if (price) {
@@ -615,6 +648,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 calculateMetrics();
             }
         });
+        // If the member's requested plan was pre-selected server-side, fill the price for it too
+        if (membershipTypeSelect.value) {
+            membershipTypeSelect.dispatchEvent(new Event('change'));
+        }
     </script>
     <script>
         function replaceSVG() {

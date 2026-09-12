@@ -50,9 +50,9 @@ if (!defined('JOF_MAIL_CONFIG_LOADED')) {
     define('SMTP_HOST',       getenv('SMTP_HOST')        ?: 'smtp.gmail.com');
     define('SMTP_PORT',       (int) (getenv('SMTP_PORT') ?: 587));
     define('SMTP_SECURE',     getenv('SMTP_SECURE')      ?: 'tls');   // 'tls' = STARTTLS/587, 'ssl' = SMTPS/465
-    define('SMTP_USERNAME',   getenv('SMTP_USERNAME')    ?: 'vedantkolhapure111@gmail.com');
-    define('SMTP_PASSWORD',   getenv('SMTP_PASSWORD')    ?: 'tzhiwibunjrfgfjj'); // Gmail App Password — REPLACE ME
-    define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL')  ?: 'vedantkolhapure111@gmail.com');
+    define('SMTP_USERNAME',   getenv('SMTP_USERNAME')    ?: 'iglmembershipid@gmail.com');
+    define('SMTP_PASSWORD',   getenv('SMTP_PASSWORD')    ?: 'hclvlxtfmfxnywwm'); // Gmail App Password — REPLACE ME
+    define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL')  ?: 'iglmembershipid@gmail.com');
     define('SMTP_FROM_NAME',  getenv('SMTP_FROM_NAME')   ?: 'JOF INDIA');
 }
 

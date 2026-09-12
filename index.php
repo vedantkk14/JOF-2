@@ -1,5 +1,16 @@
 <?php
-session_start();
+// Match the cookie params used by /auth/login.php and /auth/auth_check.php
+// so the login form and the login handler share ONE session.
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    session_start();
+}
 
 // Destroy stale sessions that are missing user_role (pre-role-auth legacy sessions)
 // Without this, old browser sessions would bypass the login form entirely
@@ -171,7 +182,8 @@ require_once __DIR__ . '/auth/google_config.php';
 
             fetch('auth/login.php', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                credentials: 'same-origin'
             })
                 .then(res => res.json())
                 .then(data => {

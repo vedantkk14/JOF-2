@@ -27,7 +27,7 @@ function sendEnquiryEmail($full_name, $email)
         jof_configure_mailer($mail, ['secure' => 'ssl', 'port' => 465]);
 
         // Email Settings
-        $mail->addReplyTo('vedantkolhapure111@gmail.com', 'JOF INDIA Support');
+        $mail->addReplyTo('iglmembershipid@gmail.com', 'JOF INDIA Support');
         $mail->addAddress($email, $full_name);
         $mail->isHTML(true);
         $mail->Subject = 'Thank You for Reaching Out to JOF INDIA!';

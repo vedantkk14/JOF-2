@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../auth/auth_check.php';
 require_role(['admin', 'trainer']);
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/diet_plan_schema.php';
 
 $error = "";
 $success = "";
@@ -67,16 +68,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($guidelines_text)
         $db_dinner .= "📝 **GUIDELINES:**\n" . $guidelines_text;
 
+    $resource_names = $_POST['resource_name'] ?? [];
+    $resource_links = $_POST['resource_link'] ?? [];
+    $resources = [];
+    foreach ($resource_names as $i => $rname) {
+        $rname = trim($rname);
+        $rlink = trim($resource_links[$i] ?? '');
+        if ($rname !== '' && $rlink !== '') {
+            $resources[] = ['name' => $rname, 'link' => $rlink];
+        }
+    }
+    $db_resources = $resources ? json_encode($resources) : null;
+
     if (empty($client_name) || empty($goal)) {
         $error = "Please fill in the Client Name and Goal.";
     } else {
         try {
-            $sql = "INSERT INTO diet_plans (plan_name, diet_type, goal, duration, calories, trainer_name, breakfast, lunch, snack, dinner) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO diet_plans (plan_name, diet_type, goal, duration, calories, trainer_name, breakfast, lunch, snack, dinner, resources)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $stmt = $conn->prepare($sql);
             $stmt->bind_param(
-                "sssiisssss",
+                "sssiissssss",
                 $plan_name,
                 $diet_type,
                 $goal,
@@ -86,7 +99,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $db_breakfast,
                 $db_lunch,
                 $db_snack,
-                $db_dinner
+                $db_dinner,
+                $db_resources
             );
 
             if ($stmt->execute()) {
@@ -356,6 +370,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                 </div>
 
+                <div class="section-title">
+                    <img src="../icons/cart-shopping-solid-full.svg" alt="icon" onerror="this.style.display='none'">
+                    <span>Resources & Recommended Products</span>
+                </div>
+
+                <div id="resourceRows" class="resource-rows">
+                    <div class="resource-row" style="display:flex; gap:10px; margin-bottom:10px;">
+                        <input type="text" name="resource_name[]" class="form-input" placeholder="e.g. Whey Protein (Blinkit)" style="flex:1;">
+                        <input type="url" name="resource_link[]" class="form-input" placeholder="https://blinkit.com/..." style="flex:1;">
+                        <button type="button" class="btn btn-secondary remove-resource-row" style="flex:0 0 auto;">Remove</button>
+                    </div>
+                </div>
+                <button type="button" id="addResourceRow" class="btn btn-secondary" style="margin-bottom:20px;">+ Add Resource</button>
+
                 <div class="action-buttons">
                     <a href="diet-plans.php" class="btn btn-secondary" style="text-decoration:none;">Cancel</a>
                     <button type="submit" class="btn btn-primary">Save Phase & Publish</button>
@@ -435,6 +463,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            const resourceRows = document.getElementById('resourceRows');
+            const addResourceRow = document.getElementById('addResourceRow');
+
+            function bindRemove(row) {
+                const btn = row.querySelector('.remove-resource-row');
+                btn.addEventListener('click', function () {
+                    if (resourceRows.querySelectorAll('.resource-row').length > 1) {
+                        row.remove();
+                    } else {
+                        row.querySelectorAll('input').forEach(i => i.value = '');
+                    }
+                });
+            }
+            resourceRows.querySelectorAll('.resource-row').forEach(bindRemove);
+
+            if (addResourceRow) {
+                addResourceRow.addEventListener('click', function () {
+                    const row = document.createElement('div');
+                    row.className = 'resource-row';
+                    row.style.cssText = 'display:flex; gap:10px; margin-bottom:10px;';
+                    row.innerHTML = `
+                        <input type="text" name="resource_name[]" class="form-input" placeholder="e.g. Whey Protein (Blinkit)" style="flex:1;">
+                        <input type="url" name="resource_link[]" class="form-input" placeholder="https://blinkit.com/..." style="flex:1;">
+                        <button type="button" class="btn btn-secondary remove-resource-row" style="flex:0 0 auto;">Remove</button>
+                    `;
+                    resourceRows.appendChild(row);
+                    bindRemove(row);
+                });
+            }
+
             if ("<?= $success ?>" === "success") {
                 const toast = document.getElementById('successToast');
                 const timerBar = document.getElementById('redirectTimer');
