@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../auth/auth_check.php';
 require_role(['admin', 'trainer']);
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/membership_helper.php';
+membership_pauses_ensure_schema($conn);
 
 // === AUTO-EXPIRY: Move active members with expired plans to inactive ===
 $conn->query("
@@ -21,9 +23,25 @@ $conn->query("
     )
     AND NOT EXISTS (
         SELECT 1 FROM membership_pauses mpz
-        WHERE mpz.member_id = m.id AND CURDATE() BETWEEN mpz.pause_start AND mpz.pause_end
+        WHERE mpz.member_id = m.id AND mpz.kind = 'pause' AND CURDATE() BETWEEN mpz.pause_start AND mpz.pause_end
     )
 ");
+
+// === EXTENSION SUCCESS: arrived here after extending a plan from inactive_members.php ===
+$highlight_member_id = isset($_GET['ext_member']) ? (int) $_GET['ext_member'] : 0;
+$ext_banner = null;
+if (isset($_GET['ext_ok']) && $highlight_member_id > 0) {
+    $eb = $conn->prepare("
+        SELECT m.full_name, mpe.days, mpe.end_date_after
+        FROM members m
+        JOIN membership_pauses mpe ON mpe.member_id = m.id AND mpe.kind = 'extension'
+        WHERE m.id = ?
+        ORDER BY mpe.id DESC LIMIT 1
+    ");
+    $eb->bind_param('i', $highlight_member_id);
+    $eb->execute();
+    $ext_banner = $eb->get_result()->fetch_assoc() ?: null;
+}
 
 // === AUTO-EXPIRY FOR PT: Sync PT expiration with membership expiration ===
 $conn->query("UPDATE personal_training pt
@@ -92,8 +110,11 @@ $sql = "SELECT
             (SELECT COUNT(*) FROM installment_payments ip WHERE ip.payment_id = (SELECT payment_id FROM member_payments WHERE member_id = m.id ORDER BY created_at DESC LIMIT 1)) as extra_installments_paid,
             (SELECT balance_pending FROM member_payments mp WHERE mp.member_id = m.id ORDER BY created_at DESC LIMIT 1) as balance_pending,
             (SELECT payment_id FROM member_payments mp WHERE mp.member_id = m.id ORDER BY created_at DESC LIMIT 1) as latest_payment_id,
-            (SELECT COALESCE(SUM(days),0) FROM membership_pauses mpz WHERE mpz.member_id = m.id) as total_paused_days,
-            (SELECT MAX(pause_end) FROM membership_pauses mpz WHERE mpz.member_id = m.id AND CURDATE() BETWEEN mpz.pause_start AND mpz.pause_end) as active_pause_end
+            (SELECT COALESCE(SUM(days),0) FROM membership_pauses mpz WHERE mpz.member_id = m.id AND mpz.kind = 'pause') as total_paused_days,
+            (SELECT MAX(pause_end) FROM membership_pauses mpz WHERE mpz.member_id = m.id AND mpz.kind = 'pause' AND CURDATE() BETWEEN mpz.pause_start AND mpz.pause_end) as active_pause_end,
+            (SELECT CONCAT(mpe.end_date_after, '|', mpe.days) FROM membership_pauses mpe
+              WHERE mpe.member_id = m.id AND mpe.kind = 'extension' AND mpe.end_date_after >= CURDATE()
+              ORDER BY mpe.id DESC LIMIT 1) as active_extension
         FROM members m
         WHERE m.status = 'active'";
 
@@ -130,7 +151,7 @@ $result = $stmt->get_result();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" size="16x16" href="../icons/favicon-dark-logo.png" type="image/png">
     <title>JOF India | Members</title>
-    <link rel="stylesheet" href="../static/root.css">
+    <link rel="stylesheet" href="../static/root.css?v=<?= @filemtime(__DIR__ . '/../static/root.css') ?>">
     <style>
         .modal-overlay {
             position: fixed;
@@ -247,6 +268,33 @@ $result = $stmt->get_result();
             display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 600;
             color: #4338CA; background: #EEF2FF; border-radius: 999px; padding: 2px 7px;
         }
+
+        /* Plan extended by admin */
+        .page-members .status-pill.extended { background: #E0F2FE; color: #0369A1; }
+        .page-members .status-pill.extended::before { background: #0EA5E9; }
+        .page-members .extended-hint {
+            display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 700;
+            color: #0369A1; background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 999px; padding: 1px 7px;
+        }
+        .page-members tr.row-highlight td { animation: rowFlash 2.4s ease-out 1; }
+        @keyframes rowFlash { 0%, 35% { background: #E0F2FE; } 100% { background: transparent; } }
+
+        /* Success banner (extension) */
+        .page-members .ext-banner {
+            display: flex; align-items: center; gap: 12px; margin: 0 0 18px; padding: 14px 18px;
+            background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 14px; color: #075985;
+            font-size: 14px; animation: popIn .35s cubic-bezier(.34,1.56,.64,1) both;
+        }
+        .page-members .ext-banner .ext-ic {
+            width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px; background: #0EA5E9;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .page-members .ext-banner .ext-ic svg { width: 18px; height: 18px; color: #fff; }
+        .page-members .ext-banner b { color: #0C4A6E; }
+        .page-members .ext-banner .ext-close {
+            margin-left: auto; border: none; background: none; color: #0369A1; font-size: 20px;
+            line-height: 1; cursor: pointer; padding: 0 4px;
+        }
     </style>
 </head>
 
@@ -267,6 +315,27 @@ $result = $stmt->get_result();
                     <p>Manage gym members and their health information</p>
                 </div>
             </header>
+
+            <?php if ($ext_banner): ?>
+                <div class="ext-banner" role="status">
+                    <div class="ext-ic">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>
+                    </div>
+                    <div>
+                        <b><?= htmlspecialchars($ext_banner['full_name']) ?></b>'s membership was extended by
+                        <b><?= (int) $ext_banner['days'] ?> day<?= (int) $ext_banner['days'] === 1 ? '' : 's' ?></b>
+                        and they're active again &mdash; valid until <b><?= date('d M Y', strtotime($ext_banner['end_date_after'])) ?></b>.
+                    </div>
+                    <button type="button" class="ext-close" onclick="this.parentElement.remove()" aria-label="Dismiss">&times;</button>
+                </div>
+                <script>
+                    window.addEventListener('DOMContentLoaded', function () {
+                        history.replaceState(null, '', 'members.php');
+                        var row = document.getElementById('member-row-<?= (int) $highlight_member_id ?>');
+                        if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    });
+                </script>
+            <?php endif; ?>
 
             <?php if (!empty($expired_members)): ?>
                 <div class="expiry-alert-banner">
@@ -399,6 +468,19 @@ $result = $stmt->get_result();
                                     $notificationBtn = ''; // no expiry nagging while frozen
                                 }
 
+                                // --- 3c. EXTENSION: plan running on admin-granted extra days ---
+                                // Payment problems still take priority; otherwise show the extension.
+                                $extended_until = null;
+                                $extended_days = 0;
+                                if (!$paused_until && !empty($rows['active_extension'])) {
+                                    [$extended_until, $extended_days] = explode('|', $rows['active_extension']) + [null, 0];
+                                    $extended_days = (int) $extended_days;
+                                    if (!($has_pending_payment && $pay_days_left < 0)) {
+                                        $status = 'Extended till ' . date('d M', strtotime($extended_until));
+                                        $statusClass = 'extended';
+                                    }
+                                }
+
                                 // --- 4. DETERMINE STATUS CATEGORY FOR FILTERING ---
                                 $statusCategory = $rows['membership'];
 
@@ -409,7 +491,7 @@ $result = $stmt->get_result();
                                 }
                                 ?>
 
-                                <tr>
+                                <tr id="member-row-<?= (int) $rows['id'] ?>"<?= $highlight_member_id === (int) $rows['id'] ? ' class="row-highlight"' : '' ?>>
                                     <td data-label="Name">
                                         <strong><?= htmlspecialchars($rows['full_name']) ?></strong>
                                         <?php if (isset($rows['payment_count']) && $rows['payment_count'] == 0): ?>
@@ -447,6 +529,11 @@ $result = $stmt->get_result();
                                         <span class="status-pill <?= $statusClass ?>">
                                             <?= $status ?>
                                         </span>
+                                        <?php if ($extended_until && $statusClass !== 'extended'): ?>
+                                            <span class="extended-hint" title="Plan extended till <?= date('d M Y', strtotime($extended_until)) ?>">+<?= $extended_days ?>d extended</span>
+                                        <?php elseif ($extended_until): ?>
+                                            <span class="extended-hint" title="Admin extension">+<?= $extended_days ?>d</span>
+                                        <?php endif; ?>
                                         <?php if (!$paused_until && $total_paused_days > 0): ?>
                                             <span class="paused-hint" title="Membership extended by paused days">+<?= $total_paused_days ?>d paused</span>
                                         <?php endif; ?>

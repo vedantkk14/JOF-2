@@ -39,6 +39,7 @@ $current_plan_name = $membership_info['plan_name'];
 $days_remaining    = $membership_info['days_remaining'];
 $expiry_status      = $membership_info['status'];
 $membership_pause   = $member_id ? membership_pause_info($conn, $member_id) : null;
+$membership_extension = ($member_id && !$membership_pause) ? membership_extension_info($conn, $member_id) : null;
 
 // Full plan catalog, same ordering as the admin page
 $plans = [];
@@ -113,7 +114,17 @@ require __DIR__ . '/_shell_top.php';
     .current-hero-stats .lbl { font-size: 11px; opacity: .85; margin-top: 2px; }
 
     /* ===== Explore plans grid ===== */
-    .section-title { font-size: 15px; font-weight: 700; margin: 6px 0 14px; }
+    .section-title {
+        display: flex; align-items: center; gap: 12px; margin: 6px 0 16px;
+    }
+    .section-title .ic {
+        width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; background: var(--coral-tint);
+        color: var(--coral-dark); display: flex; align-items: center; justify-content: center;
+    }
+    .section-title .ic svg { width: 17px; height: 17px; }
+    .section-title h2 { font-size: 15.5px; font-weight: 700; }
+    .section-title p { font-size: 12px; color: var(--ink-soft); margin-top: 1px; }
+    .tag svg { width: 11px; height: 11px; }
     .plans-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
     .member-plan-card {
         background: var(--card); border-radius: 18px; box-shadow: var(--shadow); border: 1px solid var(--border);
@@ -217,7 +228,7 @@ require __DIR__ . '/_shell_top.php';
     .qr-modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 20px 22px 4px; color: #fff; }
     .qr-modal-title { font-size: 16px; font-weight: 700; }
     .qr-modal-subtitle { font-size: 12px; color: #9aa3b5; margin-top: 3px; }
-    .qr-modal-close { width: 30px; height: 30px; border-radius: 9px; border: none; background: rgba(255,255,255,.12); color: #fff; font-size: 14px; flex-shrink: 0; }
+    .qr-modal-close { width: 30px; height: 30px; border-radius: 9px; border: none; background: rgba(255,255,255,.12); color: #fff; font-size: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
     .qr-modal-close:hover { background: rgba(255,255,255,.22); }
     .qr-modal-body { padding: 18px 22px 26px; text-align: center; }
     .qr-code-img { width: 100%; max-width: 220px; border-radius: 12px; background: #fff; padding: 8px; }
@@ -284,13 +295,30 @@ require __DIR__ . '/_shell_top.php';
         <div class="current-hero-row">
             <div>
                 <?php if ($membership_pause): ?>
-                    <div class="tag" style="background:#FDF3E2;color:#B87814;">⏸ Paused</div>
+                    <div class="tag" style="background:#FDF3E2;color:#B87814;">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                        Paused
+                    </div>
+                <?php elseif ($membership_extension && ($expiry_status === 'active' || $expiry_status === 'expiring')): ?>
+                    <div class="tag" style="background:#fff;color:#0369A1;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>
+                        Extended
+                    </div>
                 <?php elseif ($expiry_status === 'active'): ?>
-                    <div class="tag">● Active membership</div>
+                    <div class="tag">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>
+                        Active membership
+                    </div>
                 <?php elseif ($expiry_status === 'expiring'): ?>
-                    <div class="tag">⚠ Expiring soon</div>
+                    <div class="tag">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 4L2 18a2 2 0 001.7 3h16.6A2 2 0 0022 18L13.7 4a2 2 0 00-3.4 0z"/></svg>
+                        Expiring soon
+                    </div>
                 <?php elseif ($expiry_status === 'expired'): ?>
-                    <div class="tag">Expired</div>
+                    <div class="tag">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+                        Expired
+                    </div>
                 <?php else: ?>
                     <div class="tag">No active plan</div>
                 <?php endif; ?>
@@ -303,6 +331,10 @@ require __DIR__ . '/_shell_top.php';
                         Paused until <?= e(date('d M Y', strtotime($membership_pause['pause_end']))) ?> — it will resume automatically after that.
                     <?php elseif ($membership_info['valid_until']): ?>
                         Valid until <?= e(date('d M Y', strtotime($membership_info['valid_until']))) ?>
+                        <?php if ($membership_extension): ?>
+                            — extended by <?= (int) $membership_extension['days'] ?> day<?= (int) $membership_extension['days'] === 1 ? '' : 's' ?>
+                            on <?= e(date('d M Y', strtotime($membership_extension['created_at']))) ?>
+                        <?php endif; ?>
                     <?php else: ?>
                         Talk to your trainer to get started on a plan.
                     <?php endif; ?>
@@ -333,7 +365,17 @@ require __DIR__ . '/_shell_top.php';
         </div>
     </div>
 
-    <div class="section-title">Explore Plans</div>
+    <div class="section-title">
+        <span class="ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/>
+            </svg>
+        </span>
+        <div>
+            <h2>Explore Plans</h2>
+            <p>Every membership plan we currently offer.</p>
+        </div>
+    </div>
 
     <?php if (empty($plans)): ?>
         <div class="empty-card">No membership plans have been published yet — check back soon.</div>
@@ -388,7 +430,9 @@ require __DIR__ . '/_shell_top.php';
                     <p>Provide payment info to subscribe to this plan.</p>
                 </div>
             </div>
-            <button type="button" class="popup-close" id="subscribeCloseBtn" title="Close">✕</button>
+            <button type="button" class="popup-close" id="subscribeCloseBtn" title="Close">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
         </div>
 
         <div class="modal-plan-strip">
@@ -403,9 +447,14 @@ require __DIR__ . '/_shell_top.php';
             <div class="form-alert" id="subscribeError"></div>
 
             <div class="pm-section-title">
-                <h3>💳 Payment Mode Details</h3>
+                <h3>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                    Payment Mode Details
+                </h3>
                 <button type="button" class="scan-pay-btn" id="scanPayBtn">
-                    <span class="badge">📲</span> Scan &amp; Pay
+                    <span class="badge">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18h2"/></svg>
+                    </span> Scan &amp; Pay
                 </button>
             </div>
 
@@ -438,7 +487,9 @@ require __DIR__ . '/_shell_top.php';
                         <label>Upload Payment Screenshot <span class="opt">(optional)</span></label>
                         <div class="pm-upload-zone">
                             <input type="file" name="payment_screenshot" id="screenshotInput" accept="image/jpeg,image/png,application/pdf">
-                            <div class="u-icon">☁️</div>
+                            <div class="u-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 01-1.5-8.74A5.5 5.5 0 0116 8a4 4 0 01.5 7.97"/><path d="M12 12v9M9 15l3-3 3 3"/></svg>
+                            </div>
                             <div class="u-text" id="screenshotLabel">Click to upload screenshot (Optional)</div>
                         </div>
                     </div>
@@ -457,19 +508,29 @@ require __DIR__ . '/_shell_top.php';
     <div class="qr-modal-card">
         <div class="qr-modal-header">
             <div>
-                <div class="qr-modal-title">📲 Scan &amp; Pay</div>
+                <div class="qr-modal-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18h2"/></svg>
+                    Scan &amp; Pay
+                </div>
                 <div class="qr-modal-subtitle">Use any UPI app to complete payment</div>
             </div>
-            <button type="button" class="qr-modal-close" id="qrCloseBtn">✕</button>
+            <button type="button" class="qr-modal-close" id="qrCloseBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
         </div>
         <div class="qr-modal-body">
             <img src="../../icons/images/qr_code.jpeg" alt="Payment QR Code" class="qr-code-img">
             <div class="qr-upi-row">
                 UPI ID: <b id="upiId">7798487212@hdfc</b>
-                <button type="button" class="qr-copy-icon" id="copyUpiBtn" title="Copy UPI ID">📋</button>
+                <button type="button" class="qr-copy-icon" id="copyUpiBtn" title="Copy UPI ID">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M4 16V4a2 2 0 012-2h10"/></svg>
+                </button>
             </div>
             <div class="qr-payee">JOSHUA SUNIL SADANANDAN</div>
-            <a class="qr-download-link" href="../../icons/images/qr_code.jpeg" download="JOF-Payment-QR.jpg">⬇ Download QR Code</a>
+            <a class="qr-download-link" href="../../icons/images/qr_code.jpeg" download="JOF-Payment-QR.jpg">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+                Download QR Code
+            </a>
             <div class="qr-modal-footer-text">GPay &nbsp;·&nbsp; PhonePe &nbsp;·&nbsp; Paytm &nbsp;·&nbsp; any UPI app</div>
         </div>
     </div>
@@ -478,7 +539,9 @@ require __DIR__ . '/_shell_top.php';
 <!-- Success modal -->
 <div class="sp-modal-overlay" id="successOverlay">
     <div class="sp-modal">
-        <div class="ic">✓</div>
+        <div class="ic">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
         <h3>Payment Submitted!</h3>
         <p>Please wait till your trainer verifies and activates your membership. Once approved, you're all set to begin your journey!</p>
         <button type="button" id="successOkBtn">Got it</button>
@@ -530,12 +593,14 @@ require __DIR__ . '/_shell_top.php';
 
         const copyBtn = document.getElementById('copyUpiBtn');
         const upiId = document.getElementById('upiId').textContent.trim();
+        const copyIconHTML = copyBtn.innerHTML;
+        const checkIconHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
         copyBtn.addEventListener('click', function () {
             navigator.clipboard.writeText(upiId).then(function () {
-                copyBtn.textContent = '✓';
+                copyBtn.innerHTML = checkIconHTML;
                 copyBtn.classList.add('copied');
                 setTimeout(function () {
-                    copyBtn.textContent = '📋';
+                    copyBtn.innerHTML = copyIconHTML;
                     copyBtn.classList.remove('copied');
                 }, 1800);
             }).catch(function () { });

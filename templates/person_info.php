@@ -186,11 +186,23 @@ mysqli_stmt_execute($pauseStmt);
 $latest_plan = mysqli_fetch_assoc(mysqli_stmt_get_result($pauseStmt));
 $can_pause_member = $latest_plan && !empty($latest_plan['end_date']);
 
+require_once __DIR__ . '/../auth/membership_helper.php';
+membership_pauses_ensure_schema($conn);
+
+// Pauses only (extensions are shown separately below)
 $pauseAgg = mysqli_query($conn, "
     SELECT COALESCE(SUM(days),0) AS total_days,
            MAX(CASE WHEN CURDATE() BETWEEN pause_start AND pause_end THEN pause_end END) AS active_pause_end
-    FROM membership_pauses WHERE member_id = " . (int) $member_id);
+    FROM membership_pauses WHERE kind = 'pause' AND member_id = " . (int) $member_id);
 $pause_info = $pauseAgg ? mysqli_fetch_assoc($pauseAgg) : ['total_days' => 0, 'active_pause_end' => null];
+
+// Most recent plan extension (running or finished) for the extension notice
+$extStmt = mysqli_prepare($conn, "SELECT days, reason, end_date_before, end_date_after, created_at
+    FROM membership_pauses WHERE member_id = ? AND kind = 'extension' ORDER BY id DESC LIMIT 1");
+mysqli_stmt_bind_param($extStmt, "i", $member_id);
+mysqli_stmt_execute($extStmt);
+$extension_info = mysqli_fetch_assoc(mysqli_stmt_get_result($extStmt)) ?: null;
+$extension_running = $extension_info && $extension_info['end_date_after'] >= date('Y-m-d');
 
 // Fetch ALL measurements for Gallery
 $sql = "SELECT id, front_view_image, side_view_image, back_view_image, recorded_at 
@@ -223,7 +235,7 @@ $img_path = '../uploads/progress_photos/';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" size="16x16" href="../icons/favicon-dark-logo.png" type="image/png">
     <title>Member Profile | JOF INDIA</title>
-    <link rel="stylesheet" href="../static/root.css">
+    <link rel="stylesheet" href="../static/root.css?v=<?= @filemtime(__DIR__ . '/../static/root.css') ?>">
 
     <style>
         .premium-edit-footer {
@@ -497,6 +509,43 @@ $img_path = '../uploads/progress_photos/';
                             <p style="margin:8px 0 0;font-size:13px;color:#6366F1;font-weight:600;">
                                 +<?= (int) $pause_info['total_days'] ?> paused day<?= (int) $pause_info['total_days'] === 1 ? '' : 's' ?> already added to this plan.
                             </p>
+                        <?php endif; ?>
+
+                        <?php if ($extension_info):
+                            $ext_days = (int) $extension_info['days']; ?>
+                            <style>
+                                .ext-callout { display: flex; gap: 14px; margin-top: 14px; padding: 14px 16px; border-radius: 14px; background: #F0F9FF; border: 1px solid #BAE6FD; }
+                                .ext-callout.past { background: #F9FAFB; border-color: #E5E7EB; }
+                                .ext-callout-ic { width: 38px; height: 38px; flex-shrink: 0; border-radius: 11px; background: #0EA5E9; color: #fff; display: flex; align-items: center; justify-content: center; }
+                                .ext-callout.past .ext-callout-ic { background: #9CA3AF; }
+                                .ext-callout-ic svg { width: 18px; height: 18px; }
+                                .ext-callout-title { font-size: 14px; font-weight: 700; color: #0C4A6E; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+                                .ext-callout.past .ext-callout-title { color: #374151; }
+                                .ext-chip { font-size: 10.5px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: #0EA5E9; color: #fff; }
+                                .ext-callout.past .ext-chip { background: #E5E7EB; color: #6B7280; }
+                                .ext-callout-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 6px; font-size: 12.5px; color: #475569; }
+                                .ext-callout-meta b { color: #0F172A; font-weight: 700; }
+                                .ext-callout-reason { margin-top: 8px; font-size: 12.5px; color: #475569; font-style: italic; }
+                            </style>
+                            <div class="ext-callout<?= $extension_running ? '' : ' past' ?>">
+                                <div class="ext-callout-ic">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>
+                                </div>
+                                <div>
+                                    <div class="ext-callout-title">
+                                        Plan extended by <?= $ext_days ?> day<?= $ext_days === 1 ? '' : 's' ?>
+                                        <span class="ext-chip"><?= $extension_running ? 'Active' : 'Ended' ?></span>
+                                    </div>
+                                    <div class="ext-callout-meta">
+                                        <span>Extended on <b><?= date('d M Y', strtotime($extension_info['created_at'])) ?></b></span>
+                                        <span>Previously ended <b><?= date('d M Y', strtotime($extension_info['end_date_before'])) ?></b></span>
+                                        <span><?= $extension_running ? 'Now valid until' : 'Ran until' ?> <b><?= date('d M Y', strtotime($extension_info['end_date_after'])) ?></b></span>
+                                    </div>
+                                    <?php if (trim((string) $extension_info['reason']) !== ''): ?>
+                                        <div class="ext-callout-reason">Reason: <?= htmlspecialchars($extension_info['reason']) ?></div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         <?php endif; ?>
                         <div class="plan-history-container mt-15">
                             <?php if (mysqli_num_rows($mem_history_result) > 0): ?>

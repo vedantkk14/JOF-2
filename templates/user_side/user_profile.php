@@ -8,9 +8,45 @@ require_once __DIR__ . '/../../auth/profile_helper.php';
 
 $uid       = (int) $user['id'];
 $csrf      = generate_csrf_token();
-$saved     = isset($_GET['saved']);
+$photo_deleted = isset($_GET['photo_deleted']);
+$saved     = isset($_GET['saved']) || $photo_deleted;
 $errors    = [];
 $notice    = '';
+
+/* ────────────────── DELETE ONE PROGRESS PHOTO (manual only) ────────────────── */
+// Posted only by the standalone #photoDelForm, which lives OUTSIDE the profile
+// form — a delete can never ride along with a normal "Save Profile".
+// `del` = "<column>:<member_measurements.id>"
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_photo') {
+    if (hash_equals($_SESSION['_csrf_token'] ?? '', $_POST['_csrf_token'] ?? '')) {
+        $del_mid = get_user_member_id($conn, $uid);
+        [$del_col, $del_rid] = array_pad(explode(':', (string) ($_POST['del'] ?? ''), 2), 2, '');
+        $del_rid = (int) $del_rid;
+        $allowed_cols = ['front_view_image', 'side_view_image', 'back_view_image'];
+
+        if ($del_mid && $del_rid && in_array($del_col, $allowed_cols, true)) {
+            $s = mysqli_prepare($conn, "SELECT `$del_col` AS fname FROM member_measurements WHERE id = ? AND member_id = ?");
+            mysqli_stmt_bind_param($s, 'ii', $del_rid, $del_mid);
+            mysqli_stmt_execute($s);
+            $row = mysqli_fetch_assoc(mysqli_stmt_get_result($s));
+
+            if ($row && !empty($row['fname'])) {
+                // Clear every snapshot of this member that points at the same file
+                // (older saves could reference one photo from several rows).
+                $u = mysqli_prepare($conn, "UPDATE member_measurements SET `$del_col` = NULL WHERE member_id = ? AND `$del_col` = ?");
+                mysqli_stmt_bind_param($u, 'is', $del_mid, $row['fname']);
+                mysqli_stmt_execute($u);
+
+                $path = __DIR__ . '/../../uploads/progress_photos/' . basename($row['fname']);
+                if (is_file($path)) {
+                    @unlink($path);
+                }
+            }
+        }
+    }
+    header('Location: user_profile.php?photo_deleted=1#sec-photos');
+    exit;
+}
 
 /* ─────────────────────────── SAVE ─────────────────────────── */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -110,7 +146,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_execute($s);
             }
 
-            // ── progress photos (optional) ──
+            // ── latest existing snapshot (used to detect real measurement changes) ──
+            $s = mysqli_prepare($conn, "SELECT * FROM member_measurements WHERE member_id=? ORDER BY recorded_at DESC, id DESC LIMIT 1");
+            mysqli_stmt_bind_param($s, 'i', $mid);
+            mysqli_stmt_execute($s);
+            $latest_measure = mysqli_fetch_assoc(mysqli_stmt_get_result($s));
+
+            // ── progress photos (optional) — each upload is ADDED to the history ──
             $upload_dir = __DIR__ . '/../../uploads/progress_photos/';
             $save_photo = function (string $field) use ($upload_dir, $mid): ?string {
                 if (empty($_FILES[$field]['name']) || ($_FILES[$field]['error'] ?? 1) !== 0) {
@@ -123,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
                     return null;
                 }
-                $name = $field . '_' . $mid . '_' . time() . '.' . $ext;
+                $name = $field . '_' . $mid . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
                 if (!is_dir($upload_dir)) {
                     @mkdir($upload_dir, 0777, true);
                 }
@@ -134,33 +176,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $back  = $save_photo('back_view');
             $has_photo = $front || $side || $back;
 
-            // ── measurements: full set → new snapshot; photos-only → attach to latest ──
-            if ($chest > 0 && $waist > 0 && $hips > 0 && $thigh > 0) {
-                $s = mysqli_prepare($conn, "INSERT INTO member_measurements
-                    (member_id, chest_nipple_line, waist_navel_line, thigh_mid, hip_widest_part,
-                     front_view_image, side_view_image, back_view_image, recorded_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-                mysqli_stmt_bind_param($s, 'iddddsss', $mid, $chest, $waist, $thigh, $hips, $front, $side, $back);
-                mysqli_stmt_execute($s);
-            } elseif ($has_photo) {
-                $s = mysqli_prepare($conn, "SELECT id FROM member_measurements WHERE member_id=? ORDER BY recorded_at DESC, id DESC LIMIT 1");
-                mysqli_stmt_bind_param($s, 'i', $mid);
-                mysqli_stmt_execute($s);
-                $latest = mysqli_fetch_assoc(mysqli_stmt_get_result($s));
-                if ($latest) {
-                    $sets = [];
-                    $params = [];
-                    $types = '';
-                    if ($front) { $sets[] = 'front_view_image=?'; $params[] = $front; $types .= 's'; }
-                    if ($side)  { $sets[] = 'side_view_image=?';  $params[] = $side;  $types .= 's'; }
-                    if ($back)  { $sets[] = 'back_view_image=?';  $params[] = $back;  $types .= 's'; }
-                    $params[] = (int) $latest['id'];
-                    $types .= 'i';
-                    $s = mysqli_prepare($conn, "UPDATE member_measurements SET " . implode(', ', $sets) . " WHERE id=?");
-                    mysqli_stmt_bind_param($s, $types, ...$params);
+            // ── measurements + photos ──
+            // A save that changes the measurements or uploads photos writes a NEW snapshot
+            // row. Existing rows are never updated, so every earlier photo stays in the
+            // history until the member deletes it. A snapshot only holds the photos
+            // uploaded in that save; the latest photo per view is read across all rows.
+            $has_measure = $chest > 0 && $waist > 0 && $hips > 0 && $thigh > 0;
+            $measurements_changed = $has_measure && (!$latest_measure
+                || number_format((float) $latest_measure['chest_nipple_line'], 1) !== number_format($chest, 1)
+                || number_format((float) $latest_measure['waist_navel_line'], 1) !== number_format($waist, 1)
+                || number_format((float) $latest_measure['hip_widest_part'], 1) !== number_format($hips, 1)
+                || number_format((float) $latest_measure['thigh_mid'], 1) !== number_format($thigh, 1));
+
+            if (!$has_measure && $latest_measure) {
+                // Photos-only save: the new snapshot keeps the current measurements
+                $chest = (float) $latest_measure['chest_nipple_line'];
+                $waist = (float) $latest_measure['waist_navel_line'];
+                $thigh = (float) $latest_measure['thigh_mid'];
+                $hips  = (float) $latest_measure['hip_widest_part'];
+            }
+
+            if ($measurements_changed || $has_photo) {
+                if ($has_measure || $latest_measure) {
+                    $s = mysqli_prepare($conn, "INSERT INTO member_measurements
+                        (member_id, chest_nipple_line, waist_navel_line, thigh_mid, hip_widest_part,
+                         front_view_image, side_view_image, back_view_image, recorded_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                    mysqli_stmt_bind_param($s, 'iddddsss', $mid, $chest, $waist, $thigh, $hips, $front, $side, $back);
                     mysqli_stmt_execute($s);
                 } else {
                     $notice = 'Add your body measurements to save progress photos.';
+                    foreach ([$front, $side, $back] as $orphan) {
+                        if ($orphan) {
+                            @unlink($upload_dir . $orphan);
+                        }
+                    }
                 }
             }
 
@@ -218,13 +268,48 @@ $photo_dir = '../../uploads/progress_photos/';
 $mv = fn($k) => (int) ($mt[$k] ?? 5);
 $notice = $notice ?: ($_GET['notice'] ?? '');
 
+// Full photo history, one entry per upload session (oldest → newest). Older saves
+// copied the same file into several snapshot rows, so each file is only counted the
+// first time it appears. Powers the upload slots (latest per view), Before/After and
+// the dated history timeline.
+$photo_sessions = [];
+$photo_by_view  = ['front_view_image' => [], 'side_view_image' => [], 'back_view_image' => []];
+if (!empty($profile['member_id'])) {
+    $ph = mysqli_prepare($conn, "SELECT id, front_view_image, side_view_image, back_view_image, recorded_at
+        FROM member_measurements
+        WHERE member_id = ?
+          AND (front_view_image IS NOT NULL OR side_view_image IS NOT NULL OR back_view_image IS NOT NULL)
+        ORDER BY recorded_at ASC, id ASC");
+    mysqli_stmt_bind_param($ph, 'i', $profile['member_id']);
+    mysqli_stmt_execute($ph);
+    $ph_res = mysqli_stmt_get_result($ph);
+    $seen_files = [];
+    while ($ph_row = mysqli_fetch_assoc($ph_res)) {
+        $session_photos = [];
+        foreach (array_keys($photo_by_view) as $col) {
+            $file = $ph_row[$col] ?? '';
+            if ($file === '' || isset($seen_files[$file]) || !is_file(__DIR__ . '/../../uploads/progress_photos/' . basename($file))) {
+                continue;
+            }
+            $seen_files[$file] = true;
+            $session_photos[$col] = $file;
+            $photo_by_view[$col][] = ['id' => (int) $ph_row['id'], 'file' => $file, 'date' => $ph_row['recorded_at']];
+        }
+        if ($session_photos) {
+            $photo_sessions[] = ['id' => (int) $ph_row['id'], 'date' => $ph_row['recorded_at'], 'photos' => $session_photos];
+        }
+    }
+}
+$latest_photo = array_map(fn(array $list) => $list ? $list[count($list) - 1] : null, $photo_by_view);
+$photo_total  = array_sum(array_map('count', $photo_by_view));
+
 // section completeness (for checklist + per-section pills)
 $sec_done = [
     'personal'   => !$miss('Full name') && !$miss('Phone number') && !$miss('Email address') && !$miss('Gender') && !$miss('Diet preference'),
     'health'     => !$miss('Age') && !$miss('Height') && !$miss('Weight'),
     'assessment' => !$miss('Self-assessment'),
     'measure'    => !$miss('Body measurements'),
-    'photos'     => (bool) ($ms['front_view_image'] ?? '') || (bool) ($ms['side_view_image'] ?? '') || (bool) ($ms['back_view_image'] ?? ''),
+    'photos'     => $photo_total > 0,
 ];
 $ring_c = 2 * M_PI * 52;
 $ring_off = $ring_c * (1 - $status['percent'] / 100);
@@ -579,6 +664,96 @@ require __DIR__ . '/_shell_top.php';
         .photo-slot .ov svg { width: 14px; height: 14px; }
         .photo-slot:hover .ov { opacity: 1; }
         .photo-cap { text-align: center; font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-top: 7px; }
+
+        /* Before / After comparison + photo history */
+        .ba-wrap, .ph-history { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border); }
+        .ba-title { font-size: 14.5px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+        .ba-sub { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 16px; }
+
+        .ba-row { margin-bottom: 20px; }
+        .ba-row:last-child { margin-bottom: 0; }
+        .ba-label {
+            display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700;
+            color: var(--ink); margin-bottom: 8px;
+        }
+        .ba-days {
+            font-size: 11px; font-weight: 700; color: var(--coral-dark); background: var(--coral-tint);
+            padding: 2px 9px; border-radius: 20px;
+        }
+
+        .ba-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .ba-cell { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 3 / 4; background: var(--bg); }
+        .ba-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .ba-tag {
+            position: absolute; left: 8px; bottom: 8px; font-size: 10px; font-weight: 800; letter-spacing: .03em;
+            padding: 4px 9px; border-radius: 20px; background: rgba(15, 23, 42, .72); color: #fff;
+        }
+        .ba-tag.after { background: rgba(31, 169, 113, .88); }
+
+        .ba-cell img[data-lightbox] { cursor: zoom-in; }
+        .photo-cap small { display: block; font-size: 11px; font-weight: 600; color: var(--ink-faint); margin-top: 2px; }
+        .photo-note { font-size: 12px; color: var(--ink-soft); margin-top: 12px; }
+
+        /* Photo history timeline (newest first) */
+        .ph-history-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+        .ph-count {
+            flex-shrink: 0; font-size: 11.5px; font-weight: 700; color: var(--coral-dark); background: var(--coral-tint);
+            padding: 4px 11px; border-radius: 20px; white-space: nowrap;
+        }
+        .ph-timeline { position: relative; padding-left: 24px; }
+        .ph-timeline::before {
+            content: ''; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px;
+            background: var(--border); border-radius: 2px;
+        }
+        .ph-session { position: relative; padding-bottom: 22px; }
+        .ph-session:last-child { padding-bottom: 0; }
+        .ph-session-dot {
+            position: absolute; left: -24px; top: 3px; width: 14px; height: 14px; border-radius: 50%;
+            background: #fff; border: 3px solid var(--ink-faint); box-sizing: border-box;
+        }
+        .ph-session:first-child .ph-session-dot { border-color: var(--coral); }
+        .ph-session-head {
+            display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;
+            font-size: 12.5px; color: var(--ink-soft);
+        }
+        .ph-session-head b { font-size: 13.5px; color: var(--ink); }
+        .ph-latest {
+            font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+            color: #fff; background: var(--coral); padding: 2px 8px; border-radius: 20px;
+        }
+        .ph-session-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-width: 420px; }
+        .ph-thumb { position: relative; margin: 0; min-width: 0; }
+        .ph-open {
+            display: block; width: 100%; padding: 0; aspect-ratio: 3 / 4; overflow: hidden; cursor: zoom-in;
+            border: 1px solid var(--border); border-radius: 12px; background: var(--bg);
+        }
+        .ph-open img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s ease; }
+        .ph-open:hover img { transform: scale(1.04); }
+        .ph-thumb figcaption { text-align: center; font-size: 11.5px; font-weight: 700; color: var(--ink-soft); margin-top: 5px; }
+        .ph-del-btn {
+            position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; border: none;
+            background: rgba(15, 23, 42, .65); color: #fff; font-size: 15px; line-height: 1; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity .15s ease, background .15s ease;
+        }
+        .ph-thumb:hover .ph-del-btn, .ph-del-btn:focus-visible { opacity: 1; }
+        .ph-del-btn:hover { background: var(--red); }
+        @media (hover: none) { .ph-del-btn { opacity: 1; } }
+
+        /* Photo lightbox */
+        .ph-lightbox {
+            position: fixed; inset: 0; z-index: 3000; padding: 20px; background: rgba(15, 23, 42, .88);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ph-lightbox[hidden] { display: none; }
+        .ph-lightbox figure { margin: 0; max-width: min(92vw, 560px); text-align: center; }
+        .ph-lightbox img { display: block; max-width: 100%; max-height: 80vh; margin: 0 auto; border-radius: 14px; }
+        .ph-lightbox figcaption { margin-top: 10px; color: #fff; font-size: 13px; font-weight: 600; }
+        .ph-lb-close {
+            position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; border: none;
+            background: rgba(255, 255, 255, .15); color: #fff; font-size: 24px; line-height: 1; cursor: pointer;
+        }
+        .ph-lb-close:hover { background: rgba(255, 255, 255, .28); }
 
         /* messages / toast */
         .msg { padding: 13px 16px; border-radius: 12px; font-size: 13.5px; font-weight: 600; margin-bottom: 16px; }
@@ -983,7 +1158,7 @@ require __DIR__ . '/_shell_top.php';
                                     'back_view' => ['Back View', 'back_view_image'],
                                 ];
                                 foreach ($slots as $field => [$cap, $col]):
-                                    $cur = $ms[$col] ?? ''; ?>
+                                    $cur = $latest_photo[$col]['file'] ?? ''; ?>
                                     <div class="photo-cell">
                                         <label class="photo-slot">
                                             <input type="file" name="<?= $field ?>" accept="image/*">
@@ -994,7 +1169,7 @@ require __DIR__ . '/_shell_top.php';
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                                                         <path d="M12 5v14M5 12h14" />
-                                                    </svg>Replace
+                                                    </svg>Add new
                                                 </span>
                                             <?php else: ?>
                                                 <span class="ph">
@@ -1007,12 +1182,127 @@ require __DIR__ . '/_shell_top.php';
                                                 </span>
                                             <?php endif; ?>
                                         </label>
-                                        <div class="photo-cap"><?= $cap ?></div>
+                                        <div class="photo-cap"><?= $cap ?>
+                                            <?php if ($cur): ?>
+                                                <small>Latest · <?= date('d M Y', strtotime($latest_photo[$col]['date'])) ?></small>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
+                            <p class="photo-note">New photos are added to your history &mdash; your earlier photos are always kept.</p>
+
+                            <?php
+                            $view_labels = ['front_view_image' => 'Front View', 'side_view_image' => 'Side View', 'back_view_image' => 'Back View'];
+                            $has_any_compare = false;
+                            foreach ($photo_by_view as $__list) {
+                                if (count($__list) >= 2) { $has_any_compare = true; break; }
+                            }
+                            ?>
+
+                            <?php if ($has_any_compare): ?>
+                                <div class="ba-wrap">
+                                    <h3 class="ba-title">Before &amp; After</h3>
+                                    <p class="ba-sub">Your earliest photo next to your most recent one, for each angle
+                                        you've uploaded at least twice.</p>
+                                    <?php foreach ($view_labels as $col => $label):
+                                        $list = $photo_by_view[$col];
+                                        if (count($list) < 2) {
+                                            continue;
+                                        }
+                                        $before = $list[0];
+                                        $after = end($list);
+                                        $days_apart = max(0, (int) floor((strtotime($after['date']) - strtotime($before['date'])) / 86400));
+                                        ?>
+                                        <div class="ba-row">
+                                            <div class="ba-label"><?= $label ?>
+                                                <span class="ba-days"><?= $days_apart ?> day<?= $days_apart === 1 ? '' : 's' ?> apart</span>
+                                            </div>
+                                            <div class="ba-pair">
+                                                <div class="ba-cell">
+                                                    <img src="<?= $photo_dir . htmlspecialchars($before['file'], ENT_QUOTES) ?>"
+                                                        alt="Before" loading="lazy"
+                                                        data-lightbox="<?= $photo_dir . htmlspecialchars($before['file'], ENT_QUOTES) ?>"
+                                                        data-caption="<?= $label ?> · Before · <?= date('d M Y', strtotime($before['date'])) ?>">
+                                                    <span class="ba-tag before">BEFORE ·
+                                                        <?= date('d M Y', strtotime($before['date'])) ?></span>
+                                                </div>
+                                                <div class="ba-cell">
+                                                    <img src="<?= $photo_dir . htmlspecialchars($after['file'], ENT_QUOTES) ?>"
+                                                        alt="After" loading="lazy"
+                                                        data-lightbox="<?= $photo_dir . htmlspecialchars($after['file'], ENT_QUOTES) ?>"
+                                                        data-caption="<?= $label ?> · After · <?= date('d M Y', strtotime($after['date'])) ?>">
+                                                    <span class="ba-tag after">AFTER ·
+                                                        <?= date('d M Y', strtotime($after['date'])) ?></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($photo_sessions): ?>
+                                <div class="ph-history">
+                                    <div class="ph-history-head">
+                                        <div>
+                                            <h3 class="ba-title">Photo History</h3>
+                                            <p class="ba-sub">Every photo you've uploaded, newest first. They stay here
+                                                until you remove one yourself.</p>
+                                        </div>
+                                        <span class="ph-count"><?= $photo_total ?> photo<?= $photo_total === 1 ? '' : 's' ?></span>
+                                    </div>
+                                    <div class="ph-timeline">
+                                        <?php foreach (array_reverse($photo_sessions) as $si => $sess):
+                                            $n_photos = count($sess['photos']); ?>
+                                            <div class="ph-session">
+                                                <span class="ph-session-dot"></span>
+                                                <div class="ph-session-head">
+                                                    <b><?= date('d M Y', strtotime($sess['date'])) ?></b>
+                                                    <span><?= $n_photos ?> photo<?= $n_photos === 1 ? '' : 's' ?></span>
+                                                    <?php if ($si === 0): ?><span class="ph-latest">Latest</span><?php endif; ?>
+                                                </div>
+                                                <div class="ph-session-grid">
+                                                    <?php foreach ($view_labels as $col => $label):
+                                                        if (empty($sess['photos'][$col])) {
+                                                            continue;
+                                                        }
+                                                        $src = $photo_dir . htmlspecialchars($sess['photos'][$col], ENT_QUOTES); ?>
+                                                        <figure class="ph-thumb">
+                                                            <button type="button" class="ph-open" data-lightbox="<?= $src ?>"
+                                                                data-caption="<?= $label ?> · <?= date('d M Y', strtotime($sess['date'])) ?>"
+                                                                aria-label="View <?= $label ?> photo">
+                                                                <img src="<?= $src ?>" alt="<?= $label ?>" loading="lazy">
+                                                            </button>
+                                                            <figcaption><?= $label ?></figcaption>
+                                                            <!-- Submits the standalone #photoDelForm below, never the profile form -->
+                                                            <button type="submit" form="photoDelForm" name="del"
+                                                                value="<?= $col ?>:<?= (int) $sess['id'] ?>" class="ph-del-btn"
+                                                                title="Delete this photo" aria-label="Delete this photo"
+                                                                onclick="return confirm('Delete this photo? This can\'t be undone.');">&times;</button>
+                                                        </figure>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         </section>
                     </form>
+
+                    <!-- Photo delete form: kept OUTSIDE #profileForm (forms can't nest) -->
+                    <form method="POST" id="photoDelForm" hidden>
+                        <input type="hidden" name="action" value="delete_photo">
+                        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
+                    </form>
+
+                    <div class="ph-lightbox" id="phLightbox" hidden>
+                        <button type="button" class="ph-lb-close" aria-label="Close">&times;</button>
+                        <figure>
+                            <img id="phLbImg" src="" alt="Progress photo">
+                            <figcaption id="phLbCap"></figcaption>
+                        </figure>
+                    </div>
                 </div>
             </div>
 
@@ -1030,7 +1320,7 @@ require __DIR__ . '/_shell_top.php';
                     <path d="M20 6L9 17l-5-5" />
                 </svg>
             </span>
-            Profile saved
+            <?= $photo_deleted ? 'Photo deleted' : 'Profile saved' ?>
         </div>
     <?php endif; ?>
 
@@ -1112,13 +1402,34 @@ require __DIR__ . '/_shell_top.php';
                     slot.appendChild(img);
                     const ov = document.createElement('span');
                     ov.className = 'ov';
-                    ov.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Replace';
+                    ov.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Add new';
                     slot.appendChild(ov);
                 }
                 const ph = slot.querySelector('.ph'); if (ph) ph.remove();
                 img.src = URL.createObjectURL(inp.files[0]);
+                const cap = slot.parentElement.querySelector('.photo-cap small');
+                if (cap) cap.textContent = 'New · added when you save';
             });
         });
+
+        /* ===== Photo lightbox ===== */
+        const lightbox = document.getElementById('phLightbox');
+        if (lightbox) {
+            const lbImg = document.getElementById('phLbImg');
+            const lbCap = document.getElementById('phLbCap');
+            const closeLightbox = () => { lightbox.hidden = true; lbImg.src = ''; };
+            document.querySelectorAll('[data-lightbox]').forEach(el => {
+                el.addEventListener('click', () => {
+                    lbImg.src = el.dataset.lightbox;
+                    lbCap.textContent = el.dataset.caption || '';
+                    lightbox.hidden = false;
+                });
+            });
+            lightbox.addEventListener('click', e => {
+                if (e.target === lightbox || e.target.closest('.ph-lb-close')) closeLightbox();
+            });
+            document.addEventListener('keydown', e => { if (e.key === 'Escape' && !lightbox.hidden) closeLightbox(); });
+        }
 
         /* ===== Dirty state → save bar ===== */
         const form = document.getElementById('profileForm');

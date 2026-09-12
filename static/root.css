@@ -23179,6 +23179,27 @@ textarea.form-control {
     color: #047857;
 }
 
+.page-members .btn-extend {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: 0.2s;
+    margin-right: 5px;
+    background-color: #EEF2FF;
+    color: #4338CA;
+    border: 1px solid #C7D2FE;
+    cursor: pointer;
+}
+
+.page-members .btn-extend:hover {
+    background-color: #E0E7FF;
+    color: #3730A3;
+}
+
 .page-members .inactive-badge {
     display: inline-block;
     padding: 4px 10px;

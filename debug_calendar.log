@@ -1902,3 +1902,11 @@
 [2026-09-09 15:55:48] Action: fetch
 [2026-09-09 15:55:48] Method: GET
 [2026-09-09 15:55:48] Raw Input: 
+[2026-09-12 20:55:17] === Calendar Handler Called ===
+[2026-09-12 20:55:17] Action: fetch
+[2026-09-12 20:55:17] Method: GET
+[2026-09-12 20:55:17] Raw Input: 
+[2026-09-12 21:35:57] === Calendar Handler Called ===
+[2026-09-12 21:35:57] Action: fetch
+[2026-09-12 21:35:57] Method: GET
+[2026-09-12 21:35:57] Raw Input: 

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../auth/auth_check.php';
 require_role(['admin', 'trainer']);
 require_once __DIR__ . '/../config.php';
+$csrf = generate_csrf_token();
 
 // === DELETE LOGIC ===
 if (isset($_GET['delete_id'])) {
@@ -96,8 +97,111 @@ $result = $stmt->get_result();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" size="16x16" href="../icons/favicon-dark-logo.png" type="image/png">
     <title>JOF India | Inactive Members</title>
-    <link rel="stylesheet" href="../static/root.css">
+    <link rel="stylesheet" href="../static/root.css?v=<?= @filemtime(__DIR__ . '/../static/root.css') ?>">
+    <style>
+        /* ── Extend Plan action button ── */
+        .page-members .btn-extend {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 6px; margin-right: 5px;
+            background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD;
+            text-decoration: none; cursor: pointer; transition: all .2s ease;
+        }
+        .page-members .btn-extend:hover {
+            background: #BAE6FD; border-color: #7DD3FC; transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(3, 105, 161, .18);
+        }
+        .page-members .btn-extend img, .page-members .btn-extend svg { width: 14px; height: 14px; }
 
+        /* ── Extend Plan modal ── */
+        .ext-overlay {
+            display: none; position: fixed; inset: 0; z-index: 10000; padding: 16px;
+            background: rgba(15, 23, 42, .5); backdrop-filter: blur(4px);
+            align-items: center; justify-content: center;
+        }
+        .ext-overlay.open { display: flex; }
+        .ext-card {
+            width: 100%; max-width: 440px; max-height: calc(100vh - 32px); overflow-y: auto;
+            background: #fff; border-radius: 22px; box-shadow: 0 24px 60px rgba(15, 23, 42, .25);
+            animation: popIn .3s cubic-bezier(.34, 1.56, .64, 1) both;
+        }
+        .ext-head {
+            position: relative; display: flex; align-items: center; gap: 14px; padding: 22px 24px 18px;
+            border-bottom: 1px solid #F1F5F9;
+        }
+        .ext-head-ic {
+            width: 48px; height: 48px; flex-shrink: 0; border-radius: 14px; color: #fff;
+            background: linear-gradient(135deg, #0EA5E9, #0369A1);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 16px rgba(14, 165, 233, .35);
+        }
+        .ext-head-ic svg { width: 22px; height: 22px; }
+        .ext-head h2 { margin: 0 0 2px; font-size: 18px; color: #0F172A; }
+        .ext-head p { margin: 0; font-size: 13px; color: #64748B; }
+        .ext-head p b { color: #334155; }
+        .ext-x {
+            position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 50%;
+            border: none; background: #F1F5F9; color: #64748B; font-size: 20px; line-height: 1;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: .2s;
+        }
+        .ext-x:hover { background: #E2E8F0; color: #0F172A; }
+        .ext-body { padding: 20px 24px 24px; }
+
+        .ext-dates { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .ext-date { padding: 11px 13px; border-radius: 12px; background: #FEF2F2; border: 1px solid #FECACA; }
+        .ext-date span { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #B91C1C; margin-bottom: 3px; }
+        .ext-date b { font-size: 14px; color: #0F172A; }
+        .ext-date.new { background: #ECFDF5; border-color: #A7F3D0; }
+        .ext-date.new span { color: #047857; }
+        .ext-arrow { color: #94A3B8; font-size: 18px; }
+
+        .ext-label { display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 8px; }
+        .ext-label span { font-weight: 500; color: #94A3B8; }
+        .ext-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        .ext-chip {
+            padding: 8px 14px; border-radius: 999px; border: 1.5px solid #E2E8F0; background: #fff;
+            color: #334155; font-size: 13px; font-weight: 600; cursor: pointer; transition: .15s;
+        }
+        .ext-chip:hover { border-color: #7DD3FC; background: #F0F9FF; }
+        .ext-chip.active { border-color: #0284C7; background: #0284C7; color: #fff; }
+        .ext-custom { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+        .ext-custom input {
+            width: 110px; padding: 10px 12px; border: 1.5px solid #E2E8F0; border-radius: 10px;
+            font-size: 14px; font-weight: 600; color: #0F172A;
+        }
+        .ext-custom input:focus, .ext-body textarea:focus { outline: none; border-color: #0284C7; box-shadow: 0 0 0 3px rgba(2, 132, 199, .15); }
+        .ext-custom span { font-size: 13px; color: #64748B; }
+        .ext-body textarea {
+            width: 100%; min-height: 70px; padding: 10px 12px; border: 1.5px solid #E2E8F0; border-radius: 10px;
+            font-size: 13.5px; font-family: inherit; resize: vertical; margin-bottom: 16px; box-sizing: border-box;
+        }
+        .ext-summary {
+            padding: 12px 14px; border-radius: 12px; background: #F0F9FF; border: 1px dashed #7DD3FC;
+            font-size: 13px; color: #075985; line-height: 1.5; margin-bottom: 20px;
+        }
+        .ext-summary b { color: #0C4A6E; }
+        .ext-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .ext-btn {
+            padding: 11px 20px; border-radius: 11px; font-size: 13.5px; font-weight: 700; cursor: pointer; transition: .2s;
+        }
+        .ext-btn.ghost { background: #fff; border: 1.5px solid #E2E8F0; color: #334155; }
+        .ext-btn.ghost:hover { background: #F8FAFC; }
+        .ext-btn.primary { background: #0284C7; border: 1.5px solid #0284C7; color: #fff; box-shadow: 0 6px 14px rgba(2, 132, 199, .3); }
+        .ext-btn.primary:hover { background: #0369A1; border-color: #0369A1; }
+        .ext-btn.primary:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+
+        .ext-alert {
+            display: flex; align-items: center; gap: 10px; margin: 0 0 16px; padding: 12px 16px; border-radius: 12px;
+            background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; font-size: 13.5px; font-weight: 600;
+        }
+
+        @media (max-width: 480px) {
+            .ext-head { padding: 18px 18px 14px; }
+            .ext-body { padding: 16px 18px 20px; }
+            .ext-dates { grid-template-columns: 1fr; }
+            .ext-arrow { display: none; }
+            .ext-actions .ext-btn { flex: 1; }
+        }
+    </style>
 </head>
 
 <body class="page-members">
@@ -117,6 +221,13 @@ $result = $stmt->get_result();
                     <p>Members who registered via the public link and are awaiting activation</p>
                 </div>
             </header>
+
+            <?php if (isset($_GET['pause_err'])): ?>
+                <div class="ext-alert" role="alert">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+                    <?= htmlspecialchars($_GET['pause_err']) ?>
+                </div>
+            <?php endif; ?>
 
             <div class="toolbar">
                 <form id="searchForm" method="GET" action="inactive_members.php" class="search-group flex-y-center w-full">
@@ -203,6 +314,14 @@ $result = $stmt->get_result();
                                                 title="Activate & Add Payment">
                                                 <img src="../icons/indian-rupee-sign-solid-full.svg" class="fa-solid fa-indian-rupee-sign">
                                             </a>
+
+                                            <?php if (!$is_active_renewal && $row['payment_count'] > 0 && !empty($row['latest_expiry'])): ?>
+                                                <a href="javascript:void(0)"
+                                                    onclick="openExtendModal(<?= (int) $row['id'] ?>, '<?= htmlspecialchars(addslashes($row['full_name']), ENT_QUOTES) ?>', '<?= htmlspecialchars($row['latest_expiry']) ?>')"
+                                                    class="btn-extend" title="Extend Plan" aria-label="Extend Plan">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>
+                                                </a>
+                                            <?php endif; ?>
 
                                             <a href="person_info.php?id=<?= $row['id'] ?>" class="btn-view"
                                                 title="View Profile">
@@ -315,6 +434,63 @@ $result = $stmt->get_result();
         </div>
     </div>
 
+    <!-- ===== EXTEND PLAN MODAL ===== -->
+    <div id="extendModal" class="ext-overlay" onclick="if (event.target === this) closeExtendModal()">
+        <div class="ext-card" role="dialog" aria-modal="true" aria-labelledby="extendTitle">
+            <div class="ext-head">
+                <div class="ext-head-ic">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>
+                </div>
+                <div>
+                    <h2 id="extendTitle">Extend Membership</h2>
+                    <p>For <b id="extendMemberName"></b></p>
+                </div>
+                <button type="button" class="ext-x" onclick="closeExtendModal()" aria-label="Close">&times;</button>
+            </div>
+
+            <form id="extendForm" class="ext-body" method="POST" action="../handlers/pause_membership.php">
+                <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
+                <input type="hidden" name="kind" value="extension">
+                <input type="hidden" name="member_id" id="extendMemberId">
+                <input type="hidden" name="redirect" value="inactive_members.php">
+
+                <div class="ext-dates">
+                    <div class="ext-date">
+                        <span id="extendOldLabel">Plan ended</span>
+                        <b id="extendOldExpiry">—</b>
+                    </div>
+                    <div class="ext-arrow">&rarr;</div>
+                    <div class="ext-date new">
+                        <span>New expiry</span>
+                        <b id="extendNewExpiry">—</b>
+                    </div>
+                </div>
+
+                <label class="ext-label">Extend by</label>
+                <div class="ext-chips">
+                    <?php foreach ([7, 15, 30, 60, 90] as $chip_days): ?>
+                        <button type="button" class="ext-chip" data-days="<?= $chip_days ?>"><?= $chip_days ?> days</button>
+                    <?php endforeach; ?>
+                </div>
+                <div class="ext-custom">
+                    <input type="number" name="days" id="extendDays" min="1" max="365" value="30" required aria-label="Number of days">
+                    <span>days (1–365)</span>
+                </div>
+
+                <label class="ext-label" for="extendReason">Reason <span>(optional)</span></label>
+                <textarea name="reason" id="extendReason" maxlength="255"
+                    placeholder="e.g. Courtesy extension, member was travelling…"></textarea>
+
+                <div class="ext-summary" id="extendSummary"></div>
+
+                <div class="ext-actions">
+                    <button type="button" class="ext-btn ghost" onclick="closeExtendModal()">Cancel</button>
+                    <button type="submit" class="ext-btn primary" id="extendSubmit">Extend Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         let currentMemberId = null;
 
@@ -328,6 +504,75 @@ $result = $stmt->get_result();
                 window.location.href = `payment_details.php?activate_id=${currentMemberId}&type=${type}`;
             }
         }
+
+        // ── Extend Plan modal ──
+        // Mirrors handlers/pause_membership.php (kind=extension): the extra days are
+        // counted from today when the plan has already lapsed, otherwise from its end date.
+        let extendBase = null;
+        let extendLapsed = true;
+        const fmtDate = d => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+        function openExtendModal(memberId, memberName, latestExpiry) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const oldEnd = new Date(latestExpiry + 'T00:00:00');
+            extendLapsed = oldEnd < today;
+            extendBase = extendLapsed ? today : oldEnd;
+
+            document.getElementById('extendMemberId').value = memberId;
+            document.getElementById('extendMemberName').textContent = memberName;
+            document.getElementById('extendOldLabel').textContent = extendLapsed ? 'Plan ended' : 'Plan ends';
+            document.getElementById('extendOldExpiry').textContent = fmtDate(oldEnd);
+            document.getElementById('extendDays').value = 30;
+            document.getElementById('extendReason').value = '';
+            updateExtendPreview();
+            document.getElementById('extendModal').classList.add('open');
+            document.getElementById('extendDays').focus();
+        }
+
+        function closeExtendModal() {
+            document.getElementById('extendModal').classList.remove('open');
+        }
+
+        function updateExtendPreview() {
+            if (!extendBase) return;
+            const days = parseInt(document.getElementById('extendDays').value, 10);
+            const valid = days >= 1 && days <= 365;
+
+            document.querySelectorAll('.ext-chip').forEach(chip => {
+                chip.classList.toggle('active', +chip.dataset.days === days);
+            });
+            document.getElementById('extendSubmit').disabled = !valid;
+
+            const summary = document.getElementById('extendSummary');
+            if (!valid) {
+                document.getElementById('extendNewExpiry').textContent = '—';
+                summary.innerHTML = 'Enter a number of days between <b>1</b> and <b>365</b>.';
+                return;
+            }
+
+            const end = new Date(extendBase);
+            end.setDate(end.getDate() + days);
+            document.getElementById('extendNewExpiry').textContent = fmtDate(end);
+            summary.innerHTML = (extendLapsed
+                    ? 'The member becomes <b>active from today</b> and moves to Active Members. '
+                    : '<b>' + days + ' days</b> are added after the current end date. ')
+                + 'Plan valid until <b>' + fmtDate(end) + '</b>'
+                + (extendLapsed ? ' (' + days + ' day' + (days === 1 ? '' : 's') + ').' : '.');
+        }
+
+        document.getElementById('extendDays').addEventListener('input', updateExtendPreview);
+        document.querySelectorAll('.ext-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.getElementById('extendDays').value = chip.dataset.days;
+                updateExtendPreview();
+            });
+        });
+        document.getElementById('extendForm').addEventListener('submit', () => {
+            document.getElementById('extendSubmit').disabled = true;
+            document.getElementById('extendSubmit').textContent = 'Extending…';
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeExtendModal(); });
 
         function confirmDelete(url) {
             const modal = document.getElementById('confirmModal');

@@ -51,6 +51,27 @@ $current_plan_name = $membership_info['plan_name'];
 $membership_days_remaining = $membership_info['days_remaining'];
 $membership_status = $membership_info['status'];
 $membership_pause = $mrow2 ? membership_pause_info($conn, (int) $mrow2['id']) : null;
+$membership_extension = ($mrow2 && !$membership_pause) ? membership_extension_info($conn, (int) $mrow2['id']) : null;
+
+// Next upcoming PT session (card only ever shows a real, scheduled session)
+$next_pt_session = null;
+if ($mrow2) {
+    $ptstmt = $conn->prepare("
+        SELECT ps.session_date, ps.session_time, ps.status, ps.notes,
+               COALESCE(t.full_name, 'Your trainer') AS trainer_name
+        FROM pt_sessions ps
+        JOIN personal_training pt ON pt.id = ps.pt_id
+        LEFT JOIN trainers t ON t.id = pt.trainer_id
+        WHERE ps.member_id = ?
+          AND ps.session_date >= CURDATE()
+          AND ps.status NOT IN ('Cancelled', 'Completed')
+        ORDER BY ps.session_date ASC, ps.session_time ASC
+        LIMIT 1
+    ");
+    $ptstmt->bind_param('i', $current_member_id);
+    $ptstmt->execute();
+    $next_pt_session = $ptstmt->get_result()->fetch_assoc();
+}
 
 require_once __DIR__ . '/../../auth/profile_helper.php';
 $pc = $conn->query("SELECT full_name, email, profile_completed, profile_pic FROM user_data WHERE id = $uid")->fetch_assoc();
@@ -1636,6 +1657,17 @@ if ($profile_incomplete) {
                         It's paused until <?= htmlspecialchars(date('d M Y', strtotime($membership_pause['pause_end']))) ?>. Your plan will automatically resume after that.
                     </div>
                 </div>
+            <?php elseif ($membership_extension && $membership_status !== 'expired'): ?>
+                <div class="profile-warning" style="background:#F0F9FF;border-color:#BAE6FD;">
+                    <div class="pw-icon" style="color:#0284C7;">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>
+                    </div>
+                    <div class="pw-text" style="color:#075985;">
+                        <b style="color:#0C4A6E;">Your membership has been extended by <?= (int) $membership_extension['days'] ?> day<?= (int) $membership_extension['days'] === 1 ? '' : 's' ?>.</b>
+                        It's now valid until <?= htmlspecialchars(date('d M Y', strtotime($membership_info['valid_until'] ?: $membership_extension['end_date_after']))) ?><?= $membership_days_remaining !== null ? ' — ' . (int) $membership_days_remaining . ' day' . ($membership_days_remaining == 1 ? '' : 's') . ' left' : '' ?>.
+                    </div>
+                    <a class="pw-btn" href="user_membership.php" style="background:#0284C7;">View Plan</a>
+                </div>
             <?php elseif ($membership_status === 'expiring' || $membership_status === 'expired'): ?>
                 <div class="profile-warning" style="<?= $membership_status === 'expired' ? 'background:var(--red-tint);border-color:#F3B9BB;' : '' ?>">
                     <div class="pw-icon" style="<?= $membership_status === 'expired' ? 'color:var(--red);' : '' ?>">⏰</div>
@@ -1707,6 +1739,8 @@ if ($profile_incomplete) {
                             <?php endif; ?>
                             <?php if ($membership_pause): ?>
                                 <span class="status-pill amber"><span class="dot"></span>Paused</span>
+                            <?php elseif ($membership_extension && ($membership_status === 'active' || $membership_status === 'expiring')): ?>
+                                <span class="status-pill" style="background:#E0F2FE; color:#0369A1;"><span class="dot" style="background:#0EA5E9;"></span>Extended</span>
                             <?php elseif ($membership_status === 'active'): ?>
                                 <span class="status-pill green"><span class="dot"></span>Active</span>
                             <?php elseif ($membership_status === 'expiring'): ?>
@@ -1723,11 +1757,16 @@ if ($profile_incomplete) {
                         <div class="sub-line">
                             <?= $membership_info['valid_until']
                                 ? 'Valid until ' . htmlspecialchars(date('d M Y', strtotime($membership_info['valid_until'])))
+                                    . ($membership_extension ? ' · includes your extension' : '')
                                 : 'No expiry on record' ?>
                         </div>
                         <div class="divider"></div>
                         <?php if (!empty($latest_payment['start_date'])): ?>
                             <div class="kv-row"><span>Member since</span><b><?= htmlspecialchars(date('d M Y', strtotime($latest_payment['start_date']))) ?></b></div>
+                        <?php endif; ?>
+                        <?php if ($membership_extension): ?>
+                            <div class="kv-row"><span>Extended on</span><b><?= htmlspecialchars(date('d M Y', strtotime($membership_extension['created_at']))) ?></b></div>
+                            <div class="kv-row"><span>Extra days added</span><b style="color:#0369A1;">+<?= (int) $membership_extension['days'] ?> days</b></div>
                         <?php endif; ?>
                         <?php if ($membership_days_remaining !== null): ?>
                             <div class="kv-row">
@@ -1759,22 +1798,32 @@ if ($profile_incomplete) {
                             </div>
                             Upcoming PT Session
                         </div>
+                        <?php if ($next_pt_session): ?>
+                            <span class="status-pill green"><span class="dot"></span><?= htmlspecialchars($next_pt_session['status']) ?></span>
+                        <?php endif; ?>
                     </div>
-                    <div class="session-block">
-                        <div class="session-date">
-                            <div class="d">08</div>
-                            <div class="m">Sep</div>
+                    <?php if ($next_pt_session):
+                        $__pt_ts = strtotime($next_pt_session['session_date']);
+                        $__pt_days = (int) floor((strtotime($next_pt_session['session_date']) - strtotime('today')) / 86400);
+                        $__pt_when = $__pt_days === 0 ? 'Today' : ($__pt_days === 1 ? 'Tomorrow' : "In {$__pt_days} days");
+                    ?>
+                        <div class="session-block">
+                            <div class="session-date">
+                                <div class="d"><?= date('d', $__pt_ts) ?></div>
+                                <div class="m"><?= date('M', $__pt_ts) ?></div>
+                            </div>
+                            <div class="session-info">
+                                <b><?= htmlspecialchars($next_pt_session['notes'] ?: 'Personal Training Session') ?></b>
+                                <span><?= htmlspecialchars(date('g:i A', strtotime($next_pt_session['session_time']))) ?> · with <?= htmlspecialchars($next_pt_session['trainer_name']) ?></span>
+                            </div>
                         </div>
-                        <div class="session-info">
-                            <b>Strength Training — Upper Body</b>
-                            <span>6:30 AM · with Coach Aman</span>
+                        <div class="sub-line"><?= $__pt_days === 0 ? 'Your session is today' : 'Next session ' . strtolower($__pt_when) ?></div>
+                    <?php else: ?>
+                        <div class="sub-line" style="margin-top:6px;">No upcoming PT sessions scheduled.</div>
+                        <div class="btn-row">
+                            <button class="btn btn-ghost" onclick="location.href='user_membership.php'">Explore PT Plans</button>
                         </div>
-                    </div>
-                    <div class="sub-line">Next session in 2 days</div>
-                    <div class="btn-row">
-                        <button class="btn btn-ghost">Reschedule</button>
-                        <button class="btn btn-primary">View Details</button>
-                    </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Diet Plan -->
@@ -1864,6 +1913,12 @@ if ($profile_incomplete) {
                         </div>
                         <div class="divider"></div>
                         <div class="kv-row"><span>Last payment</span><b>₹<?= number_format($__received, 0) ?> · <?= htmlspecialchars(date('d M Y', strtotime($latest_payment_any['start_date'] ?? $latest_payment_any['created_at']))) ?></b></div>
+                        <?php
+                        // Installment plans only — a one-shot payment has no "next due date" to show
+                        $__is_installment = (int) ($latest_payment_any['installments_count'] ?? 1) > 1;
+                        if ($__is_installment && $__balance > 0 && !empty($latest_payment_any['next_due_date'])): ?>
+                            <div class="kv-row"><span>Next due date</span><b><?= htmlspecialchars(date('d M Y', strtotime($latest_payment_any['next_due_date']))) ?></b></div>
+                        <?php endif; ?>
                         <div class="btn-row">
                             <button class="btn btn-ghost" onclick="location.href='user_payments.php'">View Invoices</button>
                             <?php if ($__balance > 0): ?>
