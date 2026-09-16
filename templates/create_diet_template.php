@@ -177,6 +177,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             transition: width 1.5s linear;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 
 <body class="page-create_diet_plan">
@@ -212,10 +213,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <span id="gptChevron">&#9656;</span>
                 </button>
                 <div id="gptImportBody" style="display:none; padding:0 16px 16px;">
-                    <p style="font-size:12.5px; color:#92400E; margin:0 0 8px;">Paste the diet plan text from ChatGPT, then click <b>Fill the form</b>. Fields are only filled in &mdash; nothing is saved until you press Save Template.</p>
+                    <p style="font-size:12.5px; color:#92400E; margin:0 0 8px;">Paste the diet plan text from ChatGPT, or upload the plan as a PDF &mdash; then click <b>Fill the form</b>. Fields are only filled in &mdash; nothing is saved until you press Save Template.</p>
                     <textarea id="gptRaw" rows="8"
                         placeholder="Paste ChatGPT output here&#10;&#10;e.g.&#10;Breakfast: oats + fruit&#10;Lunch: dal, rice, salad&#10;Dinner: paneer + veg&#10;Guidelines: 3L water/day"
                         style="width:100%; padding:10px; border:1px solid #FCD9B6; border-radius:8px; font-family:inherit; font-size:13px; resize:vertical; box-sizing:border-box;"></textarea>
+
+                    <div style="display:flex; align-items:center; gap:10px; margin:10px 0;">
+                        <div style="flex:1; height:1px; background:#FCD9B6;"></div>
+                        <span style="font-size:11.5px; color:#B45309; font-weight:700;">OR</span>
+                        <div style="flex:1; height:1px; background:#FCD9B6;"></div>
+                    </div>
+
+                    <label for="gptPdfFile"
+                        style="display:flex; align-items:center; gap:10px; border:1px dashed #FCD9B6; background:#fff; border-radius:8px; padding:12px; cursor:pointer;">
+                        <img src="../icons/clipboard-list-solid-full.svg" width="16" style="opacity:.6;">
+                        <span style="font-size:13px; color:#92400E;">
+                            <b>Upload a PDF</b> of the diet plan (any layout) &mdash; text will be pulled out and matched automatically.
+                        </span>
+                        <input type="file" id="gptPdfFile" accept="application/pdf" style="display:none;" onchange="handleGptPdfUpload(this)">
+                    </label>
+                    <div id="gptPdfStatus" style="font-size:12.5px; margin-top:6px;"></div>
+
                     <div style="display:flex; gap:10px; align-items:center; margin-top:8px; flex-wrap:wrap;">
                         <button type="button" class="btn btn-primary" onclick="gptFillForm()" style="padding:8px 18px;">Fill the form</button>
                         <span id="gptResult" style="font-size:12.5px; color:#059669;"></span>
@@ -389,6 +407,90 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             el.style.color = warn ? '#b45309' : '#059669';
         }
 
+        // ---------- Import from PDF ----------
+        // Extracts text from an uploaded PDF (any layout) using pdf.js, reconstructing
+        // line breaks from each glyph's on-page position, then reuses the exact same
+        // parseDietText()/gptFillForm() pipeline used for pasted ChatGPT text.
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc =
+                'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        function setGptPdfStatus(msg, kind) {
+            const el = document.getElementById('gptPdfStatus');
+            if (!el) return;
+            el.textContent = msg;
+            el.style.color = kind === 'error' ? '#b91c1c' : (kind === 'ok' ? '#059669' : '#92400E');
+        }
+
+        async function extractTextFromPdf(file) {
+            if (!window.pdfjsLib) {
+                throw new Error('PDF reader failed to load (check your internet connection) — please paste the text instead.');
+            }
+            const buf = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+            const pages = [];
+
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const content = await page.getTextContent();
+
+                // Group text items into lines using their vertical position (transform[5]),
+                // since a PDF has no inherent concept of "lines" — only positioned glyphs.
+                const lines = [];
+                const Y_TOLERANCE = 3;
+                content.items.forEach(item => {
+                    const x = item.transform[4];
+                    const y = item.transform[5];
+                    let line = lines.find(l => Math.abs(l.y - y) <= Y_TOLERANCE);
+                    if (!line) {
+                        line = { y, parts: [] };
+                        lines.push(line);
+                    }
+                    line.parts.push({ x, str: item.str });
+                });
+
+                // Pages render top-to-bottom but PDF y-coordinates increase upward.
+                lines.sort((a, b) => b.y - a.y);
+
+                const pageText = lines
+                    .map(l => l.parts.sort((a, b) => a.x - b.x).map(p => p.str).join(' ').replace(/\s+/g, ' ').trim())
+                    .filter(t => t !== '')
+                    .join('\n');
+                pages.push(pageText);
+            }
+
+            return pages.join('\n\n');
+        }
+
+        async function handleGptPdfUpload(input) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+
+            if (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name)) {
+                setGptPdfStatus('Please choose a PDF file.', 'error');
+                input.value = '';
+                return;
+            }
+
+            setGptPdfStatus('Reading "' + file.name + '"…', 'info');
+            try {
+                const text = await extractTextFromPdf(file);
+                if (!text.trim()) {
+                    setGptPdfStatus('Could not find any text in this PDF (it may be a scanned image) — please paste the text instead.', 'error');
+                    return;
+                }
+                document.getElementById('gptRaw').value = text;
+                setGptPdfStatus('Text extracted from "' + file.name + '". Filling the form…', 'ok');
+                gptFillForm();
+            } catch (err) {
+                console.error(err);
+                setGptPdfStatus('Could not read that PDF: ' + (err && err.message ? err.message : 'unknown error') + '. Please paste the text instead.', 'error');
+            } finally {
+                input.value = '';
+            }
+        }
+
         // Parse a free-text diet plan (ChatGPT output, any layout) into named sections + metadata.
         function parseDietText(raw) {
             const clean = s => s
@@ -452,16 +554,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 .replace(/\s+/g, ' ')
                 .trim();
 
-            const headerField = (line) => {
-                let l = norm(line);
-                if (l.length <= 42) {
-                    for (const s of SECTIONS) {
-                        for (const k of s.keys) {
-                            const kk = k.replace(/-/g, ' ');
-                            if (l === kk || l.startsWith(kk + ' ') || (l.startsWith(kk) && l.length <= kk.length + 6)) return s.field;
-                        }
+            // A few section keys are also ordinary English words that turn up mid-sentence
+            // in body text ("Optional: 5-6 almonds" under an earlier heading; "...at night").
+            // Real meal names (breakfast/lunch/dinner/snack/...) never do this, so only these
+            // need the extra "the whole line must be short" guard below.
+            const AMBIGUOUS_WORDS = new Set(['optional', 'night']);
+
+            const matchSection = (str) => {
+                if (str.length > 42) return null;
+                for (const s of SECTIONS) {
+                    for (const k of s.keys) {
+                        const kk = k.replace(/-/g, ' ');
+                        if (str === kk) return s.field;
+                        const ambiguous = !kk.includes(' ') && AMBIGUOUS_WORDS.has(kk);
+                        const shortEnough = str.length <= kk.length + 6;
+                        if (str.startsWith(kk + ' ') && (!ambiguous || shortEnough)) return s.field;
+                        if (str.startsWith(kk) && shortEnough) return s.field;
                     }
                 }
+                return null;
+            };
+
+            const headerField = (line) => {
+                let l = norm(line);
+                let f = matchSection(l);
+                if (!f) {
+                    // Some PDFs render a heading's leading emoji/icon (🌅, 🍳, a bullet glyph…)
+                    // using a font with no real Unicode mapping, so text extraction spits out a
+                    // stray 1-2 char token instead (e.g. "n Breakfast" instead of "🍳 Breakfast").
+                    // Retry once with that kind of leading noise token stripped.
+                    const stripped = l.replace(/^[a-z0-9]{1,2}\s+(?=[a-z])/, '');
+                    if (stripped !== l) f = matchSection(stripped);
+                }
+                if (f) return f;
                 // name-less time header: "7:00 AM", "🍳 8:00 AM", "Meal 1 (8 AM)", "8:00–9:00 AM"
                 const leftover = l.replace(/^(meal|session|slot)\s*\d*/i, '').trim();
                 if (leftover.length <= 3 && clockHour(line) != null) return slotFromHour(clockHour(line));

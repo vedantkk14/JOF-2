@@ -246,6 +246,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             width: 100% !important;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="../static/diet_import.js"></script>
 </head>
 
 <body class="page-create_diet_plan">
@@ -309,6 +311,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <script>window.__DP_TEMPLATES = <?= json_encode($dp_templates, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;</script>
             <?php endif; ?>
+
+            <!-- Import from ChatGPT -->
+            <div style="margin: 0 0 18px; border: 1px dashed #F25C2A; border-radius: 12px; background: #FFF7ED;">
+                <button type="button" onclick="toggleGptImport()"
+                    style="width:100%; text-align:left; background:none; border:none; padding:14px 16px; cursor:pointer; font-size:14px; font-weight:700; color:#B45309; display:flex; justify-content:space-between; align-items:center;">
+                    <span><img src="../icons/clipboard-list-solid-full.svg" width="15" style="vertical-align:-2px; margin-right:7px;">Import from ChatGPT</span>
+                    <span id="gptChevron">&#9656;</span>
+                </button>
+                <div id="gptImportBody" style="display:none; padding:0 16px 16px;">
+                    <p style="font-size:12.5px; color:#92400E; margin:0 0 8px;">Paste the diet plan text from ChatGPT, or upload the plan as a PDF &mdash; then click <b>Fill the form</b>. Fields are only filled in &mdash; nothing is saved until you press Save New Phase.</p>
+                    <textarea id="gptRaw" rows="8"
+                        placeholder="Paste ChatGPT output here&#10;&#10;e.g.&#10;Breakfast: oats + fruit&#10;Lunch: dal, rice, salad&#10;Dinner: paneer + veg&#10;Guidelines: 3L water/day"
+                        style="width:100%; padding:10px; border:1px solid #FCD9B6; border-radius:8px; font-family:inherit; font-size:13px; resize:vertical; box-sizing:border-box;"></textarea>
+
+                    <div style="display:flex; align-items:center; gap:10px; margin:10px 0;">
+                        <div style="flex:1; height:1px; background:#FCD9B6;"></div>
+                        <span style="font-size:11.5px; color:#B45309; font-weight:700;">OR</span>
+                        <div style="flex:1; height:1px; background:#FCD9B6;"></div>
+                    </div>
+
+                    <label for="gptPdfFile"
+                        style="display:flex; align-items:center; gap:10px; border:1px dashed #FCD9B6; background:#fff; border-radius:8px; padding:12px; cursor:pointer;">
+                        <img src="../icons/clipboard-list-solid-full.svg" width="16" style="opacity:.6;">
+                        <span style="font-size:13px; color:#92400E;">
+                            <b>Upload a PDF</b> of the diet plan (any layout) &mdash; text will be pulled out and matched automatically.
+                        </span>
+                        <input type="file" id="gptPdfFile" accept="application/pdf" style="display:none;" onchange="handleGptPdfUpload(this)">
+                    </label>
+                    <div id="gptPdfStatus" style="font-size:12.5px; margin-top:6px;"></div>
+
+                    <div style="display:flex; gap:10px; align-items:center; margin-top:8px; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-primary" onclick="gptFillForm()" style="padding:8px 18px;">Fill the form</button>
+                        <span id="gptResult" style="font-size:12.5px; color:#059669;"></span>
+                    </div>
+                </div>
+            </div>
 
             <form method="POST" action="">
 
@@ -500,6 +538,72 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 });
             }
         })();
+
+        // ---------- Import from ChatGPT (text or PDF) ----------
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc =
+                'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        function toggleGptImport() {
+            const b = document.getElementById('gptImportBody');
+            const c = document.getElementById('gptChevron');
+            const open = b.style.display === 'none';
+            b.style.display = open ? 'block' : 'none';
+            c.innerHTML = open ? '&#9662;' : '&#9656;';
+        }
+
+        function setGptResult(msg, warn) {
+            const el = document.getElementById('gptResult');
+            el.textContent = msg;
+            el.style.color = warn ? '#b45309' : '#059669';
+        }
+
+        function setGptPdfStatus(msg, kind) {
+            const el = document.getElementById('gptPdfStatus');
+            if (!el) return;
+            el.textContent = msg;
+            el.style.color = kind === 'error' ? '#b91c1c' : (kind === 'ok' ? '#059669' : '#92400E');
+        }
+
+        function gptFillForm() {
+            const raw = document.getElementById('gptRaw').value || '';
+            if (!raw.trim()) { setGptResult('Paste the ChatGPT text first.', true); return; }
+            const form = document.querySelector('.card-body form');
+            const parsed = DietImport.parseDietText(raw);
+            const filled = DietImport.fillDietForm(form, parsed);
+            setGptResult(filled
+                ? ('✓ Filled ' + filled + ' field(s). Review everything, then Save New Phase.')
+                : 'Could not detect the sections — check the pasted format or fill manually.', filled === 0);
+        }
+
+        async function handleGptPdfUpload(input) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+
+            if (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name)) {
+                setGptPdfStatus('Please choose a PDF file.', 'error');
+                input.value = '';
+                return;
+            }
+
+            setGptPdfStatus('Reading "' + file.name + '"…', 'info');
+            try {
+                const text = await DietImport.extractTextFromPdf(file);
+                if (!text.trim()) {
+                    setGptPdfStatus('Could not find any text in this PDF (it may be a scanned image) — please paste the text instead.', 'error');
+                    return;
+                }
+                document.getElementById('gptRaw').value = text;
+                setGptPdfStatus('Text extracted from "' + file.name + '". Filling the form…', 'ok');
+                gptFillForm();
+            } catch (err) {
+                console.error(err);
+                setGptPdfStatus('Could not read that PDF: ' + (err && err.message ? err.message : 'unknown error') + '. Please paste the text instead.', 'error');
+            } finally {
+                input.value = '';
+            }
+        }
 
         // ---- Use a template: split the packed meal columns back into the 8 fields ----
         function unpackDiet(b, l, s, d) {
