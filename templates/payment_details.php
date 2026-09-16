@@ -58,6 +58,27 @@ if ($rp_row && !empty($rp_row['remarks'])) {
     }
 }
 
+// The Duration dropdown should default to that same requested plan's actual length
+// (mirrors the Membership Type auto-select above), converted to weeks to match the
+// dropdown's options.
+$requested_duration_weeks = 0;
+if ($requested_plan_name !== '') {
+    $dp_stmt = $conn->prepare("SELECT duration_value, duration_unit FROM membership_plans WHERE LOWER(plan_name) = LOWER(?) LIMIT 1");
+    $dp_stmt->bind_param("s", $requested_plan_name);
+    $dp_stmt->execute();
+    $dp_row = $dp_stmt->get_result()->fetch_assoc();
+    $dp_stmt->close();
+    if ($dp_row && (int) $dp_row['duration_value'] > 0) {
+        $dp_multiplier = match (strtolower(trim($dp_row['duration_unit'] ?? ''))) {
+            'day', 'days' => 1 / 7,
+            'month', 'months' => 4,
+            'year', 'years' => 52,
+            default => 1, // week(s)
+        };
+        $requested_duration_weeks = (int) round((int) $dp_row['duration_value'] * $dp_multiplier);
+    }
+}
+
 // 3. Handle Form Submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -116,8 +137,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     //    (created earlier in the wizard), otherwise insert fresh.
     $activation_type_post = $_GET['type'] ?? 'new';
 
-    $check_res = $conn->query("SELECT payment_id, payment_mode FROM member_payments WHERE member_id = $member_id ORDER BY payment_id DESC LIMIT 1");
+    $check_res = $conn->query("SELECT payment_id, payment_mode, membership_type FROM member_payments WHERE member_id = $member_id ORDER BY payment_id DESC LIMIT 1");
     $existing_payment = $check_res ? $check_res->fetch_assoc() : null;
+
+    // A member renewing via the portal (handlers/subscribe_payment.php) leaves behind an
+    // unverified 'Pending Setup' placeholder row (duration/amounts all 0) as their request
+    // marker. If that's the "latest" row admin is renewing here, it's about to be replaced
+    // by the real confirmed row inserted below — remember it so it can be cleaned up after,
+    // instead of sitting in the member's plan history forever as an empty, confusing entry.
+    $stale_pending_setup_id = null;
+    if ($existing_payment && $activation_type_post === 'renewal' && ($existing_payment['membership_type'] ?? '') === 'Pending Setup') {
+        $stale_pending_setup_id = (int) $existing_payment['payment_id'];
+    }
 
     // For renewals, force a new INSERT so history is preserved and revenue accumulates
     if ($existing_payment && $activation_type_post !== 'renewal') {
@@ -198,6 +229,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $new_payment_id = $existing_payment['payment_id'];
             } else {
                 $new_payment_id = $conn->insert_id;
+            }
+
+            // Now that the real confirmed renewal row above exists, remove the unverified
+            // 'Pending Setup' request marker it superseded (see note where it was detected).
+            if ($stale_pending_setup_id) {
+                $conn->query("DELETE FROM member_payments WHERE payment_id = " . (int) $stale_pending_setup_id);
             }
 
             // === Save Planned Installments ===
@@ -419,13 +456,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                     <div class="input-group"><label>Duration</label>
                         <div class="input-wrapper"><select name="duration" class="form-input" required>
-                                <option value="4">4 WEEKS</option>
-                                <option value="8">8 WEEKS</option>
-                                <option value="12">12 WEEKS</option>
-                                <option value="24">24 WEEKS</option>
-                                <option value="52">52 WEEKS</option>
+                                <?php foreach ([4, 8, 12, 24, 52] as $wk): ?>
+                                    <option value="<?= $wk ?>" <?= $requested_duration_weeks === $wk ? 'selected' : '' ?>><?= $wk ?> WEEKS</option>
+                                <?php endforeach; ?>
                             </select><img src="../icons/calendar-days-solid-full.svg"
                                 class="fa-solid fa-calendar-days input-icon text-purple"></div>
+                        <?php if ($requested_duration_weeks > 0): ?>
+                            <p style="font-size:12px;color:#6B7280;margin-top:6px;">
+                                📋 Matches the plan the member selected — adjust if needed.
+                            </p>
+                        <?php endif; ?>
                     </div>
                     <div class="input-group"><label>Start Date</label>
                         <div class="input-wrapper"><input type="date" name="start_date" class="form-input"

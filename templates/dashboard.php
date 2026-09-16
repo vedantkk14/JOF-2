@@ -4,6 +4,7 @@ require_role(['admin', 'trainer']);
 
 // Database connection
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/revenue_helper.php';
 
 // Staff who may create new login accounts (admin + trainer share this tier app-wide)
 $current_user     = get_session_user();
@@ -60,17 +61,12 @@ if ($plans_result) {
 }
 
 
-// Fetch Total Revenue (sum of all payments received + addon services + consultations)
+// Fetch Total Revenue (sum of all payments received + addon services + consultations).
+// Built on the shared revenue ledger (auth/revenue_helper.php) so every rupee — the
+// original signup/renewal payment AND every later installment — is counted exactly
+// once, dated by when it actually came in. See that file for why this matters.
 $total_revenue = 0;
-$revenue_query = "
-    SELECT SUM(total) as total FROM (
-        SELECT COALESCE(SUM(amount_received), 0) as total FROM member_payments
-        UNION ALL
-        SELECT COALESCE(SUM(price), 0) as total FROM addon_services_bookings WHERE status != 'cancelled'
-        UNION ALL
-        SELECT COALESCE(SUM(total_amount), 0) as total FROM consultations
-    ) as combined_revenue
-";
+$revenue_query = "SELECT COALESCE(SUM(amount), 0) as total FROM (" . revenue_ledger_sql() . ") AS ledger";
 $revenue_result = mysqli_query($conn, $revenue_query);
 
 if ($revenue_result) {
@@ -84,26 +80,16 @@ $rev_this = 0;
 $rev_last = 0;
 
 $rev_this_query = "
-    SELECT SUM(total) as total FROM (
-        SELECT COALESCE(SUM(amount_received), 0) as total FROM member_payments WHERE MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())
-        UNION ALL
-        SELECT COALESCE(SUM(price), 0) as total FROM addon_services_bookings WHERE status != 'cancelled' AND MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())
-        UNION ALL
-        SELECT COALESCE(SUM(total_amount), 0) as total FROM consultations WHERE MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())
-    ) as combined_revenue
+    SELECT COALESCE(SUM(amount), 0) as total FROM (" . revenue_ledger_sql() . ") AS ledger
+    WHERE MONTH(tx_date) = MONTH(CURDATE()) AND YEAR(tx_date) = YEAR(CURDATE())
 ";
 $res = mysqli_query($conn, $rev_this_query);
 if ($res)
     $rev_this = mysqli_fetch_assoc($res)['total'] ?? 0;
 
 $rev_last_query = "
-    SELECT SUM(total) as total FROM (
-        SELECT COALESCE(SUM(amount_received), 0) as total FROM member_payments WHERE MONTH(created_at) = MONTH(CURDATE() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(CURDATE() - INTERVAL 1 MONTH)
-        UNION ALL
-        SELECT COALESCE(SUM(price), 0) as total FROM addon_services_bookings WHERE status != 'cancelled' AND MONTH(created_at) = MONTH(CURDATE() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(CURDATE() - INTERVAL 1 MONTH)
-        UNION ALL
-        SELECT COALESCE(SUM(total_amount), 0) as total FROM consultations WHERE MONTH(created_at) = MONTH(CURDATE() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(CURDATE() - INTERVAL 1 MONTH)
-    ) as combined_revenue
+    SELECT COALESCE(SUM(amount), 0) as total FROM (" . revenue_ledger_sql() . ") AS ledger
+    WHERE MONTH(tx_date) = MONTH(CURDATE() - INTERVAL 1 MONTH) AND YEAR(tx_date) = YEAR(CURDATE() - INTERVAL 1 MONTH)
 ";
 $res = mysqli_query($conn, $rev_last_query);
 if ($res)
@@ -115,30 +101,14 @@ if ($rev_last > 0) {
 }
 $revenue_growth_direction = $revenue_growth_pct > 0 ? 'positive' : ($revenue_growth_pct < 0 ? 'negative' : 'neutral');
 
-// Fetch Recent Revenue History (Top 10)
+// Fetch Recent Revenue History (Top 10) — every real transaction (new signups, plan
+// renewals, and each later installment payment) shows up here, dated by when the
+// money actually came in.
 $recent_revenue_history = [];
 $recent_revenue_query = "
-    SELECT * FROM (
-        SELECT 
-            'Membership' COLLATE utf8mb4_unicode_ci as source_type,
-            m.full_name COLLATE utf8mb4_unicode_ci as name,
-            mp.membership_type COLLATE utf8mb4_unicode_ci as description,
-            mp.amount_received as amount,
-            mp.created_at as tx_date
-        FROM member_payments mp
-        JOIN members m ON mp.member_id = m.id
-        
-        UNION ALL
-        
-        SELECT 
-            'Add-on Service' COLLATE utf8mb4_unicode_ci as source_type,
-            member_name COLLATE utf8mb4_unicode_ci as name,
-            service_type COLLATE utf8mb4_unicode_ci as description,
-            price as amount,
-            created_at as tx_date
-        FROM addon_services_bookings 
-        WHERE status != 'cancelled'
-    ) as combined_history
+    SELECT source_type, member_name as name, label as description, amount, tx_date, is_renewal
+    FROM (" . revenue_ledger_sql() . ") AS ledger
+    WHERE amount > 0
     ORDER BY tx_date DESC
     LIMIT 10
 ";
@@ -2190,20 +2160,32 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
                 <?php else: ?>
                     <ul class="rev-history-list">
                         <?php foreach ($recent_revenue_history as $tx):
-                            $isMembership = ($tx['source_type'] === 'Membership');
+                            $srcType = $tx['source_type'];
+                            $isMembership = in_array($srcType, ['Membership', 'Membership Installment'], true);
                             $iconClass = $isMembership ? 'membership' : 'addon';
                             $iconGraphic = $isMembership ? '<img src="../icons/id-card-solid-full.svg" class="fa-solid fa-id-card">' : '<img src="../icons/spa-solid-full.svg" class="fa-solid fa-spa">';
                             $descText = htmlspecialchars($tx['description']);
-                            if (!$isMembership)
-                                $descText .= " (Add-on)";
+                            $descSuffix = match ($srcType) {
+                                'Membership Installment' => ' (Installment)',
+                                'Add-on Service' => ' (Add-on)',
+                                'Consultation' => ' (Consultation)',
+                                default => '',
+                            };
+                            $descText .= $descSuffix;
                             $txDate = date('M j, g:i A', strtotime($tx['tx_date']));
+                            $isRenewal = $isMembership && (int) $tx['is_renewal'] === 1;
                             ?>
                             <li class="rev-history-item">
                                 <div class="rev-history-icon <?= $iconClass ?>">
                                     <?= $iconGraphic ?>
                                 </div>
                                 <div class="rev-history-info">
-                                    <div class="rev-history-name"><?= htmlspecialchars($tx['name']) ?></div>
+                                    <div class="rev-history-name">
+                                        <span class="rev-history-name-text"><?= htmlspecialchars($tx['name']) ?></span>
+                                        <?php if ($isRenewal): ?>
+                                            <span class="rev-renewal-tag" title="This member renewed an existing plan">Renewal</span>
+                                        <?php endif; ?>
+                                    </div>
                                     <div class="rev-history-desc"><?= $descText ?></div>
                                 </div>
                                 <div class="rev-history-meta">

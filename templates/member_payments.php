@@ -12,7 +12,7 @@ use PHPMailer\PHPMailer\Exception;
 
 // 1. Security Check
 if (!isset($_SESSION['user_id'])) {
-    header("Location: ../templates/login_page.html");
+    header("Location: ../index.php");
     exit;
 }
 

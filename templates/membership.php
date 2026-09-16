@@ -132,6 +132,17 @@ $colorIndex = 0;
                             <div class="color-strip <?= $currentColor ?>"></div>
 
                             <div class="plan-header">
+                                <?php if ((int) ($row['is_public'] ?? 0) === 1): ?>
+                                    <span title="Members can see and request this plan"
+                                        style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:#DCFCE7;color:#15803D;margin-bottom:8px;">
+                                        <img src="../icons/eye-solid-full.svg" width="10" style="filter:invert(29%) sepia(87%) saturate(1000%) hue-rotate(100deg);"> Visible to members
+                                    </span>
+                                <?php else: ?>
+                                    <span title="Hidden from the member app's Membership section"
+                                        style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:#F3F4F6;color:#6B7280;margin-bottom:8px;">
+                                        <img src="../icons/lock-solid-full.svg" width="10" style="filter:invert(46%);"> Hidden from members
+                                    </span>
+                                <?php endif; ?>
                                 <h2><?= htmlspecialchars($row['plan_name']) ?></h2>
                                 <div class="price">
                                     <span class="currency">₹</span><?= number_format($row['price']) ?><span

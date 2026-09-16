@@ -79,7 +79,10 @@ if ($status_val === 'active') {
     $sql .= " AND is_active = 0";
 }
 
-$sql .= " ORDER BY id DESC";
+// The logged-in admin's own account ("YOU") is pinned to the top of the list.
+$sql .= " ORDER BY (id = ?) DESC, id DESC";
+$types .= "i";
+$params[] = $current_admin_id;
 
 $stmt = $conn->prepare($sql);
 if (!$stmt) {

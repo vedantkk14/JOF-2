@@ -59,6 +59,14 @@ foreach ($plans as $p) {
     }
 }
 
+// Plans browsable in "Explore Plans" below: admin-published ones (is_public), plus the
+// member's own current plan even if it's since been hidden from new signups — they
+// already have it, so it shouldn't just vanish from their view.
+$browsable_plans = array_values(array_filter($plans, function ($p) use ($current_plan_name) {
+    return (int) ($p['is_public'] ?? 0) === 1
+        || ($current_plan_name !== '' && strcasecmp(trim($p['plan_name']), $current_plan_name) === 0);
+}));
+
 function e($s) { return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8'); }
 
 function membershipPeriodLabel($plan) {
@@ -377,11 +385,11 @@ require __DIR__ . '/_shell_top.php';
         </div>
     </div>
 
-    <?php if (empty($plans)): ?>
+    <?php if (empty($browsable_plans)): ?>
         <div class="empty-card">No membership plans have been published yet — check back soon.</div>
     <?php else: ?>
         <div class="plans-grid">
-            <?php foreach ($plans as $p):
+            <?php foreach ($browsable_plans as $p):
                 $is_current = $current_plan_name !== '' && strcasecmp(trim($p['plan_name']), $current_plan_name) === 0;
                 $features = membershipFeatures($p);
             ?>

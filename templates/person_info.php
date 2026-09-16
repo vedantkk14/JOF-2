@@ -170,14 +170,29 @@ mysqli_stmt_execute($stmt);
 $notes_result = mysqli_stmt_get_result($stmt);
 
 // Fetch membership history
-$sql_mem_hist = "SELECT membership_type, diet_type, duration_months, start_date, end_date, total_amount, amount_received, payment_mode, transaction_id, created_at 
-                 FROM member_payments 
-                 WHERE member_id = ? 
+$sql_mem_hist = "SELECT payment_id, membership_type, diet_type, duration_months, start_date, end_date, total_amount, amount_received, balance_pending, installments_count, next_due_date, payment_mode, transaction_id, created_at
+                 FROM member_payments
+                 WHERE member_id = ?
                  ORDER BY created_at DESC";
 $stmt_mem = mysqli_prepare($conn, $sql_mem_hist);
 mysqli_stmt_bind_param($stmt_mem, "i", $member_id);
 mysqli_stmt_execute($stmt_mem);
 $mem_history_result = mysqli_stmt_get_result($stmt_mem);
+
+// Installment payments for every plan above, keyed by payment_id — nested inside that
+// SAME plan's single history card below rather than getting cards of their own.
+$plan_installments = [];
+$instq = mysqli_prepare($conn, "SELECT ip.payment_id, ip.installment_amount, ip.payment_mode, ip.payment_date
+    FROM installment_payments ip
+    JOIN member_payments mp ON mp.payment_id = ip.payment_id
+    WHERE mp.member_id = ?
+    ORDER BY ip.payment_date ASC");
+mysqli_stmt_bind_param($instq, "i", $member_id);
+mysqli_stmt_execute($instq);
+$instres = mysqli_stmt_get_result($instq);
+while ($irow = mysqli_fetch_assoc($instres)) {
+    $plan_installments[(int) $irow['payment_id']][] = $irow;
+}
 
 // Latest plan + pause info for the "Pause Membership" action
 $pauseStmt = mysqli_prepare($conn, "SELECT payment_id, end_date FROM member_payments WHERE member_id = ? ORDER BY created_at DESC LIMIT 1");
@@ -583,6 +598,50 @@ $img_path = '../uploads/progress_photos/';
                                                 <?php endif; ?>
                                             </div>
                                         </div>
+
+                                        <?php
+                                        // Every installment for this plan — the initial payment made at signup/renewal,
+                                        // plus each later top-up — nested in THIS one card so an installment plan never
+                                        // spawns extra history cards of its own.
+                                        $inst_rows = $plan_installments[(int) $plan['payment_id']] ?? [];
+                                        $inst_total_count = max(1, (int) $plan['installments_count']);
+                                        if ($inst_total_count > 1 || $inst_rows):
+                                            $inst_paid_count = ((float) $plan['amount_received'] > 0 ? 1 : 0) + count($inst_rows);
+                                            if ((float) $plan['balance_pending'] <= 0) {
+                                                $inst_paid_count = $inst_total_count;
+                                            }
+                                            $initial_amount = (float) $plan['amount_received'] - array_sum(array_column($inst_rows, 'installment_amount'));
+                                            ?>
+                                            <div class="plan-installments">
+                                                <div class="plan-installments-head">
+                                                    <span class="plan-installments-title">Installment Breakdown</span>
+                                                    <span class="plan-installments-progress"><?= $inst_paid_count ?> / <?= $inst_total_count ?> paid</span>
+                                                </div>
+                                                <div class="plan-installments-list">
+                                                    <?php if ($initial_amount > 0): ?>
+                                                        <div class="plan-installment-row">
+                                                            <span class="inst-idx">#1</span>
+                                                            <span class="inst-date"><?= date("d M Y", strtotime($plan['created_at'])) ?></span>
+                                                            <span class="inst-amount">₹<?= number_format($initial_amount) ?></span>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <?php foreach ($inst_rows as $ii => $inst): ?>
+                                                        <div class="plan-installment-row">
+                                                            <span class="inst-idx">#<?= $ii + 2 ?></span>
+                                                            <span class="inst-date"><?= date("d M Y", strtotime($inst['payment_date'])) ?> &middot; <?= htmlspecialchars(ucfirst($inst['payment_mode'])) ?></span>
+                                                            <span class="inst-amount">₹<?= number_format($inst['installment_amount']) ?></span>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                    <?php if ((float) $plan['balance_pending'] > 0): ?>
+                                                        <div class="plan-installment-row due">
+                                                            <span class="inst-idx">Pending</span>
+                                                            <span class="inst-date"><?= !empty($plan['next_due_date']) ? 'Due ' . date("d M Y", strtotime($plan['next_due_date'])) : 'No due date set' ?></span>
+                                                            <span class="inst-amount">₹<?= number_format($plan['balance_pending']) ?></span>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 <?php endwhile; ?>
                             <?php else: ?>

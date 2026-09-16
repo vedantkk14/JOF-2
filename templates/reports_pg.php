@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../auth/auth_check.php';
 require_role(['admin', 'trainer']);
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/revenue_helper.php';
 
 // Default Date Range: Current Month
 $start_date = date('Y-m-01');
@@ -18,14 +19,13 @@ if (isset($_GET['start_date']) && isset($_GET['end_date'])) {
     }
 }
 
+// Built on the shared revenue ledger (auth/revenue_helper.php): the original signup/
+// renewal payment and each later installment are separate, correctly-dated
+// transactions, so a date-range filter here never double-counts or misses money
+// that came in as an installment against an older membership row.
 $revenue_sql = "
-    SELECT SUM(total) as total FROM (
-        SELECT COALESCE(SUM(amount_received), 0) as total FROM member_payments WHERE DATE(created_at) BETWEEN '$start_date' AND '$end_date'
-        UNION ALL
-        SELECT COALESCE(SUM(installment_amount), 0) as total FROM installment_payments WHERE DATE(payment_date) BETWEEN '$start_date' AND '$end_date'
-        UNION ALL
-        SELECT COALESCE(SUM(price), 0) as total FROM addon_services_bookings WHERE status != 'cancelled' AND DATE(created_at) BETWEEN '$start_date' AND '$end_date'
-    ) as combined_rev
+    SELECT COALESCE(SUM(amount), 0) as total FROM (" . revenue_ledger_sql() . ") AS ledger
+    WHERE DATE(tx_date) BETWEEN '$start_date' AND '$end_date'
 ";
 $revenue_result = $conn->query($revenue_sql);
 $total_revenue = ($revenue_result) ? ($revenue_result->fetch_assoc()['total'] ?? 0) : 0;
@@ -52,13 +52,8 @@ for ($i = 5; $i >= 0; $i--) {
     $month_label = date("M", strtotime("-$i months"));
 
     $month_rev_sql = "
-        SELECT SUM(total) as total FROM (
-            SELECT COALESCE(SUM(amount_received), 0) as total FROM member_payments WHERE DATE(created_at) BETWEEN '$month_start' AND '$month_end'
-            UNION ALL
-            SELECT COALESCE(SUM(installment_amount), 0) as total FROM installment_payments WHERE DATE(payment_date) BETWEEN '$month_start' AND '$month_end'
-            UNION ALL
-            SELECT COALESCE(SUM(price), 0) as total FROM addon_services_bookings WHERE status != 'cancelled' AND DATE(created_at) BETWEEN '$month_start' AND '$month_end'
-        ) as combined_rev
+        SELECT COALESCE(SUM(amount), 0) as total FROM (" . revenue_ledger_sql() . ") AS ledger
+        WHERE DATE(tx_date) BETWEEN '$month_start' AND '$month_end'
     ";
     $month_rev_res = $conn->query($month_rev_sql);
     $month_total = $month_rev_res->fetch_assoc()['total'] ?? 0;
@@ -70,12 +65,25 @@ for ($i = 5; $i >= 0; $i--) {
 // --- 3. CHART DATA: MEMBER STATUS (Active vs Expired) ---
 // Active: Valid membership (end_date >= CURDATE())
 // Expired: end_date < CURDATE()
-// We perform two queries or one grouped query. Let's do two simple ones for clarity.
-$active_mem_sql = "SELECT COUNT(DISTINCT mp.member_id) as count FROM member_payments mp INNER JOIN members m ON mp.member_id = m.id WHERE mp.end_date >= CURDATE()";
-$active_mem = $conn->query($active_mem_sql)->fetch_assoc()['count'];
-
-$expired_mem_sql = "SELECT COUNT(DISTINCT mp.member_id) as count FROM member_payments mp INNER JOIN members m ON mp.member_id = m.id WHERE mp.end_date < CURDATE()";
-$expired_mem = $conn->query($expired_mem_sql)->fetch_assoc()['count'];
+// Judged by each member's LATEST confirmed payment row only — a plain COUNT(DISTINCT)
+// over every row would double-count a renewed member (their old expired row still
+// matches "expired" even though their new row makes them active), inflating both
+// buckets and skewing the retention rate below.
+$status_sql = "
+    SELECT
+        SUM(CASE WHEN mp.end_date >= CURDATE() THEN 1 ELSE 0 END) as active_count,
+        SUM(CASE WHEN mp.end_date <  CURDATE() THEN 1 ELSE 0 END) as expired_count
+    FROM member_payments mp
+    INNER JOIN (
+        SELECT member_id, MAX(payment_id) as latest_pid
+        FROM member_payments
+        WHERE membership_type != 'Pending Setup'
+        GROUP BY member_id
+    ) lp ON lp.member_id = mp.member_id AND lp.latest_pid = mp.payment_id
+";
+$status_row = $conn->query($status_sql)->fetch_assoc();
+$active_mem = (int) ($status_row['active_count'] ?? 0);
+$expired_mem = (int) ($status_row['expired_count'] ?? 0);
 
 // Calculate Retention Rate
 $total_mems = $active_mem + $expired_mem;

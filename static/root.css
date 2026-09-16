@@ -21770,13 +21770,33 @@ body.page-view_notifications {
 }
 
 .rev-history-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.rev-history-name-text {
     font-weight: 600;
     font-size: 0.95rem;
     color: #1e293b;
-    margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.rev-renewal-tag {
+    flex-shrink: 0;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #0369a1;
+    background: #e0f2fe;
+    border: 1px solid #bae6fd;
+    border-radius: 999px;
+    padding: 1px 8px;
 }
 
 .rev-history-desc {
@@ -26474,6 +26494,82 @@ body.page-pt_form {
     font-weight: 700;
     border: 1px solid #BBF7D0;
     text-transform: uppercase;
+}
+
+/* --- Installment breakdown, nested inside its plan's single plan-history-item --- */
+.plan-installments {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed #e5e7eb;
+}
+
+.plan-installments-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.plan-installments-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+}
+
+.plan-installments-progress {
+    font-size: 11px;
+    font-weight: 700;
+    color: #F25C2A;
+    background: #FFF1EC;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid #FFE4D6;
+}
+
+.plan-installments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.plan-installment-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #f9fafb;
+    border: 1px solid #f3f4f6;
+    border-radius: 8px;
+    font-size: 12.5px;
+}
+
+.plan-installment-row .inst-idx {
+    color: #6b7280;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.plan-installment-row .inst-date {
+    color: #374151;
+    flex: 1;
+}
+
+.plan-installment-row .inst-amount {
+    color: #15803d;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.plan-installment-row.due .inst-amount {
+    color: #B45309;
+}
+
+.plan-installment-row.due {
+    background: #FFFBEB;
+    border-color: #FDE68A;
 }
 
 .mt-20 {

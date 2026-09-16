@@ -6,6 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // 1. Connect to Database
 require_once "../config.php";
+require_once __DIR__ . '/../auth/rate_limiter.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -23,11 +24,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim(filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL));
     $table_name = "user_data";
 
-    // Check if table exists
-    $check_table = $conn->query("SHOW TABLES LIKE '$table_name'");
-    if ($check_table->num_rows == 0) {
-        die("Error: Table '$table_name' does not exist.");
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['status_msg']  = 'Please enter a valid email address.';
+        $_SESSION['status_type'] = 'error';
+        header('Location: ../templates/forgot_password.php');
+        exit;
     }
+
+    // ── Rate limiting: stops OTP-email spam against one inbox or from one IP ──
+    $retry = otp_send_retry_after($conn, $email);
+    if ($retry > 0) {
+        $_SESSION['status_msg']  = 'Too many OTP requests. Please try again in ' . rl_wait_text($retry) . '.';
+        $_SESSION['status_type'] = 'error';
+        header('Location: ../templates/forgot_password.php');
+        exit;
+    }
+    otp_send_record($conn, $email);
+
+    // The same reply is given whether or not the email has an account, so this
+    // page can't be used to discover which emails are registered.
+    $generic_sent_msg = 'If an account exists for that email, an OTP has been sent to it.';
 
     // Check if user exists
     $sql = "SELECT id, full_name FROM $table_name WHERE email = ?";
@@ -51,6 +67,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $update_stmt->bind_param("ss", $token_hash, $email);
 
         if ($update_stmt->execute()) {
+            // A fresh code gets a fresh set of guesses
+            otp_verify_record_success($conn, $email);
 
             // Send Email using PHPMailer
             require_once __DIR__ . '/../auth/PHPMailer/Exception.php';
@@ -154,7 +172,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 // Store email in session for the verification page
                 $_SESSION['reset_email'] = $email;
-                $_SESSION['status_msg'] = "An OTP has been sent to your email address.";
+                $_SESSION['status_msg'] = $generic_sent_msg;
                 $_SESSION['status_type'] = "success";
 
                 header("Location: ../templates/verify_otp.php");
@@ -171,8 +189,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['status_type'] = "error";
         }
     } else {
-        $_SESSION['status_msg'] = "Email not found in database.";
-        $_SESSION['status_type'] = "error";
+        // No such account — respond exactly as if the code was sent (no enumeration).
+        // No valid code exists for this address, so verification simply fails.
+        $_SESSION['reset_email'] = $email;
+        $_SESSION['status_msg']  = $generic_sent_msg;
+        $_SESSION['status_type'] = 'success';
+        header("Location: ../templates/verify_otp.php");
+        exit;
     }
 
     header("Location: ../templates/forgot_password.php");
