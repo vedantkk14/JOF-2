@@ -14,8 +14,9 @@ if (!file_exists('../auth/send_diet_plan.php')) {
 }
 
 require '../auth/send_diet_plan.php';
+require_once '../auth/diet_plan_schema.php';
 
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_role'] ?? '', ['admin', 'trainer'], true)) {
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
 }
@@ -52,6 +53,8 @@ try {
     $plan_name = $plan_row['plan_name'] ?? 'Diet Plan';
 
     $stmt_member = $conn->prepare("SELECT full_name, email FROM members WHERE id = ?");
+    $stmt_assign = $conn->prepare("INSERT IGNORE INTO diet_plan_assignments (plan_id, member_id) VALUES (?, ?)");
+    $stmt_notify = $conn->prepare("INSERT INTO diet_plan_messages (plan_id, member_id, sender_role, message, is_read) VALUES (?, ?, 'admin', ?, 0)");
 
     $success = 0;
 
@@ -63,6 +66,18 @@ try {
         $member = $stmt_member->get_result()->fetch_assoc();
 
         if (!$member) continue;
+
+        // Persist the assignment regardless of email outcome so the plan
+        // shows up on the member's in-app page.
+        $stmt_assign->bind_param("ii", $plan_id, $mid);
+        $stmt_assign->execute();
+
+        // Surface it in the member's notifications bell too, not just via email.
+        if ($stmt_assign->affected_rows > 0) {
+            $notify_msg = "A new diet plan (\"{$plan_name}\") has been assigned to you.";
+            $stmt_notify->bind_param("iis", $plan_id, $mid, $notify_msg);
+            $stmt_notify->execute();
+        }
 
         if (!function_exists('sendDietPlanEmail')) {
             throw new Exception("Email function missing");

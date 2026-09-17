@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../auth/auth_check.php';
 require_role(['admin', 'trainer']);
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/diet_plan_schema.php';
 
 if (!isset($_GET['id'])) {
     die("Error: No plan selected.");
@@ -110,6 +111,21 @@ if (strpos($goal, 'weight') !== false || strpos($goal, 'fat') !== false) {
     $theme = "purple";
     $icon = "dumbbell-solid-full.svg";
 }
+
+// 4. Resources
+$resources = [];
+if (!empty($plan['resources'])) {
+    $decoded = json_decode($plan['resources'], true);
+    if (is_array($decoded)) {
+        $resources = $decoded;
+    }
+}
+
+// 5. Assigned members count
+$acstmt = $conn->prepare("SELECT COUNT(*) AS c FROM diet_plan_assignments WHERE plan_id = ?");
+$acstmt->bind_param("i", $plan_id);
+$acstmt->execute();
+$assigned_count = (int) ($acstmt->get_result()->fetch_assoc()['c'] ?? 0);
 ?>
 
 <!DOCTYPE html>
@@ -144,7 +160,9 @@ if (strpos($goal, 'weight') !== false || strpos($goal, 'fat') !== false) {
             <div class="page-header">
                 <div class="header-left">
                     <h1><?= htmlspecialchars($client_name) ?></h1>
-                    <p class="plan-desc">Current Phase: <b><?= htmlspecialchars($current_phase) ?></b></p>
+                    <p class="plan-desc">Current Phase: <b><?= htmlspecialchars($current_phase) ?></b>
+                        &nbsp;&middot;&nbsp; Assigned to <b><?= $assigned_count ?></b> member<?= $assigned_count === 1 ? '' : 's' ?>
+                    </p>
                 </div>
 
                 <div class="header-actions"
@@ -255,6 +273,23 @@ if (strpos($goal, 'weight') !== false || strpos($goal, 'fat') !== false) {
                     </div>
                 </div>
             </div>
+
+            <?php if (!empty($resources)): ?>
+            <div class="content-panel" style="margin-top:20px;">
+                <div class="panel-header">
+                    <h2>Resources & Recommended Products</h2>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:10px; padding:6px 0;">
+                    <?php foreach ($resources as $r): ?>
+                        <a href="<?= htmlspecialchars($r['link'] ?? '#') ?>" target="_blank" rel="noopener"
+                            style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; padding:10px 16px;
+                                   border-radius:10px; background:#FFF3EC; color:#C2410C; font-weight:600; font-size:13px; border:1px solid #FDBA8C;">
+                            🛒 <?= htmlspecialchars($r['name'] ?? 'Resource') ?>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
 
         </main>
     </div>

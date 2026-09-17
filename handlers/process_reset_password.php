@@ -22,8 +22,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password         = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
-    // Verify session
-    if (!isset($_SESSION['otp_verified_for']) || $_SESSION['otp_verified_for'] !== $email) {
+    // Verify session — the "OTP verified" flag only unlocks a reset for 15 minutes
+    $otp_verified_ok = isset($_SESSION['otp_verified_for'], $_SESSION['otp_verified_time'])
+        && $_SESSION['otp_verified_for'] === $email
+        && (time() - (int) $_SESSION['otp_verified_time']) <= 900;
+    if (!$otp_verified_ok) {
+        unset($_SESSION['otp_verified_for'], $_SESSION['otp_verified_time']);
         $_SESSION['status_msg'] = "Unauthorized access or session expired.";
         $_SESSION['status_type'] = "error";
         header("Location: ../templates/forgot_password.php");
@@ -51,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Note: We don't check reset_token_hash here anymore because verify_otp_handler.php already did.
     // We just clear it out.
     $sql = "UPDATE user_data SET password = ?, reset_token_hash = NULL, reset_token_expires_at = NULL WHERE email = ?";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ss", $new_password_hash, $email);
     if ($stmt->execute() && $stmt->errno === 0) {

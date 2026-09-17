@@ -8914,6 +8914,29 @@ body.page-login_page {
     margin-bottom: 30px;
 }
 
+.page-login_page .form-message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    border-left: 4px solid transparent;
+    animation: fadeUp 0.25s ease;
+    letter-spacing: 0.01em;
+}
+
+.page-login_page .form-message.success {
+    background: #f0fdf4;
+    color: #166534;
+    border-left-color: #22c55e;
+}
+
+.page-login_page .form-message.error {
+    background: #fff5f5;
+    color: #9b1c1c;
+    border-left-color: #f87171;
+}
+
 .page-login_page .input-group {
     margin-bottom: 20px;
 }
@@ -9015,6 +9038,136 @@ body.page-login_page {
     text-decoration: none;
     font-weight: 600;
     cursor: pointer;
+}
+
+/* ══ "Continue with Google" — custom button (login + register) ══ */
+.page-login_page .oauth-divider {
+    display: flex;
+    align-items: center;
+    margin: 24px 0 16px;
+    color: var(--text-light);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+}
+
+.page-login_page .oauth-divider::before,
+.page-login_page .oauth-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+}
+
+.page-login_page .oauth-divider span {
+    padding: 0 12px;
+}
+
+/* Outer wrapper: sets the size, clips the oversized Google button underneath */
+.page-login_page .gbtn {
+    position: relative;
+    width: 100%;
+    min-height: 52px;
+    border-radius: 14px;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+/* The REAL Google button — fully visible to the browser (opacity 1, sized,
+   on screen) so Google Identity Services keeps it working, but sat UNDER
+   the custom skin and visually hidden by it. Never rebuilt after first render. */
+.page-login_page .gbtn-gis {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* The custom skin drawn on top. pointer-events:none lets every click/tap
+   fall straight through to the real Google button beneath it. */
+.page-login_page .gbtn-visual {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 0 16px;
+    border-radius: 14px;
+    background:
+        linear-gradient(#fff, #fff) padding-box,
+        linear-gradient(120deg, #fed7c3, #e2e8f0) border-box;
+    border: 1.5px solid transparent;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
+    pointer-events: none;
+    user-select: none;
+    transition: box-shadow .18s ease, transform .18s ease;
+}
+
+.page-login_page .gbtn:hover .gbtn-visual {
+    box-shadow: 0 10px 24px -8px rgba(242, 92, 42, .35);
+    transform: translateY(-1px);
+}
+
+.page-login_page .gbtn:active .gbtn-visual {
+    transform: translateY(0);
+}
+
+.page-login_page .gbtn:focus-within .gbtn-visual {
+    box-shadow: 0 0 0 3px rgba(242, 92, 42, .18);
+}
+
+.page-login_page .gbtn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: #f1f5f9;
+    transition: background .18s ease;
+}
+
+.page-login_page .gbtn:hover .gbtn-icon {
+    background: #fff4ef;
+}
+
+.page-login_page .gbtn-icon svg {
+    width: 19px;
+    height: 19px;
+    display: block;
+}
+
+.page-login_page .gbtn-label {
+    flex: 1;
+    text-align: left;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.page-login_page .gbtn-label small {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text-light);
+    letter-spacing: 0;
+    margin-top: 1px;
+}
+
+.page-login_page .gbtn-arrow {
+    flex-shrink: 0;
+    color: #cbd5e1;
+    transition: color .18s ease, transform .18s ease;
+}
+
+.page-login_page .gbtn:hover .gbtn-arrow {
+    color: var(--primary);
+    transform: translateX(3px);
 }
 
 .page-login_page .hidden {
@@ -16925,6 +17078,29 @@ body.page-registration_page {
     margin-bottom: 30px;
 }
 
+.page-registration_page .form-message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    border-left: 4px solid transparent;
+    animation: fadeUp 0.25s ease;
+    letter-spacing: 0.01em;
+}
+
+.page-registration_page .form-message.success {
+    background: #f0fdf4;
+    color: #166534;
+    border-left-color: #22c55e;
+}
+
+.page-registration_page .form-message.error {
+    background: #fff5f5;
+    color: #9b1c1c;
+    border-left-color: #f87171;
+}
+
 .page-registration_page .input-group {
     margin-bottom: 20px;
 }
@@ -21594,13 +21770,33 @@ body.page-view_notifications {
 }
 
 .rev-history-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.rev-history-name-text {
     font-weight: 600;
     font-size: 0.95rem;
     color: #1e293b;
-    margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.rev-renewal-tag {
+    flex-shrink: 0;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #0369a1;
+    background: #e0f2fe;
+    border: 1px solid #bae6fd;
+    border-radius: 999px;
+    padding: 1px 8px;
 }
 
 .rev-history-desc {
@@ -23001,6 +23197,27 @@ textarea.form-control {
 .page-members .btn-activate:hover {
     background-color: #D1FAE5;
     color: #047857;
+}
+
+.page-members .btn-extend {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: 0.2s;
+    margin-right: 5px;
+    background-color: #EEF2FF;
+    color: #4338CA;
+    border: 1px solid #C7D2FE;
+    cursor: pointer;
+}
+
+.page-members .btn-extend:hover {
+    background-color: #E0E7FF;
+    color: #3730A3;
 }
 
 .page-members .inactive-badge {
@@ -26277,6 +26494,82 @@ body.page-pt_form {
     font-weight: 700;
     border: 1px solid #BBF7D0;
     text-transform: uppercase;
+}
+
+/* --- Installment breakdown, nested inside its plan's single plan-history-item --- */
+.plan-installments {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed #e5e7eb;
+}
+
+.plan-installments-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.plan-installments-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+}
+
+.plan-installments-progress {
+    font-size: 11px;
+    font-weight: 700;
+    color: #F25C2A;
+    background: #FFF1EC;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid #FFE4D6;
+}
+
+.plan-installments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.plan-installment-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #f9fafb;
+    border: 1px solid #f3f4f6;
+    border-radius: 8px;
+    font-size: 12.5px;
+}
+
+.plan-installment-row .inst-idx {
+    color: #6b7280;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.plan-installment-row .inst-date {
+    color: #374151;
+    flex: 1;
+}
+
+.plan-installment-row .inst-amount {
+    color: #15803d;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.plan-installment-row.due .inst-amount {
+    color: #B45309;
+}
+
+.plan-installment-row.due {
+    background: #FFFBEB;
+    border-color: #FDE68A;
 }
 
 .mt-20 {

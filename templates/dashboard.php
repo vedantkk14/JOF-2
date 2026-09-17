@@ -4,6 +4,12 @@ require_role(['admin', 'trainer']);
 
 // Database connection
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/revenue_helper.php';
+
+// Staff who may create new login accounts (admin + trainer share this tier app-wide)
+$current_user     = get_session_user();
+$can_manage_staff = in_array($current_user['role'] ?? '', ['admin', 'trainer'], true);
+$csrf_token       = generate_csrf_token();
 
 // Fetch Total Members
 $total_members = 0;
@@ -55,17 +61,12 @@ if ($plans_result) {
 }
 
 
-// Fetch Total Revenue (sum of all payments received + addon services + consultations)
+// Fetch Total Revenue (sum of all payments received + addon services + consultations).
+// Built on the shared revenue ledger (auth/revenue_helper.php) so every rupee — the
+// original signup/renewal payment AND every later installment — is counted exactly
+// once, dated by when it actually came in. See that file for why this matters.
 $total_revenue = 0;
-$revenue_query = "
-    SELECT SUM(total) as total FROM (
-        SELECT COALESCE(SUM(amount_received), 0) as total FROM member_payments
-        UNION ALL
-        SELECT COALESCE(SUM(price), 0) as total FROM addon_services_bookings WHERE status != 'cancelled'
-        UNION ALL
-        SELECT COALESCE(SUM(total_amount), 0) as total FROM consultations
-    ) as combined_revenue
-";
+$revenue_query = "SELECT COALESCE(SUM(amount), 0) as total FROM (" . revenue_ledger_sql() . ") AS ledger";
 $revenue_result = mysqli_query($conn, $revenue_query);
 
 if ($revenue_result) {
@@ -79,26 +80,16 @@ $rev_this = 0;
 $rev_last = 0;
 
 $rev_this_query = "
-    SELECT SUM(total) as total FROM (
-        SELECT COALESCE(SUM(amount_received), 0) as total FROM member_payments WHERE MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())
-        UNION ALL
-        SELECT COALESCE(SUM(price), 0) as total FROM addon_services_bookings WHERE status != 'cancelled' AND MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())
-        UNION ALL
-        SELECT COALESCE(SUM(total_amount), 0) as total FROM consultations WHERE MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())
-    ) as combined_revenue
+    SELECT COALESCE(SUM(amount), 0) as total FROM (" . revenue_ledger_sql() . ") AS ledger
+    WHERE MONTH(tx_date) = MONTH(CURDATE()) AND YEAR(tx_date) = YEAR(CURDATE())
 ";
 $res = mysqli_query($conn, $rev_this_query);
 if ($res)
     $rev_this = mysqli_fetch_assoc($res)['total'] ?? 0;
 
 $rev_last_query = "
-    SELECT SUM(total) as total FROM (
-        SELECT COALESCE(SUM(amount_received), 0) as total FROM member_payments WHERE MONTH(created_at) = MONTH(CURDATE() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(CURDATE() - INTERVAL 1 MONTH)
-        UNION ALL
-        SELECT COALESCE(SUM(price), 0) as total FROM addon_services_bookings WHERE status != 'cancelled' AND MONTH(created_at) = MONTH(CURDATE() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(CURDATE() - INTERVAL 1 MONTH)
-        UNION ALL
-        SELECT COALESCE(SUM(total_amount), 0) as total FROM consultations WHERE MONTH(created_at) = MONTH(CURDATE() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(CURDATE() - INTERVAL 1 MONTH)
-    ) as combined_revenue
+    SELECT COALESCE(SUM(amount), 0) as total FROM (" . revenue_ledger_sql() . ") AS ledger
+    WHERE MONTH(tx_date) = MONTH(CURDATE() - INTERVAL 1 MONTH) AND YEAR(tx_date) = YEAR(CURDATE() - INTERVAL 1 MONTH)
 ";
 $res = mysqli_query($conn, $rev_last_query);
 if ($res)
@@ -110,30 +101,14 @@ if ($rev_last > 0) {
 }
 $revenue_growth_direction = $revenue_growth_pct > 0 ? 'positive' : ($revenue_growth_pct < 0 ? 'negative' : 'neutral');
 
-// Fetch Recent Revenue History (Top 10)
+// Fetch Recent Revenue History (Top 10) — every real transaction (new signups, plan
+// renewals, and each later installment payment) shows up here, dated by when the
+// money actually came in.
 $recent_revenue_history = [];
 $recent_revenue_query = "
-    SELECT * FROM (
-        SELECT 
-            'Membership' COLLATE utf8mb4_unicode_ci as source_type,
-            m.full_name COLLATE utf8mb4_unicode_ci as name,
-            mp.membership_type COLLATE utf8mb4_unicode_ci as description,
-            mp.amount_received as amount,
-            mp.created_at as tx_date
-        FROM member_payments mp
-        JOIN members m ON mp.member_id = m.id
-        
-        UNION ALL
-        
-        SELECT 
-            'Add-on Service' COLLATE utf8mb4_unicode_ci as source_type,
-            member_name COLLATE utf8mb4_unicode_ci as name,
-            service_type COLLATE utf8mb4_unicode_ci as description,
-            price as amount,
-            created_at as tx_date
-        FROM addon_services_bookings 
-        WHERE status != 'cancelled'
-    ) as combined_history
+    SELECT source_type, member_name as name, label as description, amount, tx_date, is_renewal
+    FROM (" . revenue_ledger_sql() . ") AS ledger
+    WHERE amount > 0
     ORDER BY tx_date DESC
     LIMIT 10
 ";
@@ -619,6 +594,281 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
         .btn-confirm-delete:active {
             transform: translateY(0);
         }
+
+        /* ══ Add Admin / Add Counsellor top-bar buttons ══ */
+        .page-dashboard .staff-quick-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 15px 8px 8px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid #EEF0F3;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+            transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .page-dashboard .staff-quick-btn .sqb-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 9px;
+            background: #FFF4EF;
+            color: #F25C2A;
+            flex-shrink: 0;
+        }
+
+        .page-dashboard .staff-quick-btn .sqb-icon img,
+        .page-dashboard .staff-quick-btn .sqb-icon svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .page-dashboard .staff-quick-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.1);
+        }
+
+        .page-dashboard .staff-quick-btn.primary {
+            background: linear-gradient(135deg, #F25C2A, #E5502B);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(242, 92, 42, 0.28);
+        }
+
+        .page-dashboard .staff-quick-btn.primary .sqb-icon {
+            background: rgba(255, 255, 255, 0.22);
+            color: #fff;
+        }
+
+        .page-dashboard .staff-quick-btn.primary:hover {
+            box-shadow: 0 8px 20px rgba(242, 92, 42, 0.38);
+        }
+
+        @media (max-width: 640px) {
+            .page-dashboard .staff-quick-btn span {
+                display: none;
+            }
+
+            .page-dashboard .staff-quick-btn {
+                padding: 8px;
+                gap: 0;
+            }
+        }
+
+        /* ══ Create-account modal cards ══ */
+        .page-dashboard .staff-modal {
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            padding: 20px;
+        }
+
+        .page-dashboard .staff-modal.active {
+            animation: staffFade .2s ease;
+        }
+
+        @keyframes staffFade {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .page-dashboard .staff-modal-card {
+            position: relative;
+            background: #fff;
+            width: 100%;
+            max-width: 430px;
+            border-radius: 20px;
+            padding: 28px 26px 24px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24), 0 4px 14px rgba(15, 23, 42, 0.08);
+            animation: staffPop .28s cubic-bezier(.34, 1.56, .64, 1);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        @keyframes staffPop {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .page-dashboard .staff-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 9px;
+            background: #F1F5F9;
+            color: #64748B;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .18s ease, color .18s ease;
+        }
+
+        .page-dashboard .staff-modal-close:hover {
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+
+        .page-dashboard .staff-modal-close img,
+        .page-dashboard .staff-modal-close svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        .page-dashboard .staff-modal-head {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+            padding-right: 34px;
+        }
+
+        .page-dashboard .staff-modal-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 13px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #FFF4EF, #FFE4D6);
+            color: #F25C2A;
+        }
+
+        .page-dashboard .staff-modal-icon img,
+        .page-dashboard .staff-modal-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .page-dashboard .staff-modal-head h3 {
+            margin: 0 0 3px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1E293B;
+        }
+
+        .page-dashboard .staff-modal-head p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #64748B;
+            line-height: 1.4;
+        }
+
+        .page-dashboard .staff-field {
+            margin-bottom: 14px;
+        }
+
+        .page-dashboard .staff-field label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #94A3B8;
+        }
+
+        .page-dashboard .staff-field input,
+        .page-dashboard .staff-field select {
+            width: 100%;
+            padding: 11px 13px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 0.92rem;
+            font-family: inherit;
+            color: #1E293B;
+            background: #fff;
+            outline: none;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .page-dashboard .staff-field input::placeholder {
+            color: #CBD5E1;
+        }
+
+        .page-dashboard .staff-field input:focus,
+        .page-dashboard .staff-field select:focus {
+            border-color: #F25C2A;
+            box-shadow: 0 0 0 3px rgba(242, 92, 42, 0.12);
+        }
+
+        .page-dashboard .staff-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .page-dashboard .staff-btn-ghost,
+        .page-dashboard .staff-btn-primary {
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+        }
+
+        .page-dashboard .staff-btn-ghost {
+            background: #F1F5F9;
+            color: #475569;
+        }
+
+        .page-dashboard .staff-btn-ghost:hover {
+            background: #E2E8F0;
+            color: #334155;
+        }
+
+        .page-dashboard .staff-btn-primary {
+            background: linear-gradient(135deg, #F25C2A, #E5502B);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(242, 92, 42, 0.28);
+        }
+
+        .page-dashboard .staff-btn-primary:hover {
+            box-shadow: 0 7px 18px rgba(242, 92, 42, 0.38);
+            transform: translateY(-1px);
+        }
+
+        .page-dashboard .staff-btn-primary:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .page-dashboard .staff-form-msg {
+            padding: 10px 13px;
+            border-radius: 10px;
+            font-size: 0.83rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
     </style>
 </head>
 
@@ -642,6 +892,21 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
                     <p>Here's what's happening at <b>JOF INDIA</b> today.</p>
                 </div>
                 <div class="header-actions">
+                    <?php if ($can_manage_staff): ?>
+                        <!-- Create staff login accounts -->
+                        <button type="button" class="staff-quick-btn primary" id="openAdminModalBtn"
+                            title="Create an admin or trainer login">
+                            <span class="sqb-icon"><img src="../icons/user-tie-solid-full.svg"
+                                    class="fa-solid fa-user-tie"></span>
+                            <span>Add Admin</span>
+                        </button>
+                        <button type="button" class="staff-quick-btn" id="openCounsellorModalBtn"
+                            title="Create a counsellor login">
+                            <span class="sqb-icon"><img src="../icons/clipboard-user-solid-full.svg"
+                                    class="fa-solid fa-clipboard-user"></span>
+                            <span>Add Counsellor</span>
+                        </button>
+                    <?php endif; ?>
                     <!-- PT Sessions Notification Button -->
                     <div class="pt-notif-container" id="ptNotifContainer">
                         <button class="pt-notif-btn" id="ptNotifBtn" title="Today's PT Sessions">
@@ -672,6 +937,30 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
                             <div class="enq-footer">
                                 <a href="view_enquiries.php"><img src="../icons/arrow-right-solid-full.svg"
                                         class="fa-solid fa-arrow-right"> View All Enquiries</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Diet Plan Questions Notification Button -->
+                    <div class="enquiry-notif-container" id="dietNotifContainer">
+                        <button class="enquiry-notif-btn" id="dietNotifBtn" title="Diet Plan Questions">
+                            <img src="../icons/balanced-diet.png" alt="Diet Questions" width="22">
+                            <span class="enquiry-notif-badge hidden" id="dietNotifBadge">0</span>
+                        </button>
+                        <div class="enquiry-dropdown" id="dietDropdown">
+                            <div class="enq-header">
+                                <h4><img src="../icons/comment-dots-regular-full.svg" class="fa-solid fa-comment-dots"
+                                        style="color:#F25C2A;"> Diet Plan Questions</h4>
+                                <button class="close-enq-btn" id="closeDietBtn">
+                                    <img src="../icons/xmark-solid-full.svg" class="fa-solid fa-xmark">
+                                </button>
+                            </div>
+                            <div class="enq-list" id="dietNotifList">
+                                <div class="enq-empty"><img src="../icons/inbox-solid-full.svg"
+                                        class="fa-solid fa-inbox"><br>Loading...</div>
+                            </div>
+                            <div class="enq-footer">
+                                <a href="diet_messages.php"><img src="../icons/arrow-right-solid-full.svg"
+                                        class="fa-solid fa-arrow-right"> View All Diet Messages</a>
                             </div>
                         </div>
                     </div>
@@ -903,6 +1192,95 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
             </div>
         </div>
     </div>
+
+    <?php if ($can_manage_staff): ?>
+        <!-- Create Admin / Trainer Account Modal -->
+        <div class="modal-overlay staff-modal" id="adminModal">
+            <div class="staff-modal-card">
+                <button type="button" class="staff-modal-close" data-close="adminModal" aria-label="Close">
+                    <img src="../icons/xmark-solid-full.svg" class="fa-solid fa-xmark">
+                </button>
+                <div class="staff-modal-head">
+                    <div class="staff-modal-icon">
+                        <img src="../icons/user-tie-solid-full.svg" class="fa-solid fa-user-tie">
+                    </div>
+                    <div>
+                        <h3>Create Admin Account</h3>
+                        <p>Add a new admin or trainer login for the panel.</p>
+                    </div>
+                </div>
+                <div class="staff-form-msg" id="adminFormMsg" style="display:none;"></div>
+                <form id="addAdminForm" autocomplete="off">
+                    <input type="hidden" name="_csrf_token"
+                        value="<?= htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8') ?>">
+                    <input type="hidden" name="account_type" value="admin">
+                    <div class="staff-field">
+                        <label>Full Name</label>
+                        <input type="text" name="full_name" required placeholder="First Last">
+                    </div>
+                    <div class="staff-field">
+                        <label>Email Address</label>
+                        <input type="email" name="email" required placeholder="name@example.com">
+                    </div>
+                    <div class="staff-field">
+                        <label>Password</label>
+                        <input type="password" name="password" required minlength="8" placeholder="Min. 8 characters">
+                    </div>
+                    <div class="staff-field">
+                        <label>Role</label>
+                        <select name="role" required>
+                            <option value="admin">Admin</option>
+                            <option value="trainer">Trainer</option>
+                        </select>
+                    </div>
+                    <div class="staff-modal-actions">
+                        <button type="button" class="staff-btn-ghost" data-close="adminModal">Cancel</button>
+                        <button type="submit" class="staff-btn-primary">Create Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Create Counsellor Account Modal -->
+        <div class="modal-overlay staff-modal" id="counsellorModal">
+            <div class="staff-modal-card">
+                <button type="button" class="staff-modal-close" data-close="counsellorModal" aria-label="Close">
+                    <img src="../icons/xmark-solid-full.svg" class="fa-solid fa-xmark">
+                </button>
+                <div class="staff-modal-head">
+                    <div class="staff-modal-icon">
+                        <img src="../icons/clipboard-user-solid-full.svg" class="fa-solid fa-clipboard-user">
+                    </div>
+                    <div>
+                        <h3>Create Counsellor Account</h3>
+                        <p>Add a new counsellor login for the panel.</p>
+                    </div>
+                </div>
+                <div class="staff-form-msg" id="counsellorFormMsg" style="display:none;"></div>
+                <form id="addCounsellorForm" autocomplete="off">
+                    <input type="hidden" name="_csrf_token"
+                        value="<?= htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8') ?>">
+                    <input type="hidden" name="account_type" value="counsellor">
+                    <div class="staff-field">
+                        <label>Full Name</label>
+                        <input type="text" name="full_name" required placeholder="First Last">
+                    </div>
+                    <div class="staff-field">
+                        <label>Email Address</label>
+                        <input type="email" name="email" required placeholder="name@example.com">
+                    </div>
+                    <div class="staff-field">
+                        <label>Password</label>
+                        <input type="password" name="password" required minlength="8" placeholder="Min. 8 characters">
+                    </div>
+                    <div class="staff-modal-actions">
+                        <button type="button" class="staff-btn-ghost" data-close="counsellorModal">Cancel</button>
+                        <button type="submit" class="staff-btn-primary">Create Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <script>
         // Global Events Array
@@ -1249,6 +1627,121 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
             // Kick off enquiry polling on load
             pollEnquiryBadge();
             setInterval(pollEnquiryBadge, 10000);  // Poll every 10 seconds
+
+            // ══════════════════════════════════════════════════
+            //  DIET PLAN QUESTIONS NOTIFICATION SYSTEM
+            // ══════════════════════════════════════════════════
+            let dietOpen = false;
+            const dietBtn = document.getElementById('dietNotifBtn');
+            const dietDrop = document.getElementById('dietDropdown');
+            const dietBadge = document.getElementById('dietNotifBadge');
+            const dietList = document.getElementById('dietNotifList');
+            const closeDietBtn = document.getElementById('closeDietBtn');
+
+            if (dietBtn) {
+                dietBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    dietOpen = !dietOpen;
+                    dietDrop.classList.toggle('active', dietOpen);
+                    if (dietOpen) openDietPanel();
+                });
+            }
+
+            if (closeDietBtn) {
+                closeDietBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    dietOpen = false;
+                    dietDrop.classList.remove('active');
+                });
+            }
+
+            document.addEventListener('click', function (e) {
+                if (dietOpen && dietDrop && !dietDrop.contains(e.target) && e.target !== dietBtn) {
+                    dietOpen = false;
+                    dietDrop.classList.remove('active');
+                }
+            });
+
+            async function openDietPanel() {
+                dietList.innerHTML = '<div class="enq-empty" style="padding:30px 20px;">' +
+                    '<svg class="notif-spinner" width="40" height="40" viewBox="0 0 40 40" style="animation:spin 1s linear infinite;">' +
+                    '<circle cx="20" cy="20" r="16" stroke="#F25C2A" stroke-width="4" fill="none" stroke-dasharray="80" stroke-dashoffset="60"></circle>' +
+                    '</svg>' +
+                    '<p style="margin-top:14px;font-size:0.85rem;color:#6B7280;">Loading messages...</p>' +
+                    '</div>';
+                try {
+                    var res = await fetch('../handlers/get_diet_notifications.php', { cache: 'no-store' });
+                    var data = await res.json();
+                    if (data.status === 'success') {
+                        renderDietNotifications(data.notifications);
+                        await fetch('../handlers/mark_diet_messages_seen.php', { method: 'POST', cache: 'no-store' });
+                        updateDietBadge(0);
+                    }
+                } catch (err) {
+                    dietList.innerHTML = '<div class="enq-empty"><img src="../icons/triangle-exclamation-solid-full.svg" class="fa-solid fa-triangle-exclamation"><br>Could not load messages.</div>';
+                    console.error('Diet notification error:', err);
+                }
+            }
+
+            function renderDietNotifications(items) {
+                if (!items || items.length === 0) {
+                    dietList.innerHTML = '<div class="enq-empty"><img src="../icons/inbox-solid-full.svg" class="fa-solid fa-inbox"><br>No diet plan questions yet.<br><small>Member questions appear here.</small></div>';
+                    return;
+                }
+                var html = '';
+                items.forEach(function (n) {
+                    var name = n.member_name || 'Member';
+                    var initials = name.split(' ').map(function (w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
+                    var ago = timeAgo(n.created_at);
+                    var preview = (n.message || '').slice(0, 60);
+                    html += '<a href="diet_messages.php?plan_id=' + n.plan_id + '&member_id=' + n.member_id + '" class="enq-item unseen">' +
+                        '<div class="enq-avatar">' + initials + '</div>' +
+                        '<div class="enq-body">' +
+                        '<div class="enq-name">' + escHtml(name) + ' <span style="font-weight:500;color:#9CA3AF;">· ' + escHtml(n.phase) + '</span></div>' +
+                        '<div class="enq-contact">&#128172; ' + escHtml(preview) + (n.message.length > 60 ? '…' : '') + '</div>' +
+                        '<div class="enq-time"><img src="../icons/clock-solid-full.svg" class="fa-solid fa-clock"> ' + ago + '</div>' +
+                        '</div></a>';
+                });
+                dietList.innerHTML = html;
+            }
+
+            function updateDietBadge(count) {
+                if (!dietBadge) return;
+                if (count > 0) {
+                    dietBadge.textContent = '+' + (count > 99 ? '99' : count);
+                    dietBadge.classList.remove('hidden');
+                } else {
+                    dietBadge.classList.add('hidden');
+                }
+            }
+
+            async function pollDietBadge() {
+                try {
+                    var res = await fetch('../handlers/get_diet_notifications.php', { cache: 'no-store' });
+                    var data = await res.json();
+                    if (data.status === 'success') {
+                        var newCount = data.unread_count;
+                        var oldCount = parseInt(dietBadge && !dietBadge.classList.contains('hidden') ? dietBadge.textContent.replace('+', '') : '0') || 0;
+
+                        if (newCount > oldCount && newCount > 0) {
+                            if (dietBadge) {
+                                dietBadge.classList.add('badge-pop');
+                                setTimeout(function () { dietBadge.classList.remove('badge-pop'); }, 800);
+                            }
+                            if (dietOpen) {
+                                openDietPanel();
+                            }
+                        }
+
+                        if (!dietOpen) {
+                            updateDietBadge(newCount);
+                        }
+                    }
+                } catch (e) { }
+            }
+
+            pollDietBadge();
+            setInterval(pollDietBadge, 10000);
 
 
             function timeAgo(dateStr) {
@@ -1667,20 +2160,32 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
                 <?php else: ?>
                     <ul class="rev-history-list">
                         <?php foreach ($recent_revenue_history as $tx):
-                            $isMembership = ($tx['source_type'] === 'Membership');
+                            $srcType = $tx['source_type'];
+                            $isMembership = in_array($srcType, ['Membership', 'Membership Installment'], true);
                             $iconClass = $isMembership ? 'membership' : 'addon';
                             $iconGraphic = $isMembership ? '<img src="../icons/id-card-solid-full.svg" class="fa-solid fa-id-card">' : '<img src="../icons/spa-solid-full.svg" class="fa-solid fa-spa">';
                             $descText = htmlspecialchars($tx['description']);
-                            if (!$isMembership)
-                                $descText .= " (Add-on)";
+                            $descSuffix = match ($srcType) {
+                                'Membership Installment' => ' (Installment)',
+                                'Add-on Service' => ' (Add-on)',
+                                'Consultation' => ' (Consultation)',
+                                default => '',
+                            };
+                            $descText .= $descSuffix;
                             $txDate = date('M j, g:i A', strtotime($tx['tx_date']));
+                            $isRenewal = $isMembership && (int) $tx['is_renewal'] === 1;
                             ?>
                             <li class="rev-history-item">
                                 <div class="rev-history-icon <?= $iconClass ?>">
                                     <?= $iconGraphic ?>
                                 </div>
                                 <div class="rev-history-info">
-                                    <div class="rev-history-name"><?= htmlspecialchars($tx['name']) ?></div>
+                                    <div class="rev-history-name">
+                                        <span class="rev-history-name-text"><?= htmlspecialchars($tx['name']) ?></span>
+                                        <?php if ($isRenewal): ?>
+                                            <span class="rev-renewal-tag" title="This member renewed an existing plan">Renewal</span>
+                                        <?php endif; ?>
+                                    </div>
                                     <div class="rev-history-desc"><?= $descText ?></div>
                                 </div>
                                 <div class="rev-history-meta">
@@ -1745,6 +2250,82 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
             });
         });
     </script>
+
+    <?php if ($can_manage_staff): ?>
+        <!-- Create staff login accounts (Add Admin / Add Counsellor) -->
+        <script>
+            (function () {
+                const configs = [
+                    { btn: 'openAdminModalBtn', modal: 'adminModal', form: 'addAdminForm', msg: 'adminFormMsg' },
+                    { btn: 'openCounsellorModalBtn', modal: 'counsellorModal', form: 'addCounsellorForm', msg: 'counsellorFormMsg' },
+                ];
+
+                function showMsg(box, text, ok) {
+                    box.textContent = text;
+                    box.style.display = 'block';
+                    box.style.background = ok ? '#d1fae5' : '#fee2e2';
+                    box.style.color = ok ? '#065f46' : '#b91c1c';
+                }
+
+                function clearFields(form) {
+                    form.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]')
+                        .forEach(i => { i.value = ''; });
+                    const sel = form.querySelector('select');
+                    if (sel) sel.selectedIndex = 0;
+                }
+
+                configs.forEach(cfg => {
+                    const openBtn = document.getElementById(cfg.btn);
+                    const modal = document.getElementById(cfg.modal);
+                    const form = document.getElementById(cfg.form);
+                    const msgBox = document.getElementById(cfg.msg);
+                    if (!openBtn || !modal || !form) return;
+
+                    const submitBtn = form.querySelector('.staff-btn-primary');
+                    const close = () => modal.classList.remove('active');
+
+                    openBtn.addEventListener('click', () => {
+                        clearFields(form);
+                        msgBox.style.display = 'none';
+                        modal.classList.add('active');
+                    });
+
+                    modal.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', close));
+                    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+                    form.addEventListener('submit', e => {
+                        e.preventDefault();
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Creating…';
+                        msgBox.style.display = 'none';
+
+                        fetch('../handlers/create_staff_account.php', { method: 'POST', body: new FormData(form) })
+                            .then(r => r.json())
+                            .then(data => {
+                                if (data.success) {
+                                    showMsg(msgBox, data.message, true);
+                                    clearFields(form);
+                                } else {
+                                    showMsg(msgBox, data.message || 'Could not create the account.', false);
+                                }
+                            })
+                            .catch(() => showMsg(msgBox, 'Could not reach the server. Please try again.', false))
+                            .finally(() => {
+                                submitBtn.disabled = false;
+                                submitBtn.textContent = 'Create Account';
+                            });
+                    });
+                });
+
+                // Esc closes any open create-account modal
+                document.addEventListener('keydown', e => {
+                    if (e.key === 'Escape') {
+                        document.querySelectorAll('.staff-modal.active').forEach(m => m.classList.remove('active'));
+                    }
+                });
+            })();
+        </script>
+    <?php endif; ?>
 </body>
 
 </html>

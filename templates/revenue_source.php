@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../auth/auth_check.php';
 require_role(['admin', 'trainer']);
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/revenue_helper.php';
 
 // --- 1. Date Filter Logic ---
 $filter = isset($_GET['filter']) ? $_GET['filter'] : 'this_month';
@@ -9,19 +10,19 @@ $date_condition = "";
 
 switch ($filter) {
     case 'today':
-        $date_condition = "AND DATE(created_at) = CURDATE()";
+        $date_condition = "AND DATE(tx_date) = CURDATE()";
         $period_label = "Today";
         break;
     case 'this_week':
-        $date_condition = "AND YEARWEEK(created_at, 1) = YEARWEEK(CURDATE(), 1)";
+        $date_condition = "AND YEARWEEK(tx_date, 1) = YEARWEEK(CURDATE(), 1)";
         $period_label = "This Week";
         break;
     case 'this_month':
-        $date_condition = "AND MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())";
+        $date_condition = "AND MONTH(tx_date) = MONTH(CURDATE()) AND YEAR(tx_date) = YEAR(CURDATE())";
         $period_label = "This Month";
         break;
     case 'this_year':
-        $date_condition = "AND YEAR(created_at) = YEAR(CURDATE())";
+        $date_condition = "AND YEAR(tx_date) = YEAR(CURDATE())";
         $period_label = "This Year";
         break;
     case 'all_time':
@@ -29,43 +30,22 @@ switch ($filter) {
         $period_label = "All Time";
         break;
     default:
-        $date_condition = "AND MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())";
+        $date_condition = "AND MONTH(tx_date) = MONTH(CURDATE()) AND YEAR(tx_date) = YEAR(CURDATE())";
         $period_label = "This Month";
         break;
 }
 
 // --- 2. Fetch Aggregated Revenue Data ---
+// Grouped on the shared revenue ledger (auth/revenue_helper.php): "label" is the plan
+// name for both a membership's signup payment and every later installment against it,
+// so the two merge back into one row per plan here — with the installment money
+// correctly dated to when it actually came in, not silently dropped or misdated to
+// the plan's original signup month.
 $sql = "
-    SELECT membership_type, SUM(count) as count, SUM(total_revenue) as total_revenue
-    FROM (
-        SELECT 
-            membership_type, 
-            COUNT(*) as count, 
-            SUM(amount_received) as total_revenue
-        FROM member_payments
-        WHERE 1=1 $date_condition
-        GROUP BY membership_type
-        
-        UNION ALL
-        
-        SELECT 
-            service_type as membership_type,
-            COUNT(*) as count,
-            SUM(price) as total_revenue
-        FROM addon_services_bookings
-        WHERE status != 'cancelled' $date_condition
-        GROUP BY service_type
-        
-        UNION ALL
-        
-        SELECT 
-            'Consultation' as membership_type,
-            COUNT(*) as count,
-            SUM(total_amount) as total_revenue
-        FROM consultations
-        WHERE 1=1 $date_condition
-    ) as combined_revenue
-    GROUP BY membership_type
+    SELECT label as membership_type, COUNT(*) as count, SUM(amount) as total_revenue
+    FROM (" . revenue_ledger_sql() . ") AS ledger
+    WHERE amount > 0 $date_condition
+    GROUP BY label
     ORDER BY total_revenue DESC
 ";
 

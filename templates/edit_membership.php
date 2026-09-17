@@ -48,6 +48,31 @@ if (!$plan) {
             width: 25px !important;
             height: 25px !important;
         }
+
+        /* ── Show-to-members visibility toggle: deliberately eye-catching so it's ── */
+        /* never skipped past while editing the rest of the plan.                   */
+        .visibility-box {
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+            margin: 4px 0 26px; padding: 16px 18px; border-radius: 14px;
+            background: linear-gradient(135deg, #FFF4EF, #FFE9DE); border: 1.5px solid #FFD3BB;
+        }
+        .visibility-box .vb-text { display: flex; gap: 12px; align-items: flex-start; }
+        .visibility-box .vb-icon {
+            width: 38px; height: 38px; flex-shrink: 0; border-radius: 11px; background: #F25C2A; color: #fff;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(242,92,42,.3);
+        }
+        .visibility-box .vb-icon img { width: 16px; height: 16px; filter: brightness(0) invert(1); }
+        .visibility-box .vb-title { font-size: 14px; font-weight: 700; color: #7C2D12; margin: 0 0 3px; }
+        .visibility-box .vb-sub { font-size: 12.5px; color: #9A3412; margin: 0; max-width: 360px; line-height: 1.5; }
+        .vis-toggle { display: inline-flex; border-radius: 10px; background: #fff; border: 1.5px solid #FFD3BB; padding: 3px; flex-shrink: 0; }
+        .vis-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+        .vis-toggle label {
+            padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+            color: #9A3412; transition: all .15s ease; user-select: none;
+        }
+        .vis-toggle input:checked + label.opt-no { background: #F1F5F9; color: #475569; }
+        .vis-toggle input:checked + label.opt-yes { background: #16A34A; color: #fff; box-shadow: 0 3px 8px rgba(22,163,74,.3); }
+        @media (max-width: 560px) { .visibility-box { flex-direction: column; align-items: stretch; } .vis-toggle { align-self: flex-start; } }
     </style>
 </head>
 
@@ -79,6 +104,24 @@ if (!$plan) {
 
                     <input type="hidden" name="action" value="update">
                     <input type="hidden" name="id" value="<?= $plan['id'] ?>">
+
+                    <!-- Visibility to members (highlighted so it's never overlooked) -->
+                    <?php $is_public = (int) ($plan['is_public'] ?? 0) === 1; ?>
+                    <div class="visibility-box">
+                        <div class="vb-text">
+                            <span class="vb-icon"><img src="../icons/eye-solid-full.svg" alt="visibility"></span>
+                            <div>
+                                <p class="vb-title">Show this plan to members?</p>
+                                <p class="vb-sub">When "Yes", it appears in members' app under their Membership section so they can browse and request it.</p>
+                            </div>
+                        </div>
+                        <div class="vis-toggle">
+                            <input type="radio" name="is_public" id="visNo" value="no" <?= !$is_public ? 'checked' : '' ?>>
+                            <label for="visNo" class="opt-no">No</label>
+                            <input type="radio" name="is_public" id="visYes" value="yes" <?= $is_public ? 'checked' : '' ?>>
+                            <label for="visYes" class="opt-yes">Yes</label>
+                        </div>
+                    </div>
 
                     <!-- Basic Info -->
                     <div class="form-section">

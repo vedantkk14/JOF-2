@@ -170,14 +170,54 @@ mysqli_stmt_execute($stmt);
 $notes_result = mysqli_stmt_get_result($stmt);
 
 // Fetch membership history
-$sql_mem_hist = "SELECT membership_type, diet_type, duration_months, start_date, end_date, total_amount, amount_received, payment_mode, transaction_id, created_at 
-                 FROM member_payments 
-                 WHERE member_id = ? 
+$sql_mem_hist = "SELECT payment_id, membership_type, diet_type, duration_months, start_date, end_date, total_amount, amount_received, balance_pending, installments_count, next_due_date, payment_mode, transaction_id, created_at
+                 FROM member_payments
+                 WHERE member_id = ?
                  ORDER BY created_at DESC";
 $stmt_mem = mysqli_prepare($conn, $sql_mem_hist);
 mysqli_stmt_bind_param($stmt_mem, "i", $member_id);
 mysqli_stmt_execute($stmt_mem);
 $mem_history_result = mysqli_stmt_get_result($stmt_mem);
+
+// Installment payments for every plan above, keyed by payment_id — nested inside that
+// SAME plan's single history card below rather than getting cards of their own.
+$plan_installments = [];
+$instq = mysqli_prepare($conn, "SELECT ip.payment_id, ip.installment_amount, ip.payment_mode, ip.payment_date
+    FROM installment_payments ip
+    JOIN member_payments mp ON mp.payment_id = ip.payment_id
+    WHERE mp.member_id = ?
+    ORDER BY ip.payment_date ASC");
+mysqli_stmt_bind_param($instq, "i", $member_id);
+mysqli_stmt_execute($instq);
+$instres = mysqli_stmt_get_result($instq);
+while ($irow = mysqli_fetch_assoc($instres)) {
+    $plan_installments[(int) $irow['payment_id']][] = $irow;
+}
+
+// Latest plan + pause info for the "Pause Membership" action
+$pauseStmt = mysqli_prepare($conn, "SELECT payment_id, end_date FROM member_payments WHERE member_id = ? ORDER BY created_at DESC LIMIT 1");
+mysqli_stmt_bind_param($pauseStmt, "i", $member_id);
+mysqli_stmt_execute($pauseStmt);
+$latest_plan = mysqli_fetch_assoc(mysqli_stmt_get_result($pauseStmt));
+$can_pause_member = $latest_plan && !empty($latest_plan['end_date']);
+
+require_once __DIR__ . '/../auth/membership_helper.php';
+membership_pauses_ensure_schema($conn);
+
+// Pauses only (extensions are shown separately below)
+$pauseAgg = mysqli_query($conn, "
+    SELECT COALESCE(SUM(days),0) AS total_days,
+           MAX(CASE WHEN CURDATE() BETWEEN pause_start AND pause_end THEN pause_end END) AS active_pause_end
+    FROM membership_pauses WHERE kind = 'pause' AND member_id = " . (int) $member_id);
+$pause_info = $pauseAgg ? mysqli_fetch_assoc($pauseAgg) : ['total_days' => 0, 'active_pause_end' => null];
+
+// Most recent plan extension (running or finished) for the extension notice
+$extStmt = mysqli_prepare($conn, "SELECT days, reason, end_date_before, end_date_after, created_at
+    FROM membership_pauses WHERE member_id = ? AND kind = 'extension' ORDER BY id DESC LIMIT 1");
+mysqli_stmt_bind_param($extStmt, "i", $member_id);
+mysqli_stmt_execute($extStmt);
+$extension_info = mysqli_fetch_assoc(mysqli_stmt_get_result($extStmt)) ?: null;
+$extension_running = $extension_info && $extension_info['end_date_after'] >= date('Y-m-d');
 
 // Fetch ALL measurements for Gallery
 $sql = "SELECT id, front_view_image, side_view_image, back_view_image, recorded_at 
@@ -210,7 +250,7 @@ $img_path = '../uploads/progress_photos/';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" size="16x16" href="../icons/favicon-dark-logo.png" type="image/png">
     <title>Member Profile | JOF INDIA</title>
-    <link rel="stylesheet" href="../static/root.css">
+    <link rel="stylesheet" href="../static/root.css?v=<?= @filemtime(__DIR__ . '/../static/root.css') ?>">
 
     <style>
         .premium-edit-footer {
@@ -467,7 +507,61 @@ $img_path = '../uploads/progress_photos/';
                     </div>
 
                     <div class="info-card mt-20">
-                        <h3><img src="../icons/id-card-solid-full.svg" class="fa-solid fa-id-card card-icon"> Membership & Plan History</h3>
+                        <div class="card-header-flex flex-between">
+                            <h3><img src="../icons/id-card-solid-full.svg" class="fa-solid fa-id-card card-icon"> Membership & Plan History</h3>
+                            <?php if ($can_pause_member): ?>
+                                <button type="button" class="action-btn btn-small"
+                                    onclick="openPauseModal(<?= (int) $member_id ?>, '<?= htmlspecialchars(addslashes($member['full_name']), ENT_QUOTES) ?>', '<?= htmlspecialchars($latest_plan['end_date']) ?>')">
+                                    <img src="../icons/pause-solid-full.svg" class="fa-solid fa-pause"> Pause
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                        <?php if (!empty($pause_info['active_pause_end'])): ?>
+                            <p style="margin:8px 0 0;font-size:13px;color:#4338CA;font-weight:600;">
+                                Plan currently paused &mdash; resumes <?= date('d M Y', strtotime($pause_info['active_pause_end'])) ?>.
+                            </p>
+                        <?php elseif ((int) $pause_info['total_days'] > 0): ?>
+                            <p style="margin:8px 0 0;font-size:13px;color:#6366F1;font-weight:600;">
+                                +<?= (int) $pause_info['total_days'] ?> paused day<?= (int) $pause_info['total_days'] === 1 ? '' : 's' ?> already added to this plan.
+                            </p>
+                        <?php endif; ?>
+
+                        <?php if ($extension_info):
+                            $ext_days = (int) $extension_info['days']; ?>
+                            <style>
+                                .ext-callout { display: flex; gap: 14px; margin-top: 14px; padding: 14px 16px; border-radius: 14px; background: #F0F9FF; border: 1px solid #BAE6FD; }
+                                .ext-callout.past { background: #F9FAFB; border-color: #E5E7EB; }
+                                .ext-callout-ic { width: 38px; height: 38px; flex-shrink: 0; border-radius: 11px; background: #0EA5E9; color: #fff; display: flex; align-items: center; justify-content: center; }
+                                .ext-callout.past .ext-callout-ic { background: #9CA3AF; }
+                                .ext-callout-ic svg { width: 18px; height: 18px; }
+                                .ext-callout-title { font-size: 14px; font-weight: 700; color: #0C4A6E; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+                                .ext-callout.past .ext-callout-title { color: #374151; }
+                                .ext-chip { font-size: 10.5px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: #0EA5E9; color: #fff; }
+                                .ext-callout.past .ext-chip { background: #E5E7EB; color: #6B7280; }
+                                .ext-callout-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 6px; font-size: 12.5px; color: #475569; }
+                                .ext-callout-meta b { color: #0F172A; font-weight: 700; }
+                                .ext-callout-reason { margin-top: 8px; font-size: 12.5px; color: #475569; font-style: italic; }
+                            </style>
+                            <div class="ext-callout<?= $extension_running ? '' : ' past' ?>">
+                                <div class="ext-callout-ic">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>
+                                </div>
+                                <div>
+                                    <div class="ext-callout-title">
+                                        Plan extended by <?= $ext_days ?> day<?= $ext_days === 1 ? '' : 's' ?>
+                                        <span class="ext-chip"><?= $extension_running ? 'Active' : 'Ended' ?></span>
+                                    </div>
+                                    <div class="ext-callout-meta">
+                                        <span>Extended on <b><?= date('d M Y', strtotime($extension_info['created_at'])) ?></b></span>
+                                        <span>Previously ended <b><?= date('d M Y', strtotime($extension_info['end_date_before'])) ?></b></span>
+                                        <span><?= $extension_running ? 'Now valid until' : 'Ran until' ?> <b><?= date('d M Y', strtotime($extension_info['end_date_after'])) ?></b></span>
+                                    </div>
+                                    <?php if (trim((string) $extension_info['reason']) !== ''): ?>
+                                        <div class="ext-callout-reason">Reason: <?= htmlspecialchars($extension_info['reason']) ?></div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                         <div class="plan-history-container mt-15">
                             <?php if (mysqli_num_rows($mem_history_result) > 0): ?>
                                 <?php while ($plan = mysqli_fetch_assoc($mem_history_result)): ?>
@@ -504,6 +598,50 @@ $img_path = '../uploads/progress_photos/';
                                                 <?php endif; ?>
                                             </div>
                                         </div>
+
+                                        <?php
+                                        // Every installment for this plan — the initial payment made at signup/renewal,
+                                        // plus each later top-up — nested in THIS one card so an installment plan never
+                                        // spawns extra history cards of its own.
+                                        $inst_rows = $plan_installments[(int) $plan['payment_id']] ?? [];
+                                        $inst_total_count = max(1, (int) $plan['installments_count']);
+                                        if ($inst_total_count > 1 || $inst_rows):
+                                            $inst_paid_count = ((float) $plan['amount_received'] > 0 ? 1 : 0) + count($inst_rows);
+                                            if ((float) $plan['balance_pending'] <= 0) {
+                                                $inst_paid_count = $inst_total_count;
+                                            }
+                                            $initial_amount = (float) $plan['amount_received'] - array_sum(array_column($inst_rows, 'installment_amount'));
+                                            ?>
+                                            <div class="plan-installments">
+                                                <div class="plan-installments-head">
+                                                    <span class="plan-installments-title">Installment Breakdown</span>
+                                                    <span class="plan-installments-progress"><?= $inst_paid_count ?> / <?= $inst_total_count ?> paid</span>
+                                                </div>
+                                                <div class="plan-installments-list">
+                                                    <?php if ($initial_amount > 0): ?>
+                                                        <div class="plan-installment-row">
+                                                            <span class="inst-idx">#1</span>
+                                                            <span class="inst-date"><?= date("d M Y", strtotime($plan['created_at'])) ?></span>
+                                                            <span class="inst-amount">₹<?= number_format($initial_amount) ?></span>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <?php foreach ($inst_rows as $ii => $inst): ?>
+                                                        <div class="plan-installment-row">
+                                                            <span class="inst-idx">#<?= $ii + 2 ?></span>
+                                                            <span class="inst-date"><?= date("d M Y", strtotime($inst['payment_date'])) ?> &middot; <?= htmlspecialchars(ucfirst($inst['payment_mode'])) ?></span>
+                                                            <span class="inst-amount">₹<?= number_format($inst['installment_amount']) ?></span>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                    <?php if ((float) $plan['balance_pending'] > 0): ?>
+                                                        <div class="plan-installment-row due">
+                                                            <span class="inst-idx">Pending</span>
+                                                            <span class="inst-date"><?= !empty($plan['next_due_date']) ? 'Due ' . date("d M Y", strtotime($plan['next_due_date'])) : 'No due date set' ?></span>
+                                                            <span class="inst-amount">₹<?= number_format($plan['balance_pending']) ?></span>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 <?php endwhile; ?>
                             <?php else: ?>
@@ -967,6 +1105,25 @@ $img_path = '../uploads/progress_photos/';
         
         observer.observe(document.body, { childList: true, subtree: true });
     </script>
+
+    <?php
+    $pause_redirect = 'person_info.php';
+    $pause_redirect_id = (int) $member_id;
+    include '_pause_modal.php';
+    ?>
+
+    <?php if (isset($_GET['pause_ok']) || isset($_GET['pause_err'])): ?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            <?php if (isset($_GET['pause_ok'])): ?>
+            alert('Membership paused. <?= (int) $_GET['pause_ok'] ?> day(s) added to the plan end date.');
+            <?php else: ?>
+            alert(<?= json_encode($_GET['pause_err']) ?>);
+            <?php endif; ?>
+            history.replaceState(null, '', 'person_info.php?id=<?= (int) $member_id ?>');
+        });
+    </script>
+    <?php endif; ?>
 
 </body>
 

@@ -21,21 +21,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $duration_unit = mysqli_real_escape_string($conn, $_POST['duration_unit']);
     $max_classes = mysqli_real_escape_string($conn, $_POST['max_classes']);
     $features = mysqli_real_escape_string($conn, $_POST['features']);
+    // Whether members can see/browse this plan in their app's membership section.
+    // Defaults to hidden (0) — an admin has to explicitly switch it on.
+    $is_public = (isset($_POST['is_public']) && $_POST['is_public'] === 'yes') ? 1 : 0;
 
     if (empty($max_classes)) $max_classes = "Unlimited";
 
     // 1. UPDATE EXISTING PLAN
     if ($action === 'update') {
         $id = intval($_POST['id']);
-        
-        $sql = "UPDATE membership_plans SET 
-                plan_name='$plan_name', 
-                description='$description', 
-                price=$price, 
-                duration_value=$duration_value, 
-                duration_unit='$duration_unit', 
-                max_classes='$max_classes', 
-                features='$features' 
+
+        $sql = "UPDATE membership_plans SET
+                plan_name='$plan_name',
+                description='$description',
+                price=$price,
+                duration_value=$duration_value,
+                duration_unit='$duration_unit',
+                max_classes='$max_classes',
+                features='$features',
+                is_public=$is_public
                 WHERE id=$id";
 
         if (mysqli_query($conn, $sql)) {
@@ -47,10 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // 2. CREATE NEW PLAN
     else {
-        $sql = "INSERT INTO membership_plans 
-                (plan_name, description, price, duration_value, duration_unit, max_classes, features) 
-                VALUES 
-                ('$plan_name', '$description', $price, $duration_value, '$duration_unit', '$max_classes', '$features')";
+        $sql = "INSERT INTO membership_plans
+                (plan_name, description, price, duration_value, duration_unit, max_classes, features, is_public)
+                VALUES
+                ('$plan_name', '$description', $price, $duration_value, '$duration_unit', '$max_classes', '$features', $is_public)";
 
         if (mysqli_query($conn, $sql)) {
             header("Location: ../templates/membership.php?success=created");

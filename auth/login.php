@@ -1,6 +1,18 @@
 <?php
-session_start();
+// Keep the session cookie on the site root so index.php, /auth/ and /templates/
+// all read & write the SAME session (prevents "Security token mismatch").
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    session_start();
+}
 require '../config.php';
+require_once __DIR__ . '/rate_limiter.php';
 
 header('Content-Type: application/json');
 
@@ -21,65 +33,79 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $submitted = $_POST['_csrf_token'] ?? '';
 $stored    = $_SESSION['_csrf_token'] ?? '';
 if (!$stored || !hash_equals($stored, $submitted)) {
-    echo json_encode(['success' => false, 'message' => 'Security token mismatch. Please refresh and try again.']);
+    // Issue a fresh token so the user can retry without a full page reload
+    $new_csrf = bin2hex(random_bytes(32));
+    $_SESSION['_csrf_token'] = $new_csrf;
+    echo json_encode(['success' => false, 'message' => 'Security token expired. Please try again.', 'csrf_token' => $new_csrf]);
     exit;
 }
-unset($_SESSION['_csrf_token']); // rotate after use
 
-// ── Rate Limiting (5 failed attempts per 10 min per IP) ───────────
-$ip       = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-$rl_key   = '_rl_' . md5($ip);
-$rl_data  = $_SESSION[$rl_key] ?? ['count' => 0, 'since' => time()];
-
-// Reset window if older than 10 minutes
-if ((time() - $rl_data['since']) > 600) {
-    $rl_data = ['count' => 0, 'since' => time()];
-}
-
-if ($rl_data['count'] >= 5) {
-    $wait = (int) ceil((600 - (time() - $rl_data['since'])) / 60);
-    echo json_encode(['success' => false, 'message' => "Too many failed attempts. Try again in {$wait} minute(s)."]);
-    exit;
-}
+// ── Rotate CSRF: consume old token, issue a fresh one for next attempt ─
+unset($_SESSION['_csrf_token']);
+$new_csrf = bin2hex(random_bytes(32));
+$_SESSION['_csrf_token'] = $new_csrf;
 
 // ── Input Validation ──────────────────────────────────────────────
 $email    = trim(filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL));
 $password = $_POST['password'] ?? '';
 
 if ($email === '' || $password === '') {
-    echo json_encode(['success' => false, 'message' => 'Email and password are required.']);
+    echo json_encode(['success' => false, 'message' => 'Email and password are required.', 'csrf_token' => $new_csrf]);
     exit;
 }
 
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
+    echo json_encode(['success' => false, 'message' => 'Invalid email or password.', 'csrf_token' => $new_csrf]);
+    exit;
+}
+
+// ── Rate Limiting (database-backed, per IP and per account — see auth/rate_limiter.php) ─
+$retry = login_retry_after($conn, $email);
+if ($retry > 0) {
+    echo json_encode(['success' => false, 'message' => 'Too many failed login attempts. Please try again in ' . rl_wait_text($retry) . '.', 'csrf_token' => $new_csrf]);
     exit;
 }
 
 // ── DB Lookup ─────────────────────────────────────────────────────
-$stmt = mysqli_prepare($conn, "SELECT id, full_name, password, role FROM user_data WHERE email = ? LIMIT 1");
+$stmt = mysqli_prepare($conn, "SELECT id, full_name, password, role, is_active FROM user_data WHERE email = ? LIMIT 1");
 mysqli_stmt_bind_param($stmt, 's', $email);
 mysqli_stmt_execute($stmt);
 $user = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
 $valid_roles = ['admin', 'trainer', 'user', 'counsellor'];
 
-if ($user && password_verify($password, $user['password']) && in_array($user['role'], $valid_roles, true)) {
-    // Success — clear failed attempts
-    unset($_SESSION[$rl_key]);
+// Normalise the stored role: lower-case, trimmed, and map spelling variants
+$user_role = $user ? strtolower(trim($user['role'] ?? '')) : '';
+if ($user_role === 'councillor') {
+    $user_role = 'counsellor';
+}
+
+// ── Suspended account check ──────────────────────────────────────
+if ($user && password_verify($password, $user['password']) && (int) $user['is_active'] !== 1) {
+    echo json_encode(['success' => false, 'message' => 'Your account has been suspended. Please contact an administrator.', 'csrf_token' => $new_csrf]);
+    exit;
+}
+
+if ($user && password_verify($password, $user['password']) && in_array($user_role, $valid_roles, true)) {
+    // Success — clear this account's failed attempts + consume the CSRF token
+    login_record_success($conn, $email);
+    unset($_SESSION['_csrf_token']);
 
     session_regenerate_id(true);
     $_SESSION['user_id']   = $user['id'];
     $_SESSION['user_name'] = $user['full_name'];
-    $_SESSION['user_role'] = $user['role'];
+    $_SESSION['user_role'] = $user_role;
 
-    echo json_encode(['success' => true, 'redirect' => _redirect($user['role'])]);
+    echo json_encode(['success' => true, 'redirect' => _redirect($user_role)]);
 } else {
-    // Failed — increment counter
-    $rl_data['count']++;
-    $_SESSION[$rl_key] = $rl_data;
+    // Failed — counted even when the email has no account, so responses never reveal which emails exist
+    login_record_failure($conn, $email);
 
-    echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
+    $retry = login_retry_after($conn, $email);
+    $message = $retry > 0
+        ? 'Too many failed login attempts. Please try again in ' . rl_wait_text($retry) . '.'
+        : 'Invalid email or password.';
+    echo json_encode(['success' => false, 'message' => $message, 'csrf_token' => $new_csrf]);
 }
 
 function _redirect(string $role): string {
