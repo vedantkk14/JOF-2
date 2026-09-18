@@ -2217,6 +2217,8 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
         });
     </script>
 
+    <?php include '_ai_widget.php'; ?>
+
     <!-- SVG Inline Injection for Coloring -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
