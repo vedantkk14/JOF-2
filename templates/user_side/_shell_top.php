@@ -538,7 +538,7 @@ function shell_nav_active($key, $active) { return $key === $active ? ' active' :
                 </div>
             </div>
 
-            <nav class="nav-group">
+            <nav class="nav-group" data-tour="nav">
                 <a class="nav-item<?= shell_nav_active('dashboard', $ACTIVE_NAV) ?>" href="user_dashboard.php">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
@@ -585,6 +585,15 @@ function shell_nav_active($key, $active) { return $key === $active ? ' active' :
             </nav>
 
             <div class="nav-bottom">
+                <a class="nav-item" href="#" data-tour-restart>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M9.6 9.3a2.5 2.5 0 014.7 1.1c0 1.7-2.4 2-2.4 3.4" />
+                        <path d="M12 17h.01" />
+                    </svg>
+                    <span class="nav-label">Take a tour</span>
+                </a>
                 <a class="nav-item" href="../../auth/logout.php">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
@@ -601,7 +610,7 @@ function shell_nav_active($key, $active) { return $key === $active ? ' active' :
         <main class="main">
             <div class="topbar">
                 <div class="topbar-left">
-                    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+                    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" data-tour="menu-btn">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M4 7h16M4 12h16M4 17h16" />
@@ -611,7 +620,7 @@ function shell_nav_active($key, $active) { return $key === $active ? ' active' :
                 </div>
                 <div class="topbar-right">
                     <div class="shell-dropdown-container">
-                        <button class="icon-btn" id="msgBellBtn" aria-label="Messages" title="Messages from your trainer">
+                        <button class="icon-btn" id="msgBellBtn" aria-label="Messages" title="Messages from your trainer" data-tour="messages">
                             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />

@@ -57,5 +57,15 @@ if (!function_exists('ai_ensure_schema')) {
             KEY idx_aid_conv (conversation_id, id),
             KEY idx_aid_member (member_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+        // Editing a saved plan: which plan the draft replaces, and that plan's
+        // content from just before the update — what Undo restores.
+        foreach (['target_plan_id' => 'INT DEFAULT NULL', 'original_json' => 'MEDIUMTEXT DEFAULT NULL'] as $col => $def) {
+            $chk = $conn->query("SELECT COUNT(*) c FROM information_schema.COLUMNS
+                                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ai_plan_drafts' AND COLUMN_NAME = '$col'");
+            if ($chk && (int) $chk->fetch_assoc()['c'] === 0) {
+                $conn->query("ALTER TABLE ai_plan_drafts ADD COLUMN $col $def");
+            }
+        }
     }
 }

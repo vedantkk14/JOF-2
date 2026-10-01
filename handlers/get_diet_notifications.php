@@ -1,4 +1,12 @@
 <?php
+/**
+ * handlers/get_diet_notifications.php
+ * ─────────────────────────────────────────────────────────────────
+ * Members with unread diet-plan messages, for the "Diet Messages" card on the
+ * admin dashboard. One row per member (not per message), newest first.
+ * Messages are marked read when the admin opens that member's conversation
+ * on diet_messages.php, not here.
+ */
 require_once __DIR__ . '/../auth/auth_check.php';
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../auth/diet_plan_schema.php';
@@ -11,35 +19,28 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_role'] ?? '', ['ad
     exit;
 }
 
-$sql = "SELECT dpm.id, dpm.plan_id, dpm.member_id, dpm.message, dpm.created_at,
-               m.full_name AS member_name, dp.plan_name
-        FROM diet_plan_messages dpm
-        JOIN members m ON m.id = dpm.member_id
-        JOIN diet_plans dp ON dp.id = dpm.plan_id
-        WHERE dpm.sender_role = 'user' AND dpm.is_read = 0
-        ORDER BY dpm.created_at DESC
-        LIMIT 20";
-$res = $conn->query($sql);
+$res = $conn->query("SELECT dpm.member_id, m.full_name AS member_name,
+                            COUNT(*) AS unread, MAX(dpm.id) AS last_id
+                     FROM diet_plan_messages dpm
+                     JOIN members m ON m.id = dpm.member_id
+                     WHERE dpm.sender_role = 'user' AND dpm.is_read = 0
+                     GROUP BY dpm.member_id, m.full_name
+                     ORDER BY last_id DESC
+                     LIMIT 50");
 
-$notifications = [];
+$members = [];
+$unread_count = 0;
 while ($row = $res->fetch_assoc()) {
-    $parts = explode(' - ', $row['plan_name']);
-    $notifications[] = [
-        'id'          => (int) $row['id'],
-        'plan_id'     => (int) $row['plan_id'],
+    $members[] = [
         'member_id'   => (int) $row['member_id'],
         'member_name' => $row['member_name'],
-        'phase'       => $parts[1] ?? $row['plan_name'],
-        'message'     => $row['message'],
-        'created_at'  => $row['created_at'],
+        'unread'      => (int) $row['unread'],
     ];
+    $unread_count += (int) $row['unread'];
 }
 
-$count_res = $conn->query("SELECT COUNT(*) AS c FROM diet_plan_messages WHERE sender_role = 'user' AND is_read = 0");
-$unread_count = (int) ($count_res->fetch_assoc()['c'] ?? 0);
-
 echo json_encode([
-    'status'        => 'success',
-    'notifications' => $notifications,
-    'unread_count'  => $unread_count,
+    'status'       => 'success',
+    'members'      => $members,
+    'unread_count' => $unread_count,
 ]);

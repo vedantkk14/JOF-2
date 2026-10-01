@@ -89,16 +89,49 @@ if (!function_exists('ai_plan_instructions')) {
      * exact JSON contract — json_object mode guarantees valid JSON, not the
      * right shape, so the shape is spelled out here.
      */
-    function ai_plan_instructions(array $targets, string $diet_type, string $goal, string $admin_note = ''): string
+    /**
+     * @param string $kind  'new'  — a fresh phase, which must differ from the last one
+     *                      'edit' — changing an existing plan or draft, which must
+     *                               keep everything the admin didn't ask about
+     */
+    function ai_plan_instructions(array $targets, string $diet_type, string $goal, string $admin_note = '', string $kind = 'new', bool $enforce_calories = true, string $phase = ''): string
     {
+        $phase = str_replace('"', '', $phase);
         $cal = $targets['usable'] ? $targets['target_calories'] : 0;
         $pro = $targets['usable'] ? $targets['protein_g'] : 0;
         $fat = $targets['usable'] ? $targets['fat_g'] : 0;
         $carb = $targets['usable'] ? $targets['carbs_g'] : 0;
 
+        $calorie_rules = $enforce_calories
+            ? "- The meals must add up to approximately {$cal} kcal with about {$pro} g protein, {$fat} g fat and {$carb} g carbohydrate. Use these figures — they were calculated from the member's own data.\n- \"calories\" must equal {$cal}."
+            : "- This plan has no calorie target on record. Do not rebalance quantities to hit any number — leave every meal you weren't asked about exactly as it is.\n- \"calories\" must be 0.";
+
         $note = trim($admin_note) !== ''
             ? "\nADMIN OVERRIDE — this takes priority over the calculated figures: {$admin_note}.\n"
             : '';
+
+        // Opposite rules for the two jobs: a new phase must be different, an edit
+        // must be the same except for what was asked. Applying the new-phase rule
+        // to an edit turned "make breakfast lighter" into a whole new plan.
+        $mode_block = $kind === 'edit'
+            ? <<<EDIT
+YOU ARE EDITING AN EXISTING PLAN — CHANGE ONLY WHAT THE ADMIN ASKED FOR.
+- Apply the admin's request precisely, and make that change clearly visible.
+- Every section the request does not touch must come back exactly as it is in the current
+  plan: same foods, same quantities, same wording.
+- Do not improve, reorder or reword anything that wasn't asked about.
+- If the calorie target changed, adjust quantities to meet it and keep the same foods where possible.
+- "summary" must state exactly what you changed, in one or two sentences.
+EDIT
+            : <<<NEW
+THIS IS A NEW PHASE — IT MUST NOT REPEAT THE LAST ONE.
+The member's file lists the ingredients their previous phase already used.
+- Do not build meals around those ingredients. Pick different main proteins, grains and vegetables.
+- Change the style of the meals too, not just the names — a different cuisine or cooking method,
+  not the same dish with one word swapped.
+- Someone reading both phases side by side should see a clearly different week of food.
+- "summary" must be at most two sentences.
+NEW;
 
         return <<<TXT
 {$note}
@@ -106,6 +139,7 @@ Produce a complete diet plan as a single JSON object. No prose, no markdown fenc
 
 Exact shape (every key required, all string values plain text):
 {
+  "phase": "the phase name — see the rule below",
   "goal": "short goal label, e.g. Fat Loss or Muscle Building",
   "diet_type": "veg" | "nonveg" | "vegan",
   "calories": <integer, total daily kcal>,
@@ -122,25 +156,21 @@ Exact shape (every key required, all string values plain text):
 }
 
 Hard requirements:
-- The meals must add up to approximately {$cal} kcal with about {$pro} g protein, {$fat} g fat and {$carb} g carbohydrate. Use these figures — they were calculated from the member's own data.
-- "calories" must equal {$cal}.
+{$calorie_rules}
+- "phase" must be "{$phase}" unless the admin explicitly asked to rename or renumber this phase.
+  A phase name is short, like "Week 13 & 14" or "Maintenance", and must never contain " - ".
 - "diet_type" must be "{$diet_type}".
 - "goal" should reflect: {$goal}
 - Give real quantities in grams, millilitres, pieces or standard Indian household measures (katori, roti, glass).
 - Respect every medical note and dietary restriction in the member's file.
 
-THIS IS A NEW PHASE — IT MUST NOT REPEAT THE LAST ONE.
-The member's file lists the ingredients their previous phase already used.
-- Do not build meals around those ingredients. Pick different main proteins, grains and vegetables.
-- Change the style of the meals too, not just the names — a different cuisine or cooking method,
-  not the same dish with one word swapped.
-- Someone reading both phases side by side should see a clearly different week of food.
-- Following the admin's request above matters more than any of this. If they asked for a change,
+{$mode_block}
+
+- Following the admin's request matters more than any of the above. If they asked for a change,
   make that change unmistakable in the plan.
 - Inside every text field: plain text only. No tables, no pipe characters, no markdown, no HTML tags
   such as <br>. Separate items with commas, or one per line. These fields are printed straight onto
   the member's PDF, so anything decorative shows up as clutter.
-- "summary" must be at most two sentences.
 TXT;
     }
 }

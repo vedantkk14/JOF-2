@@ -51,6 +51,8 @@ if ($ai_res) {
         animation: jofAiPop .26s cubic-bezier(.34, 1.56, .64, 1) both;
     }
     .jof-ai-card.open { display: flex; }
+    /* With a plan open there's a long form as well as the chat — give it more room */
+    .jof-ai-card:has(.jof-ai-draft.open) { height: min(780px, calc(100vh - 40px)); }
     @keyframes jofAiPop { from { opacity: 0; transform: translateY(18px) scale(.97); } to { opacity: 1; transform: none; } }
 
     .jof-ai-head {
@@ -79,7 +81,9 @@ if ($ai_res) {
     }
     .jof-ai-picker select:focus { outline: none; border-color: #F25C2A; }
 
-    .jof-ai-body { flex: 1; overflow-y: auto; padding: 16px; background: #F8FAFC; }
+    /* The chat and the draft panel share the card's height. The chat keeps a floor,
+       so a long plan can never squeeze it to nothing or push the input box off the card. */
+    .jof-ai-body { flex: 1 1 0; min-height: 90px; overflow-y: auto; padding: 16px; background: #F8FAFC; }
     .jof-ai-msg { margin-bottom: 12px; display: flex; }
     .jof-ai-msg .bubble {
         max-width: 85%; padding: 10px 13px; border-radius: 14px; font-size: 13.5px; line-height: 1.55;
@@ -103,6 +107,12 @@ if ($ai_res) {
     .jof-ai-typing span:nth-child(2) { animation-delay: .18s; }
     .jof-ai-typing span:nth-child(3) { animation-delay: .36s; }
     @keyframes jofAiBounce { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-5px); opacity: 1; } }
+    .jof-ai-typing em { font-style: normal; font-size: 12px; color: #64748B; margin-left: 6px; align-self: center; }
+
+    /* Blinking cursor at the end of a reply that's still being written */
+    .jof-ai-caret { display: inline-block; width: 7px; height: 1.05em; margin-left: 2px; vertical-align: text-bottom; background: #F25C2A; border-radius: 1px; animation: jofAiBlink 1s steps(2, start) infinite; }
+    @keyframes jofAiBlink { to { visibility: hidden; } }
+    .jof-ai-stopped { margin-top: 6px; font-size: 11px; font-style: italic; color: #94A3B8; }
 
     .jof-ai-compose { display: flex; gap: 9px; padding: 12px 14px; border-top: 1px solid #F1F5F9; background: #fff; flex-shrink: 0; }
     .jof-ai-compose textarea {
@@ -116,10 +126,12 @@ if ($ai_res) {
     }
     .jof-ai-send:hover { background: #E5502B; }
     .jof-ai-send:disabled { opacity: .45; cursor: not-allowed; }
+    .jof-ai-send.stop { background: #334155; }
+    .jof-ai-send.stop:hover { background: #1E293B; }
     .jof-ai-send svg { width: 17px; height: 17px; }
 
     /* Draft review panel */
-    .jof-ai-draft { border-top: 2px solid #F25C2A; background: #fff; flex-shrink: 0; max-height: 58%; overflow-y: auto; display: none; }
+    .jof-ai-draft { border-top: 2px solid #F25C2A; background: #fff; flex: 1.8 1 0; min-height: 0; overflow-y: auto; display: none; }
     .jof-ai-draft.open { display: block; }
     .jof-ai-draft-head { position: sticky; top: 0; background: #FFF7F4; padding: 11px 15px; border-bottom: 1px solid #FFE4D6; display: flex; align-items: center; gap: 8px; }
     .jof-ai-draft-head b { font-size: 13px; color: #9A3412; }
@@ -146,9 +158,32 @@ if ($ai_res) {
     .jof-ai-setup code { background: #FEF3C7; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
 
     @media (max-width: 560px) {
-        .jof-ai-card { right: 0; bottom: 0; width: 100vw; max-width: 100vw; height: 92vh; border-radius: 18px 18px 0 0; }
+        /* Pinned to both edges rather than width:100vw — 100vw includes the scrollbar,
+           which made the card 15px wider than the visible area on narrow windows. */
+        .jof-ai-card { left: 0; right: 0; bottom: 0; width: auto; max-width: none; height: 92vh; border-radius: 18px 18px 0 0; }
         .jof-ai-fab { right: 18px; bottom: 18px; }
         .jof-ai-row { grid-template-columns: 1fr; }
+    }
+
+    /* "Working on" plan picker + edit-mode bits.
+       Once a member is chosen the two pickers sit side by side — stacked, they
+       cost ~60px of height, which is what squeezed the chat out of the card. */
+    .jof-ai-picker select { text-overflow: ellipsis; }
+    .jof-ai-picker.has-plans .jof-ai-pickgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .jof-ai-picker.has-plans select { padding: 8px 9px; font-size: 12.5px; }
+    .jof-ai-row3 { grid-template-columns: 1.25fr .9fr 1fr; }
+    .jof-ai-f input[readonly] { background: #F8FAFC; color: #64748B; cursor: default; }
+    .jof-ai-undo {
+        margin-left: 10px; padding: 3px 11px; border-radius: 7px; cursor: pointer;
+        border: 1.5px solid #CBD5E1; background: #fff; color: #475569;
+        font-size: 12px; font-weight: 700; font-family: inherit;
+    }
+    .jof-ai-undo:hover { border-color: #F25C2A; color: #F25C2A; }
+    .jof-ai-undo:disabled { opacity: .5; cursor: not-allowed; }
+
+    @media (max-width: 560px) {
+        .jof-ai-picker.has-plans .jof-ai-pickgrid { grid-template-columns: 1fr; }
+        .jof-ai-row3 { grid-template-columns: 1fr 1fr; }
     }
 </style>
 
@@ -179,32 +214,38 @@ if ($ai_res) {
             <code>console.groq.com</code>, then reload this page.
         </div>
     <?php else: ?>
-        <div class="jof-ai-picker">
-            <label for="jofAiMember">Advising about</label>
-            <select id="jofAiMember">
-                <option value="0">General &mdash; no specific member</option>
-                <?php foreach ($ai_members as $m): ?>
-                    <option value="<?= (int) $m['id'] ?>" <?= $ai_preselect === (int) $m['id'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($m['full_name']) ?><?= $m['diet_type'] ? ' (' . htmlspecialchars($m['diet_type']) . ')' : '' ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+        <div class="jof-ai-picker" id="jofAiPicker">
+            <div class="jof-ai-pickgrid">
+                <div>
+                    <label for="jofAiMember">Advising about</label>
+                    <select id="jofAiMember">
+                        <option value="0">General &mdash; no specific member</option>
+                        <?php foreach ($ai_members as $m): ?>
+                            <option value="<?= (int) $m['id'] ?>" <?= $ai_preselect === (int) $m['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($m['full_name']) ?><?= $m['diet_type'] ? ' (' . htmlspecialchars($m['diet_type']) . ')' : '' ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div id="jofAiPlanRow" style="display:none;">
+                    <label for="jofAiPlan">Working on</label>
+                    <select id="jofAiPlan"><option value="0">+ A new phase</option></select>
+                </div>
+            </div>
         </div>
 
         <div class="jof-ai-body" id="jofAiBody"></div>
 
         <div class="jof-ai-draft" id="jofAiDraft">
             <div class="jof-ai-draft-head">
-                <b>Draft plan &mdash; review before saving</b>
+                <b id="jofAiDraftTitle">Draft plan &mdash; review before saving</b>
                 <span id="jofAiDraftCal"></span>
             </div>
             <div class="jof-ai-draft-body">
-                <div class="jof-ai-row">
-                    <div class="jof-ai-f"><label>Phase</label><input type="text" id="jofAiPhase"></div>
+                <div class="jof-ai-f"><label>Goal</label><input type="text" id="jofAiGoal"></div>
+                <div class="jof-ai-row jof-ai-row3">
+                    <div class="jof-ai-f"><label>Phase</label><input type="text" id="jofAiPhase" maxlength="60"></div>
                     <div class="jof-ai-f"><label>Calories</label><input type="number" id="jofAiCalories"></div>
-                </div>
-                <div class="jof-ai-row">
-                    <div class="jof-ai-f"><label>Goal</label><input type="text" id="jofAiGoal"></div>
                     <div class="jof-ai-f"><label>Diet type</label>
                         <select id="jofAiDietType">
                             <option value="veg">Veg</option>
@@ -260,7 +301,18 @@ if ($ai_res) {
     };
     const el = k => document.getElementById(F[k]);
 
+    const picker = document.getElementById('jofAiPicker');
+    const planRow = document.getElementById('jofAiPlanRow');
+    const planSel = document.getElementById('jofAiPlan');
+    const draftTitle = document.getElementById('jofAiDraftTitle');
+    const saveBtn = document.getElementById('jofAiSave');
+    const SECTIONS = ['wake_up', 'breakfast', 'post_workout', 'lunch', 'snack', 'dinner', 'pre_sleep', 'guidelines'];
+
     let conversationId = 0, draftId = 0, busy = false;
+    let streamCtl = null;   // AbortController of the reply being streamed, for Stop
+    // Set while a saved plan is open from "Working on". Meal times aren't
+    // editable in the panel but must survive the round trip, so they ride here.
+    let editPlanId = 0, editPlanName = '', draftTimes = {};
 
     function openCard(open) {
         card.classList.toggle('open', open);
@@ -309,14 +361,15 @@ if ($ai_res) {
         body.scrollTop = body.scrollHeight;
         return wrap;
     }
-    function typing(on) {
+    function typing(on, label) {
         const old = document.getElementById('jofAiTyping');
         if (old) old.remove();
         if (!on) return;
         const t = document.createElement('div');
         t.id = 'jofAiTyping';
         t.className = 'jof-ai-msg bot';
-        t.innerHTML = '<div class="jof-ai-typing"><span></span><span></span><span></span></div>';
+        t.innerHTML = '<div class="jof-ai-typing"><span></span><span></span><span></span>'
+            + (label ? '<em>' + label + '</em>' : '') + '</div>';
         body.appendChild(t);
         body.scrollTop = body.scrollHeight;
     }
@@ -324,7 +377,10 @@ if ($ai_res) {
     function greet() {
         const name = memberSel.value !== '0' ? memberSel.options[memberSel.selectedIndex].text.trim() : '';
         body.innerHTML = '';
-        if (name) {
+        if (name && editPlanId) {
+            bubble('bot', '**' + editPlanName + "** is open below. Edit the fields directly, or tell me what to change — I'll only touch what you ask about.");
+            chips(['Increase calories by 200', 'Make dinner lighter', 'Swap in more vegetarian protein']);
+        } else if (name) {
             bubble('bot', "I've got **" + name + "**'s file open — measurements, metrics and past phases. Ask me anything, or generate their next plan.");
             chips(['Create their next phase', 'How is their progress?', 'Any concerns in their data?']);
         } else {
@@ -346,15 +402,76 @@ if ($ai_res) {
         body.appendChild(box);
     }
 
+    function setSubtitle() {
+        if (memberSel.value === '0') {
+            subtitle.textContent = 'General nutrition advice';
+        } else if (editPlanId) {
+            subtitle.textContent = 'Editing: ' + editPlanName;
+        } else {
+            subtitle.textContent = 'Advising: ' + memberSel.options[memberSel.selectedIndex].text.trim();
+        }
+    }
+
+    function clearEdit() {
+        editPlanId = 0; editPlanName = ''; draftTimes = {}; draftId = 0;
+        draftBox.classList.remove('open');
+    }
+
+    // Fills "Working on" with the member's saved plans, newest first. The date is
+    // shown because some members have two plans with the same phase name.
+    async function loadPlans(keepId) {
+        planSel.innerHTML = '<option value="0">+ A new phase</option>';
+        const hasMember = memberSel.value !== '0';
+        picker.classList.toggle('has-plans', hasMember);
+        planRow.style.display = hasMember ? '' : 'none';
+        if (!hasMember) return;
+        try {
+            const res = await fetch('../handlers/ai_plans.php?action=list&member_id=' + encodeURIComponent(memberSel.value));
+            const data = await res.json();
+            if (!data.ok) return;
+            data.plans.slice().reverse().forEach(p => {
+                const o = document.createElement('option');
+                o.value = p.id;
+                o.textContent = p.phase + ' · ' + (p.calories ? p.calories + ' kcal · ' : '') + p.created;
+                planSel.appendChild(o);
+            });
+            // After a rename the list is rebuilt — keep the open plan selected
+            if (keepId) planSel.value = String(keepId);
+        } catch (err) {
+            // The list is a convenience — chat keeps working without it
+        }
+    }
+
     memberSel.addEventListener('change', () => {
         // Switching member starts a clean thread so one member's data never
         // carries over into advice about another.
-        conversationId = 0; draftId = 0;
-        draftBox.classList.remove('open');
-        subtitle.textContent = memberSel.value !== '0'
-            ? 'Advising: ' + memberSel.options[memberSel.selectedIndex].text.trim()
-            : 'General nutrition advice';
+        if (streamCtl) streamCtl.abort();
+        conversationId = 0;
+        clearEdit();
+        setSubtitle();
         greet();
+        loadPlans();
+    });
+
+    planSel.addEventListener('change', async () => {
+        const id = parseInt(planSel.value, 10) || 0;
+        conversationId = 0;   // a fresh thread per plan, so edits to two plans never mix
+        clearEdit();
+        if (!id) { setSubtitle(); greet(); return; }
+        try {
+            const res = await fetch('../handlers/ai_plans.php?action=load&member_id='
+                + encodeURIComponent(memberSel.value) + '&plan_id=' + id);
+            const data = await res.json();
+            if (!data.ok) { bubble('err', data.error || 'Could not open that plan.'); planSel.value = '0'; return; }
+            editPlanId = data.plan_id;
+            editPlanName = data.plan_name;
+            setSubtitle();
+            greet();
+            showDraft(data.draft, data.phase, 0);
+        } catch (err) {
+            bubble('err', 'Could not load that plan.');
+            planSel.value = '0';
+        }
     });
 
     input.addEventListener('input', () => {
@@ -364,7 +481,18 @@ if ($ai_res) {
     input.addEventListener('keydown', e => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
     });
-    sendBtn.addEventListener('click', () => send());
+    // While a reply is streaming the send button becomes a Stop button
+    const SEND_ICON = sendBtn.innerHTML;
+    const STOP_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>';
+    function stopMode(on) {
+        sendBtn.classList.toggle('stop', on);
+        sendBtn.innerHTML = on ? STOP_ICON : SEND_ICON;
+        sendBtn.setAttribute('aria-label', on ? 'Stop' : 'Send');
+    }
+    sendBtn.addEventListener('click', () => {
+        if (streamCtl) { streamCtl.abort(); return; }
+        send();
+    });
 
     // "plan" mode is requested when the admin clearly asks for a plan
     function wantsPlan(text) {
@@ -372,15 +500,47 @@ if ($ai_res) {
             || /\bnext phase\b/i.test(text);
     }
 
+    // With a plan or draft open, any request to change it is an edit. Without
+    // this, "make it vegan" (no word "plan") went to chat and nothing changed.
+    function wantsEdit(text) {
+        return /\b(change|replace|swap|switch|substitute|reduce|increase|decrease|lower|raise|cut|bump|remove|drop|add|make|update|edit|adjust|more|less|fewer|lighter|heavier|instead|without|rename|renumber|call it|name it|phase)\b/i.test(text);
+    }
+
+    // The panel exactly as it stands — including any hand edits — so the AI
+    // revises what the admin is looking at, not an older stored copy.
+    function panelDraft() {
+        const d = {
+            phase: el('phase').value,
+            goal: el('goal').value,
+            diet_type: el('diet_type').value,
+            calories: parseInt(el('calories').value, 10) || 0,
+            times: draftTimes
+        };
+        SECTIONS.forEach(k => { d[k] = el(k).value; });
+        return d;
+    }
+
     async function send(forceMode) {
         const text = input.value.trim();
         if (!text || busy) return;
         const memberId = memberSel.value;
-        const mode = forceMode || ((wantsPlan(text) && memberId !== '0') ? 'plan' : 'chat');
+        const draftOpen = draftBox.classList.contains('open');
+        const editing = editPlanId || draftOpen;
+        const mode = forceMode || ((memberId !== '0' && (editing ? (wantsEdit(text) || wantsPlan(text)) : wantsPlan(text)))
+            ? 'plan' : 'chat');
 
         bubble('user', text);
         input.value = ''; input.style.height = 'auto';
-        busy = true; sendBtn.disabled = true; typing(true);
+        busy = true;
+        if (mode === 'chat') {
+            streamCtl = new AbortController();
+            stopMode(true);
+            typing(true);
+        } else {
+            // Plans arrive whole (see ai_chat.php), so say what's happening meanwhile
+            sendBtn.disabled = true;
+            typing(true, editing ? 'Updating the plan&hellip;' : 'Building the plan&hellip;');
+        }
 
         const fd = new FormData();
         fd.append('_csrf_token', CSRF);
@@ -388,10 +548,19 @@ if ($ai_res) {
         fd.append('mode', mode);
         fd.append('member_id', memberId);
         fd.append('conversation_id', conversationId);
+        if (editPlanId) fd.append('plan_id', editPlanId);
         if (draftId && mode === 'plan') fd.append('draft_id', draftId);
+        if (draftOpen && mode === 'plan') fd.append('current_draft', JSON.stringify(panelDraft()));
+        if (mode === 'chat') fd.append('stream', '1');
 
+        const ctl = streamCtl;
         try {
-            const res = await fetch('../handlers/ai_chat.php', { method: 'POST', body: fd });
+            const res = await fetch('../handlers/ai_chat.php', { method: 'POST', body: fd, signal: ctl ? ctl.signal : undefined });
+            // A streamed reply; anything refused before the AI call is plain JSON
+            if ((res.headers.get('Content-Type') || '').includes('ndjson') && res.body) {
+                await readStream(res, ctl);
+                return;
+            }
             const data = await res.json();
             typing(false);
             if (!data.ok) { bubble('err', data.error || 'Something went wrong.'); return; }
@@ -401,47 +570,215 @@ if ($ai_res) {
             if (data.draft) showDraft(data.draft, data.phase, data.draft_id);
         } catch (err) {
             typing(false);
-            bubble('err', 'Could not reach the server. Check your connection and try again.');
+            if (err.name !== 'AbortError') {
+                bubble('err', 'Could not reach the server. Check your connection and try again.');
+            }
         } finally {
+            if (streamCtl === ctl) { streamCtl = null; stopMode(false); }
             busy = false; sendBtn.disabled = false; input.focus();
+        }
+    }
+
+    // Mid-stream the text can end inside **bold**; closing it for the preview
+    // stops the rest of the line flashing as literal asterisks.
+    function closeOpenBold(t) {
+        t = t.replace(/(^|[^*])\*$/, '$1');
+        return (t.match(/\*\*/g) || []).length % 2 ? t + '**' : t;
+    }
+
+    // Reads the reply as the server sends it, one event per line:
+    // start, delta (a few words), done, or error.
+    //
+    // Groq writes far faster than anyone reads, so a whole answer can land in a
+    // fraction of a second. Received text is queued and revealed at a steady
+    // pace instead, speeding up when a lot is waiting so long replies never lag.
+    async function readStream(res, ctl) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '', received = '', shown = 0, box = null, timer = 0;
+        let netDone = false, finished = false, stopped = false, note = '';
+
+        // Stop (or a hidden tab) skips the animation and shows everything received
+        let skip = false;
+        ctl.signal.addEventListener('abort', () => { skip = true; });
+
+        let revealEnd;
+        const revealed = new Promise(r => { revealEnd = r; });
+
+        const tick = () => {
+            timer = 0;
+            if (skip || document.hidden) shown = received.length;
+            const backlog = received.length - shown;
+            if (backlog > 0) {
+                shown = Math.min(received.length, shown + Math.max(2, Math.min(12, Math.ceil(backlog / 30))));
+                // Follow the text down only if the admin hasn't scrolled up to read
+                const atBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 60;
+                box.innerHTML = fmt(closeOpenBold(received.slice(0, shown))) + '<span class="jof-ai-caret"></span>';
+                if (atBottom) body.scrollTop = body.scrollHeight;
+            }
+            if (netDone && shown >= received.length) { revealEnd(); return; }
+            timer = setTimeout(tick, 16);
+        };
+
+        const handle = ev => {
+            if (ev.t === 'start') {
+                conversationId = ev.conversation_id;
+            } else if (ev.t === 'delta') {
+                if (!box) {
+                    typing(false);
+                    box = bubble('bot', '').querySelector('.bubble');
+                    box.innerHTML = '<span class="jof-ai-caret"></span>';
+                    tick();
+                }
+                received += ev.text;
+            } else if (ev.t === 'done') {
+                finished = true;
+                conversationId = ev.conversation_id;
+                if (ev.error) note = ev.error;
+            } else if (ev.t === 'error') {
+                finished = true;
+                typing(false);
+                bubble('err', ev.error || 'Something went wrong.');
+            }
+        };
+
+        try {
+            for (;;) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buf += decoder.decode(value, { stream: true });
+                let nl;
+                while ((nl = buf.indexOf('\n')) >= 0) {
+                    const line = buf.slice(0, nl).trim();
+                    buf = buf.slice(nl + 1);
+                    if (!line) continue;
+                    let ev = null;
+                    try { ev = JSON.parse(line); } catch (e) { continue; }
+                    handle(ev);
+                }
+            }
+        } catch (err) {
+            if (err.name !== 'AbortError') { skip = true; netDone = true; throw err; }
+            stopped = true;
+        }
+
+        netDone = true;
+        typing(false);
+        if (box) {
+            await revealed;
+            // Final render, without the cursor
+            box.innerHTML = fmt(received);
+            const tail = stopped ? 'Stopped' : note;
+            if (tail) {
+                const n = document.createElement('div');
+                n.className = 'jof-ai-stopped';
+                n.textContent = tail;
+                box.appendChild(n);
+            }
+        } else if (!finished && !stopped) {
+            bubble('err', 'The connection dropped before a reply arrived. Try again.');
         }
     }
 
     function showDraft(d, phase, id) {
         draftId = id || 0;
-        el('phase').value = phase || '';
+        if (d.times && typeof d.times === 'object' && !Array.isArray(d.times)) draftTimes = d.times;
+        el('phase').value = d.phase || phase || '';
         el('calories').value = d.calories || 0;
         el('goal').value = d.goal || '';
         el('diet_type').value = ['veg', 'nonveg', 'vegan'].includes(d.diet_type) ? d.diet_type : 'veg';
-        ['wake_up', 'breakfast', 'post_workout', 'lunch', 'snack', 'dinner', 'pre_sleep', 'guidelines']
-            .forEach(k => { el(k).value = d[k] || ''; });
-        document.getElementById('jofAiDraftCal').textContent = (d.calories || 0) + ' kcal';
+        SECTIONS.forEach(k => { el(k).value = d[k] || ''; });
+        document.getElementById('jofAiDraftCal').textContent = d.calories ? d.calories + ' kcal' : 'no calorie target';
+        draftTitle.textContent = editPlanId
+            ? 'Editing ' + (phase || editPlanName) + ' — review before updating'
+            : 'Draft plan — review before saving';
+        saveBtn.textContent = editPlanId ? 'Update ' + (el('phase').value || 'plan') : 'Save as new phase';
         draftBox.classList.add('open');
         draftBox.scrollTop = 0;
+        body.scrollTop = body.scrollHeight;   // keep the latest reply in view above the panel
+    }
+
+    // Typing a new phase name renames the plan on update — say so on the button
+    el('phase').addEventListener('input', () => {
+        if (!editPlanId) return;
+        const v = el('phase').value.trim();
+        const current = editPlanName.split(' - ').slice(1).join(' - ');
+        saveBtn.textContent = v && v !== current ? 'Update & rename to ' + v : 'Update ' + (v || 'plan');
+    });
+
+    function addLink(wrap, href, label) {
+        const a = document.createElement('a');
+        a.href = href; a.target = '_blank';
+        a.style.cssText = 'display:inline-block;margin-top:7px;font-size:12.5px;font-weight:700;color:#F25C2A;';
+        a.textContent = label;
+        wrap.querySelector('.bubble').appendChild(a);
+    }
+
+    // Updates overwrite a plan the member may already be following, so every
+    // update comes with a one-click way back.
+    function addUndo(wrap, undoId, planName) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'jof-ai-undo';
+        b.textContent = 'Undo';
+        b.addEventListener('click', async () => {
+            b.disabled = true;
+            const fd = new FormData();
+            fd.append('_csrf_token', CSRF);
+            fd.append('action', 'undo');
+            fd.append('draft_id', undoId);
+            try {
+                const res = await fetch('../handlers/ai_plan_save.php', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (!data.ok) { bubble('err', data.error || 'Could not undo.'); b.disabled = false; return; }
+                b.remove();
+                bubble('bot', 'Restored **' + (data.plan_name || planName) + '** to how it was before that update.');
+                // Undo also reverts a rename — bring the labels back in line
+                if (editPlanId && data.plan_id === editPlanId && data.plan_name) {
+                    editPlanName = data.plan_name;
+                    setSubtitle();
+                }
+                loadPlans(editPlanId || undefined);
+                draftBox.classList.remove('open');
+                draftId = 0;
+            } catch (err) {
+                bubble('err', 'Could not reach the server.');
+                b.disabled = false;
+            }
+        });
+        wrap.querySelector('.bubble').appendChild(b);
     }
 
     document.getElementById('jofAiDiscard').addEventListener('click', () => {
         draftBox.classList.remove('open');
         draftId = 0;
-        bubble('bot', 'Draft discarded. Tell me what to change and I can build another.');
+        if (editPlanId) {
+            bubble('bot', 'Changes discarded — **' + editPlanName + '** is exactly as it was.');
+            planSel.value = '0';
+            clearEdit();
+            setSubtitle();
+        } else {
+            bubble('bot', 'Draft discarded. Tell me what to change and I can build another.');
+        }
     });
 
-    document.getElementById('jofAiSave').addEventListener('click', async () => {
-        const btn = document.getElementById('jofAiSave');
-        if (btn.disabled) return;
-        btn.disabled = true; btn.textContent = 'Saving…';
+    saveBtn.addEventListener('click', async () => {
+        if (saveBtn.disabled) return;
+        const label = saveBtn.textContent;
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
 
         const fd = new FormData();
         fd.append('_csrf_token', CSRF);
         fd.append('member_id', memberSel.value);
         fd.append('draft_id', draftId);
+        if (editPlanId) fd.append('plan_id', editPlanId);
         fd.append('phase', el('phase').value);
         fd.append('goal', el('goal').value);
         fd.append('diet_type', el('diet_type').value);
         fd.append('calories', el('calories').value);
         fd.append('duration', 2);
-        ['wake_up', 'breakfast', 'post_workout', 'lunch', 'snack', 'dinner', 'pre_sleep', 'guidelines']
-            .forEach(k => fd.append(k, el(k).value));
+        fd.append('times', JSON.stringify(draftTimes));
+        SECTIONS.forEach(k => fd.append(k, el(k).value));
 
         try {
             const res = await fetch('../handlers/ai_plan_save.php', { method: 'POST', body: fd });
@@ -449,22 +786,33 @@ if ($ai_res) {
             if (!data.ok) { bubble('err', data.error || 'Could not save.'); return; }
             draftBox.classList.remove('open');
             draftId = 0;
-            const w = bubble('bot', 'Saved as **' + data.plan_name + '** and assigned to the member.');
-            const a = document.createElement('a');
-            a.href = data.view_url; a.target = '_blank';
-            a.style.cssText = 'display:inline-block;margin-top:7px;font-size:12.5px;font-weight:700;color:#F25C2A;';
-            a.textContent = 'Open the plan →';
-            w.querySelector('.bubble').appendChild(a);
+
+            if (data.updated) {
+                // The plan stays open, so further requests edit the saved version
+                const w = bubble('bot', data.renamed
+                    ? 'Updated and renamed to **' + data.plan_name + '**. The member sees the new version straight away.'
+                    : 'Updated **' + data.plan_name + '**. The member sees the new version straight away.');
+                if (data.renamed) {
+                    editPlanName = data.plan_name;
+                    setSubtitle();
+                    loadPlans(editPlanId);   // relabel the dropdown, keep this plan selected
+                }
+                addLink(w, data.view_url, 'Open the plan →');
+                addUndo(w, data.undo_draft_id, data.plan_name);
+            } else {
+                const w = bubble('bot', 'Saved as **' + data.plan_name + '** and assigned to the member.');
+                addLink(w, data.view_url, 'Open the plan →');
+                loadPlans();   // so the new phase can be opened and edited straight away
+            }
         } catch (err) {
             bubble('err', 'Could not reach the server while saving.');
         } finally {
-            btn.disabled = false; btn.textContent = 'Save as phase';
+            saveBtn.disabled = false; saveBtn.textContent = label;
         }
     });
 
-    if (memberSel.value !== '0') {
-        subtitle.textContent = 'Advising: ' + memberSel.options[memberSel.selectedIndex].text.trim();
-    }
+    setSubtitle();
+    if (memberSel.value !== '0') loadPlans();
 })();
 </script>
 <?php endif; ?>

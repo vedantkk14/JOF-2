@@ -205,7 +205,7 @@ require __DIR__ . '/_shell_top.php';
     </style>
 
     <div class="wrap">
-        <div class="page-head">
+        <div class="page-head" data-tour="diet-head">
             <div>
                 <h1>My Diet Plan</h1>
                 <p>Current Phase: <b id="planPhaseSub">—</b></p>
@@ -291,7 +291,7 @@ require __DIR__ . '/_shell_top.php';
                 </div>
 
                 <div class="plan-side">
-                    <div class="content-panel chat-panel">
+                    <div class="content-panel chat-panel" data-tour="diet-chat">
                         <div class="panel-header"><h3>💬 Ask About This Plan</h3></div>
                         <div class="chat-box">
                             <div class="chat-messages" id="chatMessages">

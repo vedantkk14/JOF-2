@@ -329,11 +329,16 @@ if (!function_exists('ai_context_to_text')) {
      * Renders the packet as the compact text block that goes into the prompt.
      * Roughly 1,500–2,500 tokens, which matters against Groq's per-minute cap.
      *
-     * @param bool $for_plan  true when generating a plan: the previous phase is
-     *                        reduced to an ingredient list so the model builds
-     *                        something new instead of rewording the old one.
+     * @param string     $purpose  'chat' | 'new_plan' | 'edit_plan'
+     *   chat       the plan in focus (or the latest) is included in full, so
+     *              questions about it can be answered
+     *   new_plan   the previous phase is reduced to an ingredient list, so the
+     *              model builds something new instead of rewording the old one
+     *   edit_plan  omitted: the plan being edited is supplied separately, and a
+     *              second copy here would only compete with it
+     * @param array|null $focus_plan  the diet_plans row the admin has open, if any
      */
-    function ai_context_to_text(array $ctx, array $targets, bool $for_plan = false): string
+    function ai_context_to_text(array $ctx, array $targets, string $purpose = 'chat', ?array $focus_plan = null): string
     {
         $m = $ctx['member'];
         $L = [];
@@ -397,17 +402,20 @@ if (!function_exists('ai_context_to_text')) {
                     . $p['diet_type'] . ' | created ' . date('d M Y', strtotime($p['created_at']));
             }
             $last = end($ctx['plans']);
-            $L[] = '';
-            if ($for_plan) {
+            if ($purpose === 'new_plan') {
                 // Names only, never the text — see ai_recent_ingredients()
+                $L[] = '';
                 $L[] = '## ALREADY USED IN "' . $last['plan_name'] . '" — DO NOT BUILD THE NEW PHASE AROUND THESE';
                 $L[] = ai_recent_ingredients($last);
                 $L[] = 'Choose different main proteins, different grains and different vegetables this time.';
-            } else {
-                $L[] = '## MOST RECENT PHASE IN FULL — "' . $last['plan_name'] . '"';
+            } elseif ($purpose === 'chat') {
+                $show = $focus_plan ?? $last;
+                $L[] = '';
+                $L[] = '## ' . ($focus_plan ? 'PLAN THE ADMIN HAS OPEN' : 'MOST RECENT PHASE')
+                    . ' IN FULL — "' . $show['plan_name'] . '"';
                 foreach (['breakfast', 'lunch', 'snack', 'dinner'] as $col) {
-                    if (trim((string) $last[$col]) !== '') {
-                        $L[] = $last[$col];
+                    if (trim((string) ($show[$col] ?? '')) !== '') {
+                        $L[] = $show[$col];
                     }
                 }
             }

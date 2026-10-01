@@ -129,6 +129,8 @@
             setInterval(pollMsgBadge, 10000);
         });
     </script>
+
+    <?php include __DIR__ . '/_tour.php'; ?>
 </body>
 
 </html>

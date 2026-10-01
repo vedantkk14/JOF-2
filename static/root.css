@@ -8964,9 +8964,37 @@ body.page-login_page {
     transition: all 0.3s;
 }
 
+.page-login_page .password-toggle {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.page-login_page .password-toggle:hover {
+    opacity: 1;
+}
+
+.page-login_page .password-toggle img {
+    width: 17px;
+    height: 17px;
+    display: block;
+}
+
 .page-login_page .form-input {
     width: 100%;
-    padding: 12px 15px 12px 45px;
+    padding: 12px 45px 12px 45px;
     border: 2px solid #e2e8f0;
     border-radius: 10px;
     font-size: 14px;
@@ -8983,6 +9011,10 @@ body.page-login_page {
 .page-login_page .form-input:focus+.input-icon {
     opacity: 1;
     filter: invert(48%) sepia(70%) saturate(2476%) hue-rotate(345deg) brightness(98%) contrast(93%);
+}
+
+.page-login_page .input-wrapper:has(.password-toggle) .password-toggle img {
+    filter: invert(38%) sepia(87%) saturate(1391%) hue-rotate(338deg) brightness(98%) contrast(96%);
 }
 
 .page-login_page .btn-primary {

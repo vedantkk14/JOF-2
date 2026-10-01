@@ -167,14 +167,14 @@ require __DIR__ . '/_shell_top.php';
 <div class="wrap">
 
     <?php if (empty($payments)): ?>
-        <div class="empty-state">
+        <div class="empty-state" data-tour="payments">
             <div class="big">💳</div>
             <h3>No payment history yet</h3>
             <p>Once you subscribe to a membership plan, your payments and invoices will show up here.</p>
         </div>
     <?php else: ?>
 
-        <div class="summary-row">
+        <div class="summary-row" data-tour="payments">
             <div class="summary-card">
                 <div class="lbl">Total Membership Duration</div>
                 <div class="val"><?= (int) $total_months ?> month<?= $total_months == 1 ? '' : 's' ?></div>

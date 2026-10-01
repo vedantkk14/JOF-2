@@ -586,6 +586,53 @@ if ($profile_incomplete) {
             background: var(--coral-dark);
         }
 
+        /* Incomplete profile: the one thing a new member should do first, so it's
+           red, sits at the top, and gently pulses to draw the eye. */
+        .profile-warning.urgent {
+            background: var(--red-tint);
+            border: 2px solid var(--red);
+            padding: 18px 20px;
+            box-shadow: 0 6px 20px rgba(229, 72, 77, .22);
+            animation: pwPulse 2.4s ease-in-out infinite;
+        }
+
+        .profile-warning.urgent .pw-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--red);
+            color: #fff;
+            font-size: 20px;
+        }
+
+        .profile-warning.urgent .pw-text {
+            color: #8A2A2D;
+            font-size: 14px;
+        }
+
+        .profile-warning.urgent .pw-text b {
+            font-size: 16px;
+            color: #6B1618;
+        }
+
+        .profile-warning.urgent .pw-btn {
+            background: var(--red);
+            font-size: 14px;
+            padding: 12px 22px;
+        }
+
+        .profile-warning.urgent .pw-btn:hover {
+            background: #C8383D;
+        }
+
+        @keyframes pwPulse {
+            0%, 100% { box-shadow: 0 6px 20px rgba(229, 72, 77, .22); }
+            50% { box-shadow: 0 6px 26px rgba(229, 72, 77, .42); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .profile-warning.urgent { animation: none; }
+        }
+
         @media (max-width: 560px) {
             .profile-warning {
                 flex-wrap: wrap;
@@ -748,6 +795,15 @@ if ($profile_incomplete) {
         .sub-line {
             font-size: 13.5px;
             color: var(--ink-soft);
+        }
+
+        .membership-card .big-line {
+            font-size: 20px;
+        }
+
+        .membership-card .sub-line,
+        .membership-card .kv-row {
+            font-size: 12.5px;
         }
 
         .divider {
@@ -1259,6 +1315,15 @@ if ($profile_incomplete) {
                 font-size: 22px;
             }
 
+            .membership-card .big-line {
+                font-size: 18px;
+            }
+
+            .membership-card .sub-line,
+            .membership-card .kv-row {
+                font-size: 13px;
+            }
+
             .amount-due {
                 font-size: 22px;
             }
@@ -1373,6 +1438,7 @@ if ($profile_incomplete) {
         }
 
         .sd {
+            position: relative;
             flex: 1 0 32px;
             min-width: 32px;
             display: flex;
@@ -1385,6 +1451,113 @@ if ($profile_incomplete) {
             border-radius: 10px;
             cursor: pointer;
             transition: background .15s ease;
+        }
+
+        .sd-note-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1.5px solid var(--border);
+            font-size: 8.5px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ink-faint);
+            cursor: pointer;
+        }
+
+        .sd.has-note .sd-note-btn {
+            border-color: var(--coral);
+            color: var(--coral-dark);
+            background: var(--coral-tint);
+        }
+
+        /* Note editor modal */
+        .note-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(20, 20, 30, .45);
+            z-index: 4000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .note-modal-overlay.open {
+            display: flex;
+        }
+
+        .note-modal {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 360px;
+            padding: 20px;
+        }
+
+        .note-modal h4 {
+            font-size: 14.5px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .note-modal h4 span {
+            color: var(--coral-dark);
+        }
+
+        .note-modal textarea {
+            width: 100%;
+            resize: none;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font: inherit;
+            font-size: 13.5px;
+            color: var(--ink);
+        }
+
+        .note-modal textarea:focus {
+            outline: none;
+            border-color: var(--coral);
+        }
+
+        .note-modal-acts {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .note-modal-cancel,
+        .note-modal-save {
+            border: none;
+            border-radius: 10px;
+            padding: 9px 16px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .note-modal-cancel {
+            background: var(--bg);
+            color: var(--ink-soft);
+        }
+
+        .note-modal-save {
+            background: var(--coral);
+            color: #fff;
+        }
+
+        .note-modal-save:hover {
+            background: var(--coral-dark);
         }
 
         .sd:hover {
@@ -1534,7 +1707,7 @@ if ($profile_incomplete) {
                 </div>
             </div>
 
-            <nav class="nav-group">
+            <nav class="nav-group" data-tour="nav">
                 <a class="nav-item active" href="user_dashboard.php">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
@@ -1581,6 +1754,15 @@ if ($profile_incomplete) {
             </nav>
 
             <div class="nav-bottom">
+                <a class="nav-item" href="#" data-tour-restart>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M9.6 9.3a2.5 2.5 0 014.7 1.1c0 1.7-2.4 2-2.4 3.4" />
+                        <path d="M12 17h.01" />
+                    </svg>
+                    <span class="nav-label">Take a tour</span>
+                </a>
                 <a class="nav-item" href="../../auth/logout.php">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
@@ -1597,7 +1779,7 @@ if ($profile_incomplete) {
         <main class="main">
             <div class="topbar">
                 <div class="topbar-left">
-                    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+                    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" data-tour="menu-btn">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M4 7h16M4 12h16M4 17h16" />
@@ -1607,7 +1789,7 @@ if ($profile_incomplete) {
                 </div>
                 <div class="topbar-right">
                     <div class="shell-dropdown-container">
-                        <button class="icon-btn" id="msgBellBtn" aria-label="Messages" title="Messages from your trainer">
+                        <button class="icon-btn" id="msgBellBtn" aria-label="Messages" title="Messages from your trainer" data-tour="messages">
                             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
@@ -1639,13 +1821,13 @@ if ($profile_incomplete) {
             </div>
 
             <?php if ($profile_incomplete): ?>
-                <div class="profile-warning">
+                <div class="profile-warning urgent" role="alert">
                     <div class="pw-icon">⚠</div>
                     <div class="pw-text">
                         <b>Your profile is incomplete.</b>
-                        Please complete it so your trainer can set up the right plan for you.
+                        Please complete it now so your trainer can set up the right plan for you.
                     </div>
-                    <a class="pw-btn" href="user_profile.php">Complete Profile</a>
+                    <a class="pw-btn" href="user_profile.php">Complete Profile Now</a>
                 </div>
             <?php endif; ?>
 
@@ -1721,7 +1903,7 @@ if ($profile_incomplete) {
             <div class="grid">
 
                 <!-- Membership -->
-                <div class="card">
+                <div class="card membership-card" data-tour="membership-card">
                     <div class="card-head">
                         <div class="card-title">
                             <div class="card-icon" style="background:var(--coral-tint); color:var(--coral-dark);">
@@ -1827,7 +2009,7 @@ if ($profile_incomplete) {
                 </div>
 
                 <!-- Diet Plan -->
-                <div class="card">
+                <div class="card" data-tour="diet-card">
                     <div class="card-head">
                         <div class="card-title">
                             <div class="card-icon" style="background:#EAF2FF; color:#3B6FE0;">
@@ -1929,14 +2111,14 @@ if ($profile_incomplete) {
                 </div>
 
                 <!-- Workout streak -->
-                <div class="card span-2" id="streakCard" data-csrf="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
+                <div class="card span-2" id="streakCard" data-tour="streak-card" data-csrf="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
                     <div class="card-head">
                         <div class="card-title">
                             <div class="card-icon" style="background:var(--coral-tint); color:var(--coral-dark);">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                     stroke-linecap="round" stroke-linejoin="round">
                                     <path
-                                        d="M12 2s4 4 4 8a4 4 0 01-8 0c0-1 .3-2 .8-2.8C8 9 8 12 8 12s-2-1.5-2-4C6 5 12 2 12 2z" />
+                                        d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" />
                                 </svg>
                             </div>
                             Workout Streak
@@ -1949,7 +2131,7 @@ if ($profile_incomplete) {
                             <div class="fl">
                                 <svg viewBox="0 0 24 24" fill="currentColor">
                                     <path
-                                        d="M12 2s5 4.5 5 9a5 5 0 11-10 0c0-1.2.4-2.3 1-3.2C7.5 10 7 12.5 7 12.5S5 10.7 5 7.5C5 4 12 2 12 2z" />
+                                        d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" />
                                 </svg>
                             </div>
                             <div>
@@ -1971,10 +2153,12 @@ if ($profile_incomplete) {
 
                     <div class="streak-strip" id="streakStrip">
                         <?php foreach ($streak['strip'] as $d): ?>
-                            <button type="button" class="sd <?= $d['done'] ? 'on' : '' ?> <?= $d['today'] ? 'is-today' : '' ?>"
-                                data-date="<?= $d['date'] ?>" title="<?= $d['date'] ?>">
+                            <button type="button" class="sd <?= $d['done'] ? 'on' : '' ?> <?= $d['today'] ? 'is-today' : '' ?> <?= $d['note'] !== '' ? 'has-note' : '' ?>"
+                                data-date="<?= $d['date'] ?>" data-note="<?= htmlspecialchars($d['note'], ENT_QUOTES) ?>"
+                                title="<?= $d['date'] . ($d['note'] !== '' ? ' — ' . htmlspecialchars($d['note'], ENT_QUOTES) : '') ?>">
                                 <span class="sd-dow"><?= substr($d['label'], 0, 1) ?></span>
                                 <span class="sd-dot"></span>
+                                <?php if ($d['done']): ?><span class="sd-note-btn" title="Add/edit note">✎</span><?php endif; ?>
                                 <span class="sd-day"><?= $d['day'] ?></span>
                             </button>
                         <?php endforeach; ?>
@@ -1991,6 +2175,18 @@ if ($profile_incomplete) {
                     </div>
                 </div>
 
+            </div>
+
+            <!-- Workout note editor (replaces the native prompt() popup) -->
+            <div class="note-modal-overlay" id="noteModalOverlay">
+                <div class="note-modal">
+                    <h4>Note for <span id="noteModalDate"></span></h4>
+                    <textarea id="noteModalInput" maxlength="255" rows="3" placeholder="e.g. Leg day, felt strong"></textarea>
+                    <div class="note-modal-acts">
+                        <button type="button" class="note-modal-cancel" id="noteModalCancel">Cancel</button>
+                        <button type="button" class="note-modal-save" id="noteModalSave">Save</button>
+                    </div>
+                </div>
             </div>
 
             <footer class="note">JOF India · Joshuaa's Outdoor Fitness — Member Portal</footer>
@@ -2190,10 +2386,13 @@ if ($profile_incomplete) {
                 logBtn.querySelector('.tx').textContent =
                     s.logged_today ? 'Logged today' : "Log today's workout";
 
+                const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
                 strip.innerHTML = s.strip.map(d =>
-                    `<button type="button" class="sd ${d.done ? 'on' : ''} ${d.today ? 'is-today' : ''}"` +
-                    ` data-date="${d.date}" title="${d.date}">` +
+                    `<button type="button" class="sd ${d.done ? 'on' : ''} ${d.today ? 'is-today' : ''} ${d.note ? 'has-note' : ''}"` +
+                    ` data-date="${d.date}" data-note="${esc(d.note)}"` +
+                    ` title="${d.date}${d.note ? ' — ' + esc(d.note) : ''}">` +
                     `<span class="sd-dow">${d.label[0]}</span><span class="sd-dot"></span>` +
+                    (d.done ? '<span class="sd-note-btn" title="Add/edit note">✎</span>' : '') +
                     `<span class="sd-day">${d.day}</span></button>`
                 ).join('');
 
@@ -2223,13 +2422,63 @@ if ($profile_incomplete) {
                     .finally(() => { busy = false; logBtn.disabled = false; });
             }
 
+            // ── Note editor (a small modal in place of the native prompt()) ──
+            const noteOverlay = document.getElementById('noteModalOverlay');
+            const noteDateEl = document.getElementById('noteModalDate');
+            const noteInput = document.getElementById('noteModalInput');
+            let noteDate = null;
+
+            function editNote(btn) {
+                noteDate = btn.dataset.date;
+                noteDateEl.textContent = noteDate;
+                noteInput.value = btn.dataset.note || '';
+                noteOverlay.classList.add('open');
+                noteInput.focus();
+            }
+
+            function closeNoteModal() {
+                noteOverlay.classList.remove('open');
+                noteDate = null;
+            }
+
+            function saveNote() {
+                if (busy || !noteDate) return;
+                const note = noteInput.value;
+                const date = noteDate;
+                closeNoteModal();
+                busy = true;
+                fetch('../../handlers/workout_log.php', {
+                    method: 'POST',
+                    body: new URLSearchParams({ _csrf_token: CSRF, date: date, action: 'note', note })
+                })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.success) render(d.stats);
+                        else showToast('Could not save', d.message || 'Please try again.');
+                    })
+                    .catch(() => showToast('Offline', 'Could not reach the server.'))
+                    .finally(() => { busy = false; });
+            }
+
+            document.getElementById('noteModalCancel').addEventListener('click', closeNoteModal);
+            document.getElementById('noteModalSave').addEventListener('click', saveNote);
+            noteOverlay.addEventListener('click', (e) => { if (e.target === noteOverlay) closeNoteModal(); });
+            noteInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveNote(); }
+                if (e.key === 'Escape') closeNoteModal();
+            });
+
             logBtn.addEventListener('click', () => toggleDay(todayLocal()));
             strip.addEventListener('click', (e) => {
+                const noteBtn = e.target.closest('.sd-note-btn');
+                if (noteBtn) { e.stopPropagation(); editNote(noteBtn.closest('.sd')); return; }
                 const b = e.target.closest('.sd');
                 if (b) toggleDay(b.dataset.date);
             });
         })();
     </script>
+
+    <?php include __DIR__ . '/_tour.php'; ?>
 </body>
 
 </html>

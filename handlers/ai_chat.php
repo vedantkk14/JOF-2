@@ -5,7 +5,7 @@
  * The assistant's single chat endpoint (POST → JSON).
  *
  * Two modes:
- *   mode = "chat"  → a normal reply, as text
+ *   mode = "chat"  → a normal reply, as text (streamed line by line when stream=1)
  *   mode = "plan"  → a full diet plan as JSON, stored as a draft for review
  *
  * The member is chosen by the admin in the widget's dropdown, so this handler
@@ -52,6 +52,11 @@ $admin      = get_session_user();
 $admin_id   = (int) $admin['id'];
 $admin_name = html_entity_decode($admin['name'] ?? '', ENT_QUOTES);
 
+// Nothing below touches the session. Releasing it now matters: PHP locks the
+// session file for the life of a request, so a 10-second AI call would otherwise
+// freeze every other page the admin opens in the meantime.
+session_write_close();
+
 // Daily quota per admin, so one person can't exhaust the Groq free tier
 if (AI_DAILY_REQUEST_CAP > 0) {
     $wait = rl_retry_after($conn, 'ai_request', (string) $admin_id, AI_DAILY_REQUEST_CAP, 86400);
@@ -65,7 +70,9 @@ $member_id       = (int) ($_POST['member_id'] ?? 0);
 $conversation_id = (int) ($_POST['conversation_id'] ?? 0);
 $draft_id        = (int) ($_POST['draft_id'] ?? 0);
 $message         = trim($_POST['message'] ?? '');
-$existing_draft  = null;   // set below when revising an existing draft
+$plan_id         = (int) ($_POST['plan_id'] ?? 0);   // saved plan open in "Working on"
+$existing_draft  = null;   // set below when revising a draft or editing a saved plan
+$target_plan     = null;   // the saved diet_plans row being edited, if any
 
 if ($message === '' && $mode !== 'plan') {
     ai_fail('Type a message first.');
@@ -85,11 +92,20 @@ if ($member_id > 0) {
     }
     $member_name = $ctx['member']['full_name'];
 
+    // The saved plan the admin has open, if any. Checked against this member, so
+    // a stray or crafted id can never reach someone else's plan.
+    if ($plan_id > 0) {
+        $target_plan = ai_member_owns_plan($conn, $member_id, $plan_id);
+        if (!$target_plan) {
+            ai_fail('That plan was not found for this member.');
+        }
+    }
+
     // A revision carries the goal of the draft being revised. Without this, a
     // message like "make it vegan" reads as no goal at all and the targets
     // silently fall back to maintenance calories, undoing a fat-loss deficit.
     if ($draft_id > 0) {
-        $dq = $conn->prepare("SELECT draft_json FROM ai_plan_drafts WHERE id = ? AND member_id = ? LIMIT 1");
+        $dq = $conn->prepare("SELECT draft_json, target_plan_id FROM ai_plan_drafts WHERE id = ? AND member_id = ? LIMIT 1");
         $dq->bind_param('ii', $draft_id, $member_id);
         $dq->execute();
         if ($drow = $dq->get_result()->fetch_assoc()) {
@@ -97,7 +113,37 @@ if ($member_id > 0) {
             if (!is_array($existing_draft)) {
                 $existing_draft = null;
             }
+            // A draft made while editing a saved plan stays tied to that plan
+            if ($target_plan === null && !empty($drow['target_plan_id'])) {
+                $target_plan = ai_member_owns_plan($conn, $member_id, (int) $drow['target_plan_id']);
+            }
         }
+    }
+
+    // Editing a saved plan with no draft yet: the plan itself is the starting point
+    if ($mode === 'plan' && $existing_draft === null && $target_plan !== null) {
+        $existing_draft = ai_columns_to_draft($target_plan);
+        $existing_draft['phase'] = ai_phase_of($target_plan['plan_name']);
+    }
+
+    // What the admin currently sees in the panel wins over any stored version:
+    // it may hold hand edits made since the last reply, and revising from the
+    // stored copy would silently throw those away.
+    $posted = json_decode((string) ($_POST['current_draft'] ?? ''), true);
+    if ($mode === 'plan' && is_array($posted)) {
+        $base = $existing_draft ?? [];
+        foreach (array_merge(array_keys(ai_plan_sections()), ['goal', 'diet_type', 'phase']) as $k) {
+            if (isset($posted[$k]) && is_string($posted[$k])) {
+                $base[$k] = $posted[$k];
+            }
+        }
+        if (isset($posted['calories'])) {
+            $base['calories'] = (int) $posted['calories'];
+        }
+        if (isset($posted['times']) && is_array($posted['times'])) {
+            $base['times'] = array_filter(array_intersect_key($posted['times'], ai_plan_sections()), 'is_string');
+        }
+        $existing_draft = $base;
     }
 
     // Goal for the targets: the draft being revised, else what the admin asked
@@ -154,11 +200,19 @@ if ($conversation_id === 0) {
 }
 
 // ── Build the prompt ──────────────────────────────────────────────
+$is_edit = $mode === 'plan' && $existing_draft !== null;
+$context_purpose = $mode !== 'plan' ? 'chat' : ($is_edit ? 'edit_plan' : 'new_plan');
+
+// Some older plans never recorded a calorie figure (stored as 0). Editing one of
+// those must not impose the formula's target, or the model would rebalance meals
+// the admin never asked it to touch. An explicit calorie request still applies.
+$enforce_calories = !($is_edit && (int) ($existing_draft['calories'] ?? 0) === 0 && empty($targets['overridden']));
+
 $messages = [];
 $messages[] = [
     'role'    => 'system',
     'content' => $ctx
-        ? ai_system_prompt_member(ai_context_to_text($ctx, $targets, $mode === 'plan'), $member_name)
+        ? ai_system_prompt_member(ai_context_to_text($ctx, $targets, $context_purpose, $target_plan), $member_name)
         : ai_system_prompt_general(),
 ];
 
@@ -193,22 +247,105 @@ if ($mode === 'plan') {
         $goal = $message !== '' ? $message : (!empty($ctx['plans']) ? end($ctx['plans'])['goal'] : 'General fitness');
     }
 
-    // Revising an existing draft: hand the current version back for editing
-    if ($existing_draft !== null) {
+    // Editing: hand the plan as it stands back to the model. Meal times are left
+    // out — they aren't the model's to change, and they're restored afterwards.
+    if ($is_edit) {
+        $for_model = $existing_draft;
+        unset($for_model['times']);
         $messages[] = [
             'role'    => 'system',
-            'content' => "The current draft plan is below. Apply the admin's requested change and return the COMPLETE plan again in the same JSON shape. Keep the calorie and macro targets unchanged unless the admin explicitly asked to change them.\n\n"
-                . json_encode($existing_draft, JSON_UNESCAPED_UNICODE),
+            'content' => "The plan as it currently stands is below. Apply the admin's requested change and return the COMPLETE plan in the same JSON shape — every section, including the ones you did not change. Keep the calorie and macro targets unchanged unless the admin explicitly asked to change them.\n\n"
+                . json_encode($for_model, JSON_UNESCAPED_UNICODE),
         ];
+    }
+
+    // The phase name the plan should carry: what's in the panel or draft, else the
+    // saved plan's own, else the next number in the member's sequence.
+    $phase_hint = trim((string) ($existing_draft['phase'] ?? ''));
+    if ($phase_hint === '') {
+        $phase_hint = $target_plan
+            ? ai_phase_of($target_plan['plan_name'])
+            : ai_next_phase_name($conn, ai_client_name_for_member($conn, $member_id));
     }
 
     $messages[] = [
         'role'    => 'system',
-        'content' => ai_plan_instructions($targets, $diet_type, $goal, (string) ($targets['override_note'] ?? '')),
+        'content' => ai_plan_instructions(
+            $targets,
+            $diet_type,
+            $goal,
+            (string) ($targets['override_note'] ?? ''),
+            $is_edit ? 'edit' : 'new',
+            $enforce_calories,
+            $phase_hint
+        ),
     ];
     $messages[] = ['role' => 'user', 'content' => $message !== '' ? $message : 'Create the next phase for this member.'];
 } else {
     $messages[] = ['role' => 'user', 'content' => $message];
+}
+
+// ── Chat, streamed ────────────────────────────────────────────────
+// The reply is sent to the browser as it's written, one JSON object per line:
+//   {"t":"start"} → {"t":"delta","text":"..."} × n → {"t":"done"} or {"t":"error"}
+// Plans don't stream — Groq only releases a JSON reply once it's complete.
+if ($mode === 'chat' && ($_POST['stream'] ?? '') === '1') {
+    @set_time_limit(GROQ_TIMEOUT + 30);
+    // Keep running if the admin presses Stop, so the partial reply is still saved
+    ignore_user_abort(true);
+
+    // Every layer that could hold output back is switched off
+    @ini_set('zlib.output_compression', '0');
+    @ini_set('output_buffering', '0');
+    if (function_exists('apache_setenv')) {
+        @apache_setenv('no-gzip', '1');
+    }
+    header('Content-Type: application/x-ndjson; charset=utf-8');
+    header('Cache-Control: no-cache');
+    header('X-Accel-Buffering: no');
+    while (ob_get_level() > 0) {
+        ob_end_flush();
+    }
+    ob_implicit_flush(true);
+
+    $emit = function (array $event): void {
+        echo json_encode($event, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE), "\n";
+        flush();
+    };
+
+    $emit(['t' => 'start', 'conversation_id' => $conversation_id]);
+    $result = groq_chat_stream($messages, function (string $text) use ($emit): void {
+        $emit(['t' => 'delta', 'text' => $text]);
+    });
+
+    if (AI_DAILY_REQUEST_CAP > 0) {
+        rl_hit($conn, 'ai_request', (string) $admin_id);
+    }
+
+    $reply = $result['content'];
+    if ($reply === '') {
+        $emit(['t' => 'error', 'error' => $result['error'] ?: 'Stopped.', 'retry_after' => $result['retry_after']]);
+        exit;
+    }
+
+    // A stopped or cut-off reply is saved as far as it got, so the conversation
+    // history matches what the admin actually saw.
+    $um = $conn->prepare("INSERT INTO ai_messages (conversation_id, role, content) VALUES (?, 'user', ?)");
+    $um->bind_param('is', $conversation_id, $message);
+    $um->execute();
+    $am = $conn->prepare("INSERT INTO ai_messages (conversation_id, role, content, tokens_in, tokens_out) VALUES (?, 'assistant', ?, ?, ?)");
+    $am->bind_param('isii', $conversation_id, $reply, $result['usage']['in'], $result['usage']['out']);
+    $am->execute();
+
+    $emit([
+        't'               => 'done',
+        'reply'           => $reply,
+        'conversation_id' => $conversation_id,
+        'mode'            => 'chat',
+        'stopped'         => $result['aborted'],
+        'error'           => $result['ok'] ? '' : $result['error'],
+    ]);
+    exit;
 }
 
 // ── Call Groq ─────────────────────────────────────────────────────
@@ -241,15 +378,29 @@ $response = [
 
 if ($mode === 'plan') {
     $draft = $result['json'];
-    // The targets are authoritative — overwrite whatever the model put here
-    if ($targets['usable']) {
+    // The targets are authoritative — overwrite whatever the model put here.
+    // (A plan with no recorded calories keeps none, unless one was requested.)
+    if (!$enforce_calories) {
+        $draft['calories'] = 0;
+    } elseif ($targets['usable']) {
         $draft['calories'] = $targets['target_calories'];
     }
     $draft['diet_type'] = in_array($draft['diet_type'] ?? '', ['veg', 'nonveg', 'vegan'], true) ? $draft['diet_type'] : 'veg';
 
+    // Meal times aren't the model's to change — carry them over from what was edited
+    if ($is_edit && !empty($existing_draft['times'])) {
+        $draft['times'] = $existing_draft['times'];
+    }
+
+    // The model may rename the phase when asked, but only to a valid name.
+    // Anything it gets wrong falls back to the name it was given.
+    $phase_check = ai_validate_phase((string) ($draft['phase'] ?? ''));
+    $draft['phase'] = $phase_check['ok'] ? $phase_check['phase'] : $phase_hint;
+
     $json = json_encode($draft, JSON_UNESCAPED_UNICODE);
-    $di = $conn->prepare("INSERT INTO ai_plan_drafts (conversation_id, member_id, draft_json) VALUES (?, ?, ?)");
-    $di->bind_param('iis', $conversation_id, $member_id, $json);
+    $target_id = $target_plan ? (int) $target_plan['id'] : null;
+    $di = $conn->prepare("INSERT INTO ai_plan_drafts (conversation_id, member_id, draft_json, target_plan_id) VALUES (?, ?, ?, ?)");
+    $di->bind_param('iisi', $conversation_id, $member_id, $json, $target_id);
     $di->execute();
     $new_draft_id = (int) $conn->insert_id;
 
@@ -261,8 +412,10 @@ if ($mode === 'plan') {
     $response['reply']    = $summary;
     $response['draft']    = $draft;
     $response['draft_id'] = $new_draft_id;
-    $response['phase']    = ai_next_phase_name($conn, ai_client_name_for_member($conn, $member_id));
-    $response['targets']  = $targets;
+    $response['phase']            = $draft['phase'];
+    $response['target_plan_id']   = $target_plan ? (int) $target_plan['id'] : 0;
+    $response['target_plan_name'] = $target_plan['plan_name'] ?? '';
+    $response['targets']          = $targets;
 } else {
     $reply = $result['content'];
     $am = $conn->prepare("INSERT INTO ai_messages (conversation_id, role, content, tokens_in, tokens_out) VALUES (?, 'assistant', ?, ?, ?)");

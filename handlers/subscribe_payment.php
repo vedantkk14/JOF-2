@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../auth/auth_check.php';
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../auth/profile_helper.php';
+require_once __DIR__ . '/../auth/membership_helper.php';
 
 header('Content-Type: application/json');
 
@@ -16,6 +17,26 @@ $uid = (int) $user['id'];
 $member_id = get_user_member_id($conn, $uid);
 if (!$member_id) {
     echo json_encode(['success' => false, 'error' => 'Please complete your profile first.']);
+    exit;
+}
+
+// Mirrors the gating on templates/user_side/user_membership.php — a member can't apply
+// again while a request is already pending review, or while their current plan still
+// has more than 10 days left.
+$pending_already = membership_pending_request($conn, $member_id);
+$cstmt = $conn->prepare("SELECT * FROM member_payments WHERE member_id = ? AND membership_type != 'Pending Setup' ORDER BY created_at DESC LIMIT 1");
+$cstmt->bind_param('i', $member_id);
+$cstmt->execute();
+$confirmed_payment = $cstmt->get_result()->fetch_assoc();
+$status = membership_status_info($conn, $confirmed_payment, '');
+$renew_window_open = $status['status'] === 'none' || $status['status'] === 'expired' || ($status['days_remaining'] !== null && $status['days_remaining'] <= 10);
+
+if ($pending_already) {
+    echo json_encode(['success' => false, 'error' => 'You already have a request awaiting verification.']);
+    exit;
+}
+if (!$renew_window_open) {
+    echo json_encode(['success' => false, 'error' => 'Your current plan is still active. You can subscribe again once it\'s within 10 days of expiry.']);
     exit;
 }
 

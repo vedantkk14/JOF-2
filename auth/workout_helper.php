@@ -54,6 +54,28 @@ function workout_toggle_day(mysqli $conn, int $user_id, string $date): bool
 }
 
 /**
+ * Save/clear the note on a day that's already logged. A day has to be logged
+ * first — there's nothing to attach a note to otherwise.
+ * @return bool  true if a logged day was found and updated
+ */
+function workout_set_note(mysqli $conn, int $user_id, string $date, string $note): bool
+{
+    ensure_workout_table($conn);
+    $chk = mysqli_prepare($conn, "SELECT 1 FROM workout_logs WHERE user_id = ? AND workout_date = ?");
+    mysqli_stmt_bind_param($chk, 'is', $user_id, $date);
+    mysqli_stmt_execute($chk);
+    if (!mysqli_stmt_get_result($chk)->fetch_row()) {
+        return false; // nothing logged on this day to attach a note to
+    }
+
+    $note = trim($note) === '' ? null : mb_substr(trim($note), 0, 255);
+    $stmt = mysqli_prepare($conn, "UPDATE workout_logs SET note = ? WHERE user_id = ? AND workout_date = ?");
+    mysqli_stmt_bind_param($stmt, 'sis', $note, $user_id, $date);
+    mysqli_stmt_execute($stmt);
+    return true;
+}
+
+/**
  * Compute every streak figure the dashboard card needs.
  *
  * @return array{
@@ -67,12 +89,16 @@ function workout_streak_stats(mysqli $conn, int $user_id): array
     ensure_workout_table($conn);
 
     $dates = [];
-    $stmt = mysqli_prepare($conn, "SELECT workout_date FROM workout_logs WHERE user_id = ? ORDER BY workout_date ASC");
+    $notes = [];
+    $stmt = mysqli_prepare($conn, "SELECT workout_date, note FROM workout_logs WHERE user_id = ? ORDER BY workout_date ASC");
     mysqli_stmt_bind_param($stmt, 'i', $user_id);
     mysqli_stmt_execute($stmt);
     $res = mysqli_stmt_get_result($stmt);
     while ($row = mysqli_fetch_assoc($res)) {
         $dates[] = $row['workout_date'];
+        if ($row['note'] !== null && $row['note'] !== '') {
+            $notes[$row['workout_date']] = $row['note'];
+        }
     }
 
     $today   = new DateTimeImmutable('today');
@@ -143,6 +169,7 @@ function workout_streak_stats(mysqli $conn, int $user_id): array
             'day'   => $day->format('j'),
             'done'  => isset($set[$key]),
             'today' => $i === 0,
+            'note'  => $notes[$key] ?? '',
         ];
     }
 

@@ -38,6 +38,12 @@ $membership_info   = membership_status_info($conn, $latest_payment, $member['mem
 $current_plan_name = $membership_info['plan_name'];
 $days_remaining    = $membership_info['days_remaining'];
 $expiry_status      = $membership_info['status'];
+
+// New subscriptions/renewals are blocked while a request is already pending review,
+// or while the current plan still has more than 10 days left — the member can apply
+// again once it's about to expire. Mirrored server-side in subscribe_payment.php.
+$renew_window_open = $expiry_status === 'none' || $expiry_status === 'expired' || ($days_remaining !== null && $days_remaining <= 10);
+$can_subscribe     = !$pending_plan_request && $renew_window_open;
 $membership_pause   = $member_id ? membership_pause_info($conn, $member_id) : null;
 $membership_extension = ($member_id && !$membership_pause) ? membership_extension_info($conn, $member_id) : null;
 
@@ -159,12 +165,21 @@ require __DIR__ . '/_shell_top.php';
     .plan-features li { display: flex; align-items: flex-start; gap: 7px; font-size: 11.5px; margin-bottom: 7px; color: var(--ink); }
     .plan-features li::before { content: '✓'; color: var(--green); font-weight: 800; flex-shrink: 0; }
 
-    .plan-subscribe { padding: 0 18px 18px; }
+    .plan-subscribe { padding: 14px 18px 18px; }
     .subscribe-btn {
         display: block; width: 100%; text-align: center; padding: 10px 14px; border-radius: 10px;
         background: var(--coral); color: #fff; font-weight: 700; font-size: 13px; border: none; cursor: pointer; font-family: inherit;
     }
     .subscribe-btn:hover { background: var(--coral-dark); }
+    .subscribe-btn.locked { display: flex; align-items: center; justify-content: center; gap: 7px; background: #fff; color: var(--ink-faint); cursor: not-allowed; border: 1.5px solid var(--border); }
+    .subscribe-btn.locked svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .pending-banner {
+        display: flex; align-items: center; gap: 10px; background: #FFF7ED; border: 1px solid #FED7AA; color: #9A3412;
+        padding: 12px 16px; border-radius: 12px; font-size: 13.5px; margin-bottom: 16px;
+    }
+    .pending-banner svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .pending-banner b { font-weight: 800; }
 
     .empty-card { text-align: center; padding: 50px 20px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); color: var(--ink-faint); }
 
@@ -299,7 +314,21 @@ require __DIR__ . '/_shell_top.php';
         <p>Your current plan, and everything else we offer.</p>
     </div>
 
-    <div class="current-hero <?= $expiry_status === 'none' ? 'none' : ($expiry_status === 'expired' ? 'expired' : '') ?>">
+    <?php if ($pending_plan_request): ?>
+        <div class="pending-banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <b>You've already applied for<?= $pending_plan_request['plan_name'] !== '' ? ' ' . e($pending_plan_request['plan_name']) : ' a plan' ?>.</b>
+            Awaiting your trainer's verification.
+        </div>
+    <?php elseif (!$renew_window_open): ?>
+        <div class="pending-banner" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E3A8A;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <b>Your plan is active with <?= (int) $days_remaining ?> day<?= (int) $days_remaining === 1 ? '' : 's' ?> left.</b>
+            You can subscribe to a new plan once you're within 10 days of expiry.
+        </div>
+    <?php endif; ?>
+
+    <div data-tour="membership-plans" class="current-hero <?= $expiry_status === 'none' ? 'none' : ($expiry_status === 'expired' ? 'expired' : '') ?>">
         <div class="current-hero-row">
             <div>
                 <?php if ($membership_pause): ?>
@@ -418,7 +447,14 @@ require __DIR__ . '/_shell_top.php';
                     <?php endif; ?>
                     <?php if (!$is_current): ?>
                         <div class="plan-subscribe">
-                            <button type="button" class="subscribe-btn" data-plan-id="<?= (int) $p['id'] ?>" onclick="openSubscribeModal(this.dataset.planId)">Subscribe</button>
+                            <?php if ($can_subscribe): ?>
+                                <button type="button" class="subscribe-btn" data-plan-id="<?= (int) $p['id'] ?>" onclick="openSubscribeModal(this.dataset.planId)">Subscribe</button>
+                            <?php else: ?>
+                                <button type="button" class="subscribe-btn locked" disabled title="<?= $pending_plan_request ? 'A request is already pending review' : 'Available once your current plan is within 10 days of expiry' ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+                                    <?= $pending_plan_request ? 'Pending' : 'Locked' ?>
+                                </button>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>
