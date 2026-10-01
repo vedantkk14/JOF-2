@@ -280,6 +280,26 @@ if ($ai_res) {
     <?php endif; ?>
 </div>
 
+<?php if ($ai_problem !== ''): ?>
+<script>
+// No Groq key configured yet — the full chat script below never loads, so the
+// button would otherwise look clickable but silently do nothing. Wire up just
+// enough to open/close the card and show the "Setup needed" message it already
+// contains, instead of a dead button.
+(function () {
+    const fab = document.getElementById('jofAiFab');
+    const card = document.getElementById('jofAiCard');
+    function openCard(open) {
+        card.classList.toggle('open', open);
+        fab.classList.toggle('hidden', open);
+    }
+    fab.addEventListener('click', () => openCard(true));
+    document.getElementById('jofAiClose').addEventListener('click', () => openCard(false));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && card.classList.contains('open')) openCard(false); });
+})();
+</script>
+<?php endif; ?>
+
 <?php if ($ai_problem === ''): ?>
 <script>
 (function () {
