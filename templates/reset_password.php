@@ -75,12 +75,24 @@ if (isset($_SESSION['status_msg'])) {
 
                         <div class="input-group">
                             <label style="display:block; margin-bottom:8px; font-weight:600; font-size:12px;">New Password</label>
-                            <input type="password" name="password" class="form-input" placeholder="New Password" required minlength="8">
+                            <div class="input-wrapper">
+                                <input type="password" name="password" class="form-input" placeholder="New Password" required minlength="8">
+                                <img src="../icons/lock-solid-full.svg" class="input-icon" alt="lock">
+                                <button type="button" class="password-toggle" aria-label="Show password" title="Show password">
+                                    <img src="../icons/eye-solid-full.svg" alt="Toggle password visibility">
+                                </button>
+                            </div>
                         </div>
 
                         <div class="input-group">
                             <label style="display:block; margin-bottom:8px; font-weight:600; font-size:12px;">Confirm Password</label>
-                            <input type="password" name="confirm_password" class="form-input" placeholder="Confirm Password" required minlength="8">
+                            <div class="input-wrapper">
+                                <input type="password" name="confirm_password" class="form-input" placeholder="Confirm Password" required minlength="8">
+                                <img src="../icons/lock-solid-full.svg" class="input-icon" alt="lock">
+                                <button type="button" class="password-toggle" aria-label="Show password" title="Show password">
+                                    <img src="../icons/eye-solid-full.svg" alt="Toggle password visibility">
+                                </button>
+                            </div>
                         </div>
 
                         <button type="submit" class="btn-primary">Update Password</button>
@@ -94,6 +106,20 @@ if (isset($_SESSION['status_msg'])) {
             </div>
         </div>
     </div>
+
+    <script>
+        document.querySelectorAll('.password-toggle').forEach(function(button) {
+            const input = button.closest('.input-wrapper')?.querySelector('input');
+            if (!input) return;
+
+            button.addEventListener('click', function() {
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                button.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+                button.setAttribute('title', isPassword ? 'Hide password' : 'Show password');
+            });
+        });
+    </script>
 
 </body>
 </html>

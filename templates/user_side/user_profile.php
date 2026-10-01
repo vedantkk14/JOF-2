@@ -958,7 +958,7 @@ require __DIR__ . '/_shell_top.php';
 
                 <!-- ── Form column ── -->
                 <div>
-                    <nav class="pf-tabs" id="pfTabs">
+                    <nav class="pf-tabs" id="pfTabs" data-tour="profile-form">
                         <?php foreach ([
                             'sec-personal' => ['Personal', $sec_done['personal']],
                             'sec-health' => ['Health', $sec_done['health']],

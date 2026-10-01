@@ -4,9 +4,10 @@
  * ─────────────────────────────────────────────────────────────────
  * Member portal workout-streak endpoint (JSON).
  *
- *   GET               → { success, stats }
- *   POST date=Y-m-d   → toggles that day, returns { success, logged, date, stats }
- *                       (date defaults to today; CSRF required)
+ *   GET                                → { success, stats }
+ *   POST date=Y-m-d                    → toggles that day, returns { success, logged, date, stats }
+ *                                         (date defaults to today; CSRF required)
+ *   POST date=Y-m-d&action=note&note=… → sets/clears that day's note (day must already be logged)
  *
  * User accounts only.
  */
@@ -47,11 +48,17 @@ if (!$stored || !hash_equals($stored, $submitted)) {
 
 // ── Validate the date ──────────────────────────────────────────
 $date = $_POST['date'] ?? date('Y-m-d');
+// createFromFormat('Y-m-d', ...) fills any field the format doesn't cover (H:i:s)
+// with the CURRENT wall-clock time, not midnight — so without setTime(0,0,0) here,
+// "today" always came out later than new DateTime('today') and every same-day
+// submission was rejected as "in the future". Past days worked by accident, since
+// a past midnight is always earlier than today's current time regardless.
 $d = DateTime::createFromFormat('Y-m-d', $date);
 if (!$d || $d->format('Y-m-d') !== $date) {
     echo json_encode(['success' => false, 'message' => 'Invalid date.']);
     exit;
 }
+$d->setTime(0, 0, 0);
 $today = new DateTime('today');
 if ($d > $today) {
     echo json_encode(['success' => false, 'message' => "You can't log a workout in the future."]);
@@ -59,6 +66,20 @@ if ($d > $today) {
 }
 if ($d < (clone $today)->modify('-1 year')) {
     echo json_encode(['success' => false, 'message' => 'That date is too far in the past.']);
+    exit;
+}
+
+if (($_POST['action'] ?? '') === 'note') {
+    $note = (string) ($_POST['note'] ?? '');
+    if (mb_strlen($note) > 255) {
+        echo json_encode(['success' => false, 'message' => 'Keep the note under 255 characters.']);
+        exit;
+    }
+    if (!workout_set_note($conn, $user_id, $date, $note)) {
+        echo json_encode(['success' => false, 'message' => 'Log this day before adding a note.']);
+        exit;
+    }
+    echo json_encode(['success' => true, 'date' => $date, 'stats' => workout_streak_stats($conn, $user_id)]);
     exit;
 }
 
