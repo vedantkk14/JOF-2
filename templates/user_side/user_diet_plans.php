@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../auth/auth_check.php';
 require_role(['user']);
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../auth/diet_plan_schema.php';
+require_once __DIR__ . '/../../auth/google_calendar_helper.php';
 
 $user = get_session_user();
 $uid  = (int) $user['id'];
@@ -29,6 +30,17 @@ if ($member_id) {
 }
 
 $current = $plans[0] ?? null;
+
+$calendar_connected = google_calendar_is_connected($conn, $uid);
+$calendar_status_messages = [
+    'connected'        => ['ok', 'Meal reminders are on — your Google Calendar will be kept up to date automatically.'],
+    'denied'           => ['warn', "Calendar access wasn't granted, so reminders are off. You can try again anytime."],
+    'invalid_state'    => ['error', 'That connection attempt looked suspicious and was rejected. Please try again.'],
+    'no_code'          => ['error', 'Google did not return a valid response. Please try again.'],
+    'exchange_failed'  => ['error', 'Could not finish connecting to Google Calendar. Please try again.'],
+    'no_refresh_token' => ['error', 'Google did not grant lasting access. Please try again and make sure to approve the calendar permission.'],
+];
+$calendar_status_flash = $calendar_status_messages[$_GET['calendar_status'] ?? ''] ?? null;
 
 function e($s) { return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8'); }
 
@@ -202,6 +214,25 @@ require __DIR__ . '/_shell_top.php';
             .chat-input-row button { flex: 1 1 100%; padding: 10px; }
             .msg { max-width: 88%; }
         }
+
+        /* ===== Automatic meal reminders (Google Calendar) ===== */
+        .calendar-flash { padding: 12px 16px; border-radius: 12px; font-size: 13.5px; margin-bottom: 14px; }
+        .calendar-flash-ok { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+        .calendar-flash-warn { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+        .calendar-flash-error { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+        .calendar-reminder-card {
+            display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+            background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-bottom: 18px;
+        }
+        .calendar-reminder-text { display: flex; align-items: flex-start; gap: 12px; }
+        .calendar-reminder-text img { margin-top: 2px; opacity: .7; flex-shrink: 0; }
+        .calendar-reminder-text b { font-size: 14px; color: var(--ink); }
+        .calendar-reminder-text p { margin: 4px 0 0; font-size: 13px; color: var(--faint); line-height: 1.5; max-width: 480px; }
+        .calendar-btn { border: none; border-radius: 10px; padding: 10px 18px; font-weight: 700; font-size: 13.5px; cursor: pointer; text-decoration: none; white-space: nowrap; display: inline-block; }
+        .calendar-btn-primary { background: var(--coral); color: #fff; }
+        .calendar-btn-primary:hover { background: var(--coral-dark); }
+        .calendar-btn-secondary { background: #F3F4F6; color: #374151; }
+        .calendar-btn-secondary:hover { background: #E5E7EB; }
     </style>
 
     <div class="wrap">
@@ -227,6 +258,33 @@ require __DIR__ . '/_shell_top.php';
                         </div>
                     <?php endif; ?>
                 </div>
+            <?php endif; ?>
+        </div>
+
+        <?php if ($calendar_status_flash): ?>
+            <div class="calendar-flash calendar-flash-<?= e($calendar_status_flash[0]) ?>">
+                <?= e($calendar_status_flash[1]) ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="calendar-reminder-card">
+            <div class="calendar-reminder-text">
+                <img src="../../icons/calendar-days-solid-full.svg" alt="" width="20">
+                <div>
+                    <b>Automatic meal reminders</b>
+                    <p>
+                        <?php if ($calendar_connected): ?>
+                            Connected — every meal time in your diet plan is kept in sync with your Google Calendar, with a reminder 30 minutes before.
+                        <?php else: ?>
+                            Connect your Google Calendar once and every meal time in your diet plan gets its own reminder automatically — no manual setup per plan.
+                        <?php endif; ?>
+                    </p>
+                </div>
+            </div>
+            <?php if ($calendar_connected): ?>
+                <button type="button" id="calendarDisconnectBtn" class="calendar-btn calendar-btn-secondary">Disconnect</button>
+            <?php else: ?>
+                <a href="../../handlers/google_calendar_connect.php" class="calendar-btn calendar-btn-primary">Enable Meal Reminders</a>
             <?php endif; ?>
         </div>
 
@@ -314,6 +372,31 @@ require __DIR__ . '/_shell_top.php';
         const PLANS = <?= json_encode($plans_js) ?>;
 
         document.addEventListener('DOMContentLoaded', function () {
+            const calendarDisconnectBtn = document.getElementById('calendarDisconnectBtn');
+            if (calendarDisconnectBtn) {
+                calendarDisconnectBtn.addEventListener('click', function () {
+                    if (!confirm('Turn off automatic meal reminders? Events already on your calendar will stay, but future plan updates will stop syncing.')) return;
+                    calendarDisconnectBtn.disabled = true;
+                    calendarDisconnectBtn.textContent = 'Disconnecting…';
+                    fetch('../../handlers/google_calendar_disconnect.php', { method: 'POST' })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                window.location.reload();
+                            } else {
+                                alert(data.error || 'Could not disconnect. Please try again.');
+                                calendarDisconnectBtn.disabled = false;
+                                calendarDisconnectBtn.textContent = 'Disconnect';
+                            }
+                        })
+                        .catch(() => {
+                            alert('Could not reach the server. Please try again.');
+                            calendarDisconnectBtn.disabled = false;
+                            calendarDisconnectBtn.textContent = 'Disconnect';
+                        });
+                });
+            }
+
             const weekSelect = document.getElementById('weekSelect');
             const phaseSubEl = document.getElementById('planPhaseSub');
             const scheduleTagEl = document.getElementById('planScheduleTag');

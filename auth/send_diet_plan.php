@@ -96,12 +96,20 @@ function generateDietPlanPDF($current_plan_id)
         $formatted = [];
         $lastWasHeading = false;
         $inNumberedList = false;
+        $inGuidelines = false;   // inside the GUIDELINES section, blank lines are deliberate separators
+        $pendingGap = false;
         foreach (explode("\n", $text) as $line) {
             $line = trim(ltrim($line, "? \t"));
-            // A stray blank line (accidental extra Enter) has no effect at all — never rendered,
-            // never treated as "end of point". Only a new "N. " line closes the previous point.
-            if ($line === '')
+            // In meal sections a stray blank line (accidental extra Enter) has no effect at all —
+            // never rendered, never treated as "end of point". Only a new "N. " line closes the
+            // previous point. In GUIDELINES (e.g. a workout routine split into days) a blank line
+            // IS meaningful, so remember it and show ONE blank line before the next content line.
+            if ($line === '') {
+                if ($inGuidelines) {
+                    $pendingGap = true;
+                }
                 continue;
+            }
 
             // 1. Section label — was wrapped in **...** in the stored plan
             if (preg_match('/\*\*\s*(.+?)\s*\*\*/', $line, $sm)) {
@@ -111,10 +119,17 @@ function generateDietPlanPDF($current_plan_id)
                 $formatted[] = $prefix . '<b style="color:#F25C2A; font-size:11px;">' . $label . '</b>';
                 $lastWasHeading = true;
                 $inNumberedList = false;
+                $inGuidelines = (bool) preg_match('/^guidelines?\s*:?$/i', trim($sm[1]));
+                $pendingGap = false;
                 continue;
             }
 
             $line = str_replace('**', '', $line);
+
+            // One blank line, only between two content lines (never straight after the heading).
+            // (A standalone time below already gets its own blank line before it.)
+            $gap = ($inGuidelines && $pendingGap && !$lastWasHeading) ? '<br>' : '';
+            $pendingGap = false;
 
             // 2. Line that is / starts with a time or time-range -> time in bold orange, rest normal
             if (preg_match($timeRe, $line, $tm)) {
@@ -148,14 +163,14 @@ function generateDietPlanPDF($current_plan_id)
             if (preg_match('/^\d+[.)]\s+/', $line)) {
                 $entry = '<span style="color:#333333; font-size:10px;">'
                        . htmlspecialchars($line, ENT_QUOTES, 'UTF-8') . '</span>';
-                $formatted[] = ($inNumberedList ? '<br>' : '') . $entry;
+                $formatted[] = (($inNumberedList || $gap !== '') ? '<br>' : '') . $entry;
                 $inNumberedList = true;
                 $lastWasHeading = false;
                 continue;
             }
 
             // 4. Plain content line — if a numbered point is open, this continues it (no gap)
-            $formatted[] = '<span style="color:#333333; font-size:10px;">'
+            $formatted[] = $gap . '<span style="color:#333333; font-size:10px;">'
                          . htmlspecialchars($line, ENT_QUOTES, 'UTF-8') . '</span>';
             $lastWasHeading = false;
         }

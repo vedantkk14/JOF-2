@@ -2,16 +2,25 @@
 /**
  * auth/google_config.php
  * ─────────────────────────────────────────────────────────────────
- * Loads the Google OAuth Web Client ID used by "Continue with Google"
- * on the registration page.
+ * Loads Google OAuth settings used by:
+ *   - "Continue with Google" sign-in (GOOGLE_CLIENT_ID only — Google
+ *     Identity Services one-tap flow, no secret needed).
+ *   - Google Calendar auto-reminders (GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET
+ *     — a separate, traditional OAuth authorization-code flow, since
+ *     writing to a user's calendar needs an access/refresh token pair
+ *     that one-tap sign-in never produces).
  *
- * Set it in the project-root .env file:
+ * Set these in the project-root .env file:
  *     GOOGLE_CLIENT_ID=xxxxxxxx.apps.googleusercontent.com
+ *     GOOGLE_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
  *
- * Get the value from Google Cloud Console → APIs & Services →
- * Credentials → Create OAuth client ID → "Web application", with
- * "Authorized JavaScript origins" set to your site origin
- * (e.g. http://localhost).
+ * Both come from the SAME OAuth client in Google Cloud Console →
+ * APIs & Services → Credentials → "Web application" client. For the
+ * Calendar flow to work, that client also needs, under "Authorized
+ * redirect URIs", the exact URL of handlers/google_calendar_callback.php
+ * on this site (e.g. http://localhost/JOF-phase2/handlers/google_calendar_callback.php),
+ * and the Google Calendar API must be enabled for the project (APIs &
+ * Services → Library → Google Calendar API → Enable).
  */
 
 if (!defined('GOOGLE_CLIENT_ID')) {
@@ -31,4 +40,5 @@ if (!defined('GOOGLE_CLIENT_ID')) {
     }
 
     define('GOOGLE_CLIENT_ID', getenv('GOOGLE_CLIENT_ID') ?: '');
+    define('GOOGLE_CLIENT_SECRET', getenv('GOOGLE_CLIENT_SECRET') ?: '');
 }

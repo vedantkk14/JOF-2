@@ -15,6 +15,7 @@ if (!file_exists('../auth/send_diet_plan.php')) {
 
 require '../auth/send_diet_plan.php';
 require_once '../auth/diet_plan_schema.php';
+require_once '../auth/google_calendar_helper.php';
 
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_role'] ?? '', ['admin', 'trainer'], true)) {
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
@@ -86,6 +87,16 @@ try {
         $res = sendDietPlanEmail($member['email'], $member['full_name'], $pdf_content, $plan_name);
 
         if ($res['success']) $success++;
+
+        // Best-effort: if this member has connected Google Calendar reminders,
+        // sync the new plan's meal times to it. Never blocks/fails the assign
+        // flow — a member who hasn't connected calendar reminders just gets
+        // 'connected' => false back, which is expected, not an error.
+        try {
+            sync_member_diet_calendar($conn, $plan_id, $mid);
+        } catch (Throwable $calErr) {
+            error_log('[GOOGLE-CALENDAR] sync failed for member_id=' . $mid . ': ' . $calErr->getMessage());
+        }
     }
 
     echo json_encode([
