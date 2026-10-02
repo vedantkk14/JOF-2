@@ -222,3 +222,71 @@ if (!function_exists('membership_pending_request')) {
         return ['plan_name' => $plan_name];
     }
 }
+
+if (!function_exists('membership_unpaid_summary')) {
+    /**
+     * Looks at EVERY confirmed plan the member has ever had — not just the latest one.
+     *
+     * Without this, a member who paid in installments, let that plan lapse with a balance
+     * still owing, then subscribed and fully paid a *different* plan, would look completely
+     * clear everywhere: the dashboard and membership page only ever read the latest payment
+     * row, and the old unpaid one just scrolls out of view.
+     *
+     * @return array{
+     *   total:float, count:int, overdue_total:float, overdue_since:?string,
+     *   has_overdue:bool, has_expired_unpaid:bool,
+     *   upcoming_total:float, upcoming_due:?string, has_upcoming:bool
+     * }
+     *   has_overdue          — something is unpaid AND its due date (or plan end, if no due
+     *                          date was set) has already passed. Drives the dashboard notice (red).
+     *   has_upcoming         — due within the next 3 days but not yet overdue. Drives the
+     *                          dashboard's advance-warning notice (amber), separately from has_overdue
+     *                          — once the date passes, a row moves out of "upcoming" and into "overdue".
+     *   has_expired_unpaid   — the plan itself has ended with money still owed on it, dues
+     *                          notice aside. Drives the "can't subscribe again yet" block.
+     */
+    function membership_unpaid_summary(mysqli $conn, int $member_id): array
+    {
+        $out = ['total' => 0.0, 'count' => 0, 'overdue_total' => 0.0, 'overdue_since' => null,
+                'has_overdue' => false, 'has_expired_unpaid' => false,
+                'upcoming_total' => 0.0, 'upcoming_due' => null, 'has_upcoming' => false];
+
+        $stmt = $conn->prepare("SELECT balance_pending, next_due_date, end_date FROM member_payments
+                                 WHERE member_id = ? AND membership_type != 'Pending Setup' AND balance_pending > 0
+                                 ORDER BY created_at ASC");
+        $stmt->bind_param('i', $member_id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $today = date('Y-m-d');
+        $soon  = date('Y-m-d', strtotime('+3 days'));
+
+        while ($row = $res->fetch_assoc()) {
+            $balance = (float) $row['balance_pending'];
+            $out['total'] += $balance;
+            $out['count']++;
+
+            // Prefer the installment's own due date; fall back to the plan's end date if
+            // none was set, so a missing next_due_date never hides a genuinely old debt.
+            $due = $row['next_due_date'] ?: $row['end_date'];
+            if ($due && $due < $today) {
+                $out['overdue_total'] += $balance;
+                if ($out['overdue_since'] === null || $due < $out['overdue_since']) {
+                    $out['overdue_since'] = $due;
+                }
+            } elseif ($due && $due <= $soon) {
+                // Due today through 3 days out, not yet overdue — the advance-warning window.
+                $out['upcoming_total'] += $balance;
+                if ($out['upcoming_due'] === null || $due < $out['upcoming_due']) {
+                    $out['upcoming_due'] = $due;
+                }
+            }
+            if (!empty($row['end_date']) && $row['end_date'] < $today) {
+                $out['has_expired_unpaid'] = true;
+            }
+        }
+
+        $out['has_overdue']  = $out['overdue_total'] > 0;
+        $out['has_upcoming'] = $out['upcoming_total'] > 0;
+        return $out;
+    }
+}

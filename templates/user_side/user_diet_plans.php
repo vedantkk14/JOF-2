@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../auth/google_calendar_helper.php';
 
 $user = get_session_user();
 $uid  = (int) $user['id'];
+$csrf = generate_csrf_token();
 $open_plan = (int) ($_GET['open_plan'] ?? 0);
 
 $mstmt = $conn->prepare("SELECT id, full_name FROM members WHERE user_id = ? ORDER BY id DESC LIMIT 1");
@@ -203,6 +204,53 @@ require __DIR__ . '/_shell_top.php';
         .chat-input-row button:hover { background: var(--coral-dark); }
         .chat-placeholder { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--faint); font-size: 13px; }
 
+        /* Ask Trainer / FitJo tabs */
+        .chat-tabs { display: flex; gap: 6px; margin-bottom: 14px; background: var(--bg); border-radius: 11px; padding: 4px; position: relative; }
+
+        /* Hovering hint above the FitJo tab, until it's clicked */
+        .fitjo-hint {
+            position: absolute; bottom: calc(100% + 10px); right: 4px; z-index: 5;
+            background: var(--ink, #1E2230); color: #fff; font-size: 11.5px; font-weight: 600;
+            padding: 8px 12px; border-radius: 10px; white-space: nowrap; box-shadow: 0 6px 16px -4px rgba(20,20,30,.35);
+            display: flex; align-items: center; gap: 6px;
+            animation: fitjoHintBob 2.2s ease-in-out infinite;
+            opacity: 0; transform: translateY(4px); transition: opacity .25s ease, transform .25s ease;
+            pointer-events: none;
+        }
+        .fitjo-hint.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .fitjo-hint::after {
+            content: ''; position: absolute; top: 100%; right: 22px; width: 0; height: 0;
+            border: 6px solid transparent; border-top-color: var(--ink, #1E2230);
+        }
+        .fitjo-hint .dot { width: 6px; height: 6px; border-radius: 50%; background: #34D399; flex-shrink: 0; animation: fitjoHintPulse 1.4s ease-in-out infinite; }
+        @keyframes fitjoHintBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        @keyframes fitjoHintPulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+        @media (prefers-reduced-motion: reduce) { .fitjo-hint { animation: none; } .fitjo-hint .dot { animation: none; } }
+        .chat-tab {
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px;
+            border: none; background: transparent; border-radius: 8px; font-size: 12.5px; font-weight: 700;
+            color: var(--soft); cursor: pointer; font-family: inherit; transition: background .15s, color .15s;
+        }
+        .chat-tab.active { background: #fff; color: var(--coral-dark); box-shadow: 0 1px 4px rgba(20,20,30,.08); }
+        .chat-tab-panel { display: none; flex: 1; min-height: 0; flex-direction: column; }
+        .chat-tab-panel.active { display: flex; }
+
+        /* FitJo bot */
+        .bot-plan-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .bot-plan-row label { font-size: 11.5px; font-weight: 700; color: var(--faint); white-space: nowrap; }
+        .bot-plan-row select {
+            flex: 1; font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink);
+            border: 1px solid var(--border); border-radius: 9px; padding: 7px 10px; background: #fff; cursor: pointer;
+        }
+        .msg.bot { align-self: flex-start; background: #fff; color: var(--ink); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+        .msg.bot.greeting { background: var(--coral-tint); border-color: #FDBA8C; }
+        .bot-typing { align-self: flex-start; display: flex; gap: 4px; padding: 11px 14px; background: #fff; border: 1px solid var(--border); border-radius: 14px; }
+        .bot-typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); animation: botBounce 1.3s infinite; }
+        .bot-typing span:nth-child(2) { animation-delay: .18s; }
+        .bot-typing span:nth-child(3) { animation-delay: .36s; }
+        @keyframes botBounce { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-5px); opacity: 1; } }
+        .chat-input-row textarea:disabled, .chat-input-row button:disabled { opacity: .5; cursor: not-allowed; }
+
         /* ===== Mobile hardening ===== */
         @media (max-width: 640px) {
             .page-head { flex-direction: column; align-items: stretch; }
@@ -351,14 +399,42 @@ require __DIR__ . '/_shell_top.php';
                 <div class="plan-side">
                     <div class="content-panel chat-panel" data-tour="diet-chat">
                         <div class="panel-header"><h3>💬 Ask About This Plan</h3></div>
-                        <div class="chat-box">
-                            <div class="chat-messages" id="chatMessages">
-                                <div class="chat-placeholder">Loading conversation…</div>
+                        <div class="chat-tabs">
+                            <div class="fitjo-hint" id="fitjoHint"><span class="dot"></span>Try our AI chatbot!</div>
+                            <button type="button" class="chat-tab active" id="tabTrainerBtn">👤 Ask Trainer</button>
+                            <button type="button" class="chat-tab" id="tabBotBtn">🤖 FitJo</button>
+                        </div>
+
+                        <div class="chat-tab-panel active" id="tabTrainer">
+                            <div class="chat-box">
+                                <div class="chat-messages" id="chatMessages">
+                                    <div class="chat-placeholder">Loading conversation…</div>
+                                </div>
+                                <div class="chat-input-row">
+                                    <textarea id="chatInput" placeholder="Ask your trainer a question about this plan..."></textarea>
+                                    <button type="button" id="chatSendBtn">Send</button>
+                                </div>
                             </div>
-                            <div class="chat-input-row">
-                                <textarea id="chatInput" placeholder="Ask your trainer a question about this plan..."></textarea>
-                                <button type="button" id="chatSendBtn">Send</button>
+                            <p style="font-size:11px;color:var(--faint);margin-top:8px;">Sends a message to your trainer — they'll reply here once they see it.</p>
+                        </div>
+
+                        <div class="chat-tab-panel" id="tabBot">
+                            <div class="bot-plan-row">
+                                <label for="botPlanSelect">Scope:</label>
+                                <select id="botPlanSelect">
+                                    <option value="0">All my phases</option>
+                                </select>
                             </div>
+                            <div class="chat-box">
+                                <div class="chat-messages" id="botMessages">
+                                    <div class="chat-placeholder">Loading…</div>
+                                </div>
+                                <div class="chat-input-row">
+                                    <textarea id="botInput" placeholder="Ask FitJo about your diet or fitness..."></textarea>
+                                    <button type="button" id="botSendBtn">Send</button>
+                                </div>
+                            </div>
+                            <p style="font-size:11px;color:var(--faint);margin-top:8px;">FitJo only knows about your diet plan, health and fitness — and replies instantly.</p>
                         </div>
                     </div>
                 </div>
@@ -370,6 +446,8 @@ require __DIR__ . '/_shell_top.php';
     <script>
         const MEMBER_ID = <?= (int) $member_id ?>;
         const PLANS = <?= json_encode($plans_js) ?>;
+        const CSRF = <?= json_encode($csrf) ?>;
+        const MEMBER_FIRST_NAME = <?= json_encode(trim(explode(' ', html_entity_decode($member_full_name, ENT_QUOTES))[0] ?: 'there')) ?>;
 
         document.addEventListener('DOMContentLoaded', function () {
             const calendarDisconnectBtn = document.getElementById('calendarDisconnectBtn');
@@ -517,6 +595,148 @@ require __DIR__ . '/_shell_top.php';
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     sendMessage();
+                }
+            });
+
+            // ══════════════════════════════════════════════════
+            //  FitJo — the member's own diet/fitness chatbot
+            // ══════════════════════════════════════════════════
+            const tabTrainerBtn = document.getElementById('tabTrainerBtn');
+            const tabBotBtn = document.getElementById('tabBotBtn');
+            const tabTrainer = document.getElementById('tabTrainer');
+            const tabBot = document.getElementById('tabBot');
+            const botPlanSelect = document.getElementById('botPlanSelect');
+            const botMessages = document.getElementById('botMessages');
+            const botInput = document.getElementById('botInput');
+            const botSendBtn = document.getElementById('botSendBtn');
+
+            let botLoaded = false;
+            let botBusy = false;
+
+            function switchTab(which) {
+                const toTrainer = which === 'trainer';
+                tabTrainerBtn.classList.toggle('active', toTrainer);
+                tabBotBtn.classList.toggle('active', !toTrainer);
+                tabTrainer.classList.toggle('active', toTrainer);
+                tabBot.classList.toggle('active', !toTrainer);
+                if (!toTrainer) dismissFitjoHint();
+                if (!toTrainer && !botLoaded) loadBotHistory();
+            }
+            tabTrainerBtn.addEventListener('click', () => switchTab('trainer'));
+            tabBotBtn.addEventListener('click', () => switchTab('bot'));
+
+            // Small hint bubble pointing at FitJo until it's noticed — shown once per
+            // browser (not every page visit) so it never becomes a nag.
+            const fitjoHint = document.getElementById('fitjoHint');
+            function dismissFitjoHint() {
+                fitjoHint.classList.remove('show');
+                try { localStorage.setItem('fitjo_hint_seen', '1'); } catch (e) { }
+            }
+            let fitjoHintSeen = false;
+            try { fitjoHintSeen = localStorage.getItem('fitjo_hint_seen') === '1'; } catch (e) { }
+            if (!fitjoHintSeen) {
+                setTimeout(() => fitjoHint.classList.add('show'), 600);
+            }
+            fitjoHint.addEventListener('click', () => switchTab('bot'));
+
+            // "All my phases" plus one option per phase, same list the week-switcher uses
+            PLANS.slice().reverse().forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.phase + (p.is_current ? ' (Current)' : '');
+                botPlanSelect.appendChild(opt);
+            });
+
+            function botBubble(role, text) {
+                const div = document.createElement('div');
+                div.className = 'msg ' + role;
+                // The model mostly obeys "plain text only" but occasionally slips in
+                // **bold** anyway — render that instead of showing raw asterisks.
+                div.innerHTML = escapeHtml(text).replace(/\n/g, '<br>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                botMessages.appendChild(div);
+                botMessages.scrollTop = botMessages.scrollHeight;
+                return div;
+            }
+
+            function botTyping(on) {
+                const old = document.getElementById('botTypingEl');
+                if (old) old.remove();
+                if (!on) return;
+                const el = document.createElement('div');
+                el.id = 'botTypingEl';
+                el.className = 'bot-typing';
+                el.innerHTML = '<span></span><span></span><span></span>';
+                botMessages.appendChild(el);
+                botMessages.scrollTop = botMessages.scrollHeight;
+            }
+
+            function disableBotChat() {
+                botInput.disabled = true;
+                botSendBtn.disabled = true;
+                botInput.placeholder = 'Chat is no longer available';
+            }
+
+            function renderBotGreeting() {
+                botMessages.innerHTML = '';
+                const g = document.createElement('div');
+                g.className = 'msg bot greeting';
+                g.textContent = `Hello ${MEMBER_FIRST_NAME}, how can I help you today? Ask me anything about your diet plan or fitness! 🙂`;
+                botMessages.appendChild(g);
+            }
+
+            function loadBotHistory() {
+                botLoaded = true;
+                botMessages.innerHTML = '<div class="chat-placeholder">Loading…</div>';
+                fetch('../../handlers/user_ai_chat.php', { cache: 'no-store' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.success) { botMessages.innerHTML = '<div class="chat-placeholder">Could not load chat.</div>'; return; }
+                        if (!data.history.length) {
+                            renderBotGreeting();
+                        } else {
+                            botMessages.innerHTML = '';
+                            data.history.forEach(m => botBubble(m.role === 'user' ? 'user' : 'bot', m.content));
+                        }
+                        if (data.limit_reached) disableBotChat();
+                    })
+                    .catch(() => { botMessages.innerHTML = '<div class="chat-placeholder">Could not reach the server.</div>'; });
+            }
+
+            function sendBotMessage() {
+                const text = botInput.value.trim();
+                if (!text || botBusy) return;
+                botBusy = true;
+                botSendBtn.disabled = true;
+                botBubble('user', text);
+                botInput.value = '';
+                botTyping(true);
+
+                fetch('../../handlers/user_ai_chat.php', {
+                    method: 'POST',
+                    body: new URLSearchParams({ _csrf_token: CSRF, message: text, plan_id: botPlanSelect.value })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        botTyping(false);
+                        if (data.success) {
+                            botBubble('bot', data.reply);
+                            if (data.limit_reached) disableBotChat();
+                        } else {
+                            botBubble('bot', data.error || 'Something went wrong. Please try again.');
+                        }
+                    })
+                    .catch(() => {
+                        botTyping(false);
+                        botBubble('bot', 'Could not reach the server. Please try again.');
+                    })
+                    .finally(() => { botBusy = false; botSendBtn.disabled = false; });
+            }
+
+            botSendBtn.addEventListener('click', sendBotMessage);
+            botInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendBotMessage();
                 }
             });
 

@@ -21,8 +21,8 @@ if (!$member_id) {
 }
 
 // Mirrors the gating on templates/user_side/user_membership.php — a member can't apply
-// again while a request is already pending review, or while their current plan still
-// has more than 10 days left.
+// again while a request is already pending review, while an earlier plan still has money
+// owing on it, or while their current plan still has more than 10 days left.
 $pending_already = membership_pending_request($conn, $member_id);
 $cstmt = $conn->prepare("SELECT * FROM member_payments WHERE member_id = ? AND membership_type != 'Pending Setup' ORDER BY created_at DESC LIMIT 1");
 $cstmt->bind_param('i', $member_id);
@@ -30,9 +30,14 @@ $cstmt->execute();
 $confirmed_payment = $cstmt->get_result()->fetch_assoc();
 $status = membership_status_info($conn, $confirmed_payment, '');
 $renew_window_open = $status['status'] === 'none' || $status['status'] === 'expired' || ($status['days_remaining'] !== null && $status['days_remaining'] <= 10);
+$unpaid_dues = membership_unpaid_summary($conn, $member_id);
 
 if ($pending_already) {
     echo json_encode(['success' => false, 'error' => 'You already have a request awaiting verification.']);
+    exit;
+}
+if ($unpaid_dues['has_expired_unpaid']) {
+    echo json_encode(['success' => false, 'error' => 'You have ₹' . number_format($unpaid_dues['total']) . ' pending from a previous plan. Clear that balance before subscribing to a new one.']);
     exit;
 }
 if (!$renew_window_open) {

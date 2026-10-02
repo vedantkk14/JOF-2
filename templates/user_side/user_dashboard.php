@@ -52,6 +52,8 @@ $membership_days_remaining = $membership_info['days_remaining'];
 $membership_status = $membership_info['status'];
 $membership_pause = $mrow2 ? membership_pause_info($conn, (int) $mrow2['id']) : null;
 $membership_extension = ($mrow2 && !$membership_pause) ? membership_extension_info($conn, (int) $mrow2['id']) : null;
+// Across every plan the member has ever had, not just the latest — see auth/membership_helper.php
+$unpaid_dues = $mrow2 ? membership_unpaid_summary($conn, (int) $mrow2['id']) : ['has_overdue' => false];
 
 // Next upcoming PT session (card only ever shows a real, scheduled session)
 $next_pt_session = null;
@@ -1828,6 +1830,34 @@ if ($profile_incomplete) {
                         Please complete it now so your trainer can set up the right plan for you.
                     </div>
                     <a class="pw-btn" href="user_profile.php">Complete Profile Now</a>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($unpaid_dues['has_overdue']): ?>
+                <div class="profile-warning" style="background:var(--red-tint);border-color:#F3B9BB;" role="alert">
+                    <div class="pw-icon" style="color:var(--red);">₹</div>
+                    <div class="pw-text" style="color:#8A2A2D;">
+                        <b style="color:#6B1618;">
+                            You have ₹<?= number_format($unpaid_dues['overdue_total']) ?> overdue<?= $unpaid_dues['count'] > 1 ? ' across ' . (int) $unpaid_dues['count'] . ' plans' : '' ?>.
+                        </b>
+                        <?= $unpaid_dues['overdue_since'] ? 'Due since ' . htmlspecialchars(date('d M Y', strtotime($unpaid_dues['overdue_since']))) . '. ' : '' ?>Clear it to keep subscribing to new plans.
+                    </div>
+                    <a class="pw-btn" href="user_payments.php" style="background:var(--red);">View Invoices</a>
+                </div>
+            <?php elseif ($unpaid_dues['has_upcoming']): ?>
+                <div class="profile-warning" style="background:var(--amber-tint);border-color:#F0D9A6;" role="alert">
+                    <div class="pw-icon" style="color:#B87814;">₹</div>
+                    <div class="pw-text" style="color:#7A5417;">
+                        <b style="color:#5C3F10;">
+                            Your next payment of ₹<?= number_format($unpaid_dues['upcoming_total']) ?> is due soon.
+                        </b>
+                        <?php
+                            $days_to_due = (int) floor((strtotime($unpaid_dues['upcoming_due']) - strtotime('today')) / 86400);
+                        ?>
+                        Due <?= $days_to_due <= 0 ? 'today' : ('in ' . $days_to_due . ' day' . ($days_to_due === 1 ? '' : 's')) ?>
+                        (<?= htmlspecialchars(date('d M Y', strtotime($unpaid_dues['upcoming_due']))) ?>). Pay now to avoid falling behind.
+                    </div>
+                    <a class="pw-btn" href="user_payments.php">View Invoices</a>
                 </div>
             <?php endif; ?>
 

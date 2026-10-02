@@ -270,6 +270,72 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
         .dm-name.dm-more { background: transparent; border-style: dashed; padding: 4px 10px; color: #6B7280; }
         .dm-card-empty { color: #94A3B8; font-size: 12.5px; font-weight: 500; }
 
+        /* Dues Payments card — same visual language as the Diet Messages card above */
+        .dues-card { position: relative; align-items: flex-start; }
+        .dues-card .quick-action-icon { position: relative; overflow: visible; }
+        .dues-card-badge {
+            position: absolute; top: -7px; right: -7px; min-width: 20px; height: 20px; padding: 0 5px;
+            border-radius: 999px; background: #EF4444; color: #fff; font-style: normal;
+            font-size: 11px; font-weight: 700; line-height: 20px; text-align: center;
+            border: 2px solid #fff; box-shadow: 0 2px 6px rgba(239, 68, 68, .4);
+        }
+        .dues-card-badge.hidden { display: none; }
+        .dues-card-badge.badge-pop { animation: badgeBounce 0.7s ease; }
+
+        /* Dues modal 1 — the list */
+        .dues-modal-overlay, .dues-detail-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);
+            z-index: 10000; align-items: center; justify-content: center;
+        }
+        .dues-modal-overlay.open, .dues-detail-overlay.open { display: flex; }
+        .dues-list-modal, .dues-detail-modal {
+            background: #fff; border-radius: 16px; width: 460px; max-width: 95vw; max-height: 82vh;
+            display: flex; flex-direction: column; box-shadow: 0 25px 65px rgba(0, 0, 0, 0.15);
+        }
+        .dues-modal-head {
+            display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid #F1F5F9;
+        }
+        .dues-modal-head b { font-size: 15px; font-weight: 700; color: #1E293B; display: flex; align-items: center; gap: 9px; }
+        .dues-modal-close { background: #F1F5F9; border: none; width: 28px; height: 28px; border-radius: 8px; color: #64748B; cursor: pointer; font-size: 13px; }
+        .dues-modal-close:hover { background: #E2E8F0; }
+        .dues-list-body { overflow-y: auto; flex: 1; padding: 6px 0; }
+        .dues-list-empty { padding: 44px 20px; text-align: center; color: #94A3B8; font-size: 13px; }
+        .dues-item {
+            display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; padding: 13px 22px;
+            border: none; background: #fff; cursor: pointer; border-bottom: 1px solid #F8FAFC; font-family: inherit;
+        }
+        .dues-item:hover { background: #F8FAFC; }
+        .dues-item-avatar {
+            width: 38px; height: 38px; border-radius: 10px; background: #D1FAE5; color: #047857;
+            display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0;
+        }
+        .dues-item-main { flex: 1; min-width: 0; }
+        .dues-item-name { font-weight: 700; font-size: 13.5px; color: #1E293B; }
+        .dues-item-sub { font-size: 12px; color: #64748B; margin-top: 2px; }
+        .dues-item-amt { font-weight: 800; font-size: 14px; color: #047857; font-family: 'Sora', sans-serif; flex-shrink: 0; }
+
+        /* Dues modal 2 — one submission's full detail */
+        .dues-detail-body { padding: 20px 22px; overflow-y: auto; }
+        .dues-detail-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #F8FAFC; font-size: 13px; }
+        .dues-detail-row span { color: #64748B; }
+        .dues-detail-row b { color: #1E293B; font-weight: 600; }
+        .dues-detail-amt { text-align: center; padding: 16px; background: #ECFDF5; border-radius: 12px; margin-bottom: 14px; }
+        .dues-detail-amt .n { font-size: 26px; font-weight: 800; color: #047857; font-family: 'Sora', sans-serif; }
+        .dues-detail-amt .l { font-size: 11.5px; color: #059669; font-weight: 600; margin-top: 2px; }
+        .dues-ss-link {
+            display: block; text-align: center; margin-top: 14px; padding: 10px; background: #F8FAFC; border-radius: 10px;
+            color: #334155; font-size: 12.5px; font-weight: 600; text-decoration: none; border: 1px solid #E5E7EB;
+        }
+        .dues-ss-link:hover { background: #F1F5F9; }
+        .dues-ss-link img { max-width: 100%; border-radius: 8px; margin-top: 8px; display: block; }
+        .dues-detail-acts { display: flex; gap: 10px; padding: 16px 22px; border-top: 1px solid #F1F5F9; }
+        .dues-detail-acts button { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; }
+        .dues-reject-btn { background: #FEF2F2; color: #B91C1C; }
+        .dues-reject-btn:hover { background: #FEE2E2; }
+        .dues-verify-btn { background: #10B981; color: #fff; }
+        .dues-verify-btn:hover { background: #059669; }
+        .dues-detail-loading, .dues-detail-msg { padding: 40px 20px; text-align: center; color: #94A3B8; font-size: 13px; }
+
         /* Enquiry Dropdown */
         .enquiry-dropdown {
             position: absolute;
@@ -1071,12 +1137,18 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
             </section>
 
             <section class="quick-actions-row">
-                <a href="add_member.php" class="quick-action-card">
-                    <div class="quick-action-icon">
-                        <img src="../icons/user-plus-solid-full.svg" alt="Add Member" width="20">
+                <!-- Dues Payments: members who've submitted proof of paying an outstanding balance -->
+                <div class="quick-action-card dues-card" id="duesCard" role="link" tabindex="0"
+                    aria-label="Open pending dues payments">
+                    <div class="quick-action-icon" style="background:linear-gradient(135deg, #10B981 0%, #34D399 100%);">
+                        <img src="../icons/wallet-solid-full.svg" alt="Dues Payments" width="20">
+                        <em class="dues-card-badge hidden" id="duesCardBadge">0</em>
                     </div>
-                    <span>Add Member</span>
-                </a>
+                    <div class="dm-card-body">
+                        <span>Dues Payments</span>
+                        <div class="dm-card-names" id="duesCardSummary"><small class="dm-card-empty">Checking&hellip;</small></div>
+                    </div>
+                </div>
                 <!-- Diet Messages: members who have written to the trainer; click through for the full chat -->
                 <div class="quick-action-card dm-card" id="dmCard" role="link" tabindex="0"
                     aria-label="Open diet messages">
@@ -1697,6 +1769,156 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
                 setInterval(pollDietCard, 10000);
             }
 
+            // ══════════════════════════════════════════════════
+            //  DUES PAYMENTS CARD
+            //  Members who've submitted proof of paying off an outstanding balance.
+            //  Card → list modal → one submission's detail modal, with Verify/Reject there.
+            // ══════════════════════════════════════════════════
+            const duesCard = document.getElementById('duesCard');
+            const duesBadge = document.getElementById('duesCardBadge');
+            const duesSummary = document.getElementById('duesCardSummary');
+            const duesModalOverlay = document.getElementById('duesModalOverlay');
+            const duesListBody = document.getElementById('duesListBody');
+            const duesDetailOverlay = document.getElementById('duesDetailOverlay');
+            const duesDetailBody = document.getElementById('duesDetailBody');
+            const duesDetailActs = document.getElementById('duesDetailActs');
+            const DUES_CSRF = <?= json_encode($csrf_token) ?>;
+            let duesLastCount = 0;
+
+            function duesTimeAgo(dateStr) {
+                var past = new Date(dateStr.replace(' ', 'T'));
+                if (isNaN(past.getTime())) return '';
+                var diff = Math.floor((Date.now() - past.getTime()) / 1000);
+                if (diff < 60) return diff + 's ago';
+                if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+                if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+                return Math.floor(diff / 86400) + 'd ago';
+            }
+
+            async function pollDuesCard() {
+                try {
+                    var res = await fetch('../handlers/admin_dues.php?action=list', { cache: 'no-store' });
+                    var data = await res.json();
+                    if (data.status !== 'success') return;
+                    var total = data.count;
+                    if (total > 0) {
+                        duesSummary.innerHTML = '<small style="color:#047857;font-weight:600;">' + total + ' payment' + (total === 1 ? '' : 's') + ' to review</small>';
+                        duesBadge.textContent = total > 99 ? '99+' : total;
+                        duesBadge.classList.remove('hidden');
+                        if (total > duesLastCount) {
+                            duesBadge.classList.add('badge-pop');
+                            setTimeout(function () { duesBadge.classList.remove('badge-pop'); }, 800);
+                        }
+                    } else {
+                        duesSummary.innerHTML = '<small class="dm-card-empty">All caught up</small>';
+                        duesBadge.classList.add('hidden');
+                    }
+                    duesLastCount = total;
+                    if (duesModalOverlay.classList.contains('open')) renderDuesList(data.items);
+                } catch (e) { }
+            }
+
+            function renderDuesList(items) {
+                if (!items.length) {
+                    duesListBody.innerHTML = '<div class="dues-list-empty">No pending dues payments right now.</div>';
+                    return;
+                }
+                duesListBody.innerHTML = items.map(function (it) {
+                    var initials = it.member_name.split(' ').map(function (w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
+                    return '<button type="button" class="dues-item" data-id="' + it.id + '">' +
+                        '<div class="dues-item-avatar">' + initials + '</div>' +
+                        '<div class="dues-item-main">' +
+                        '<div class="dues-item-name">' + escHtml(it.member_name) + '</div>' +
+                        '<div class="dues-item-sub">' + escHtml(it.plan_name) + ' · ' + duesTimeAgo(it.created_at) + '</div>' +
+                        '</div>' +
+                        '<div class="dues-item-amt">₹' + Number(it.amount).toLocaleString('en-IN') + '</div>' +
+                        '</button>';
+                }).join('');
+            }
+
+            function openDuesListModal() {
+                duesModalOverlay.classList.add('open');
+                duesListBody.innerHTML = '<div class="dues-list-empty">Loading…</div>';
+                fetch('../handlers/admin_dues.php?action=list', { cache: 'no-store' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) { if (data.status === 'success') renderDuesList(data.items); })
+                    .catch(function () { duesListBody.innerHTML = '<div class="dues-list-empty">Could not load. Try again.</div>'; });
+            }
+            function closeDuesListModal() { duesModalOverlay.classList.remove('open'); }
+
+            function openDuesDetail(id) {
+                duesDetailOverlay.classList.add('open');
+                duesDetailActs.style.display = 'none';
+                duesDetailBody.innerHTML = '<div class="dues-detail-loading">Loading…</div>';
+                fetch('../handlers/admin_dues.php?action=detail&id=' + id, { cache: 'no-store' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.status !== 'success') { duesDetailBody.innerHTML = '<div class="dues-detail-msg">Not found.</div>'; return; }
+                        var d = data.item;
+                        var html = '<div class="dues-detail-amt"><div class="n">₹' + Number(d.amount).toLocaleString('en-IN') + '</div><div class="l">Amount submitted</div></div>' +
+                            '<div class="dues-detail-row"><span>Member</span><b>' + escHtml(d.member_name) + '</b></div>' +
+                            '<div class="dues-detail-row"><span>Plan</span><b>' + escHtml(d.plan_name) + '</b></div>' +
+                            '<div class="dues-detail-row"><span>Current balance</span><b>₹' + Number(d.balance_pending).toLocaleString('en-IN') + '</b></div>' +
+                            '<div class="dues-detail-row"><span>Transaction ID</span><b>' + escHtml(d.transaction_id) + '</b></div>' +
+                            (d.payer_name ? '<div class="dues-detail-row"><span>Paid by</span><b>' + escHtml(d.payer_name) + '</b></div>' : '') +
+                            '<div class="dues-detail-row"><span>Submitted</span><b>' + duesTimeAgo(d.created_at) + '</b></div>';
+                        if (d.screenshot_url) {
+                            html += '<a class="dues-ss-link" href="' + d.screenshot_url + '" target="_blank" rel="noopener">' +
+                                'View full receipt<img src="' + d.screenshot_url + '" alt="Payment receipt"></a>';
+                        }
+                        duesDetailBody.innerHTML = html;
+                        duesDetailActs.style.display = 'flex';
+                        duesDetailActs.dataset.id = d.id;
+                    })
+                    .catch(function () { duesDetailBody.innerHTML = '<div class="dues-detail-msg">Could not load. Try again.</div>'; });
+            }
+            function closeDuesDetail() { duesDetailOverlay.classList.remove('open'); }
+
+            function duesAction(action) {
+                var id = duesDetailActs.dataset.id;
+                if (!id) return;
+                var note = '';
+                if (action === 'reject') {
+                    note = prompt('Reason for rejecting this payment (optional):', '');
+                    if (note === null) return;
+                }
+                fetch('../handlers/admin_dues.php', {
+                    method: 'POST',
+                    body: new URLSearchParams({ _csrf_token: DUES_CSRF, action: action, id: id, note: note })
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.status === 'success') {
+                            closeDuesDetail();
+                            openDuesListModal();
+                            pollDuesCard();
+                        } else {
+                            alert(data.message || 'Could not complete that action.');
+                        }
+                    })
+                    .catch(function () { alert('Network error. Please try again.'); });
+            }
+
+            if (duesCard) {
+                duesCard.addEventListener('click', openDuesListModal);
+                duesCard.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDuesListModal(); }
+                });
+                document.getElementById('duesModalClose').addEventListener('click', closeDuesListModal);
+                duesModalOverlay.addEventListener('click', function (e) { if (e.target === duesModalOverlay) closeDuesListModal(); });
+                duesListBody.addEventListener('click', function (e) {
+                    var item = e.target.closest('.dues-item');
+                    if (item) openDuesDetail(item.dataset.id);
+                });
+                document.getElementById('duesDetailClose').addEventListener('click', closeDuesDetail);
+                duesDetailOverlay.addEventListener('click', function (e) { if (e.target === duesDetailOverlay) closeDuesDetail(); });
+                document.getElementById('duesVerifyBtn').addEventListener('click', function () { duesAction('verify'); });
+                document.getElementById('duesRejectBtn').addEventListener('click', function () { duesAction('reject'); });
+
+                pollDuesCard();
+                setInterval(pollDuesCard, 10000);
+            }
+
 
             function timeAgo(dateStr) {
                 var now = new Date();
@@ -2150,6 +2372,36 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
                         <?php endforeach; ?>
                     </ul>
                 <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dues Payments: list of pending submissions -->
+    <div id="duesModalOverlay" class="dues-modal-overlay">
+        <div class="dues-list-modal">
+            <div class="dues-modal-head">
+                <b><img src="../icons/wallet-solid-full.svg" width="16" style="opacity:.75;"> Dues Payments</b>
+                <button type="button" class="dues-modal-close" id="duesModalClose">✕</button>
+            </div>
+            <div class="dues-list-body" id="duesListBody">
+                <div class="dues-list-empty">Loading…</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dues Payments: one submission's full detail -->
+    <div id="duesDetailOverlay" class="dues-detail-overlay">
+        <div class="dues-detail-modal">
+            <div class="dues-modal-head">
+                <b><img src="../icons/receipt-solid-full.svg" width="16" style="opacity:.75;"> Payment Detail</b>
+                <button type="button" class="dues-modal-close" id="duesDetailClose">✕</button>
+            </div>
+            <div class="dues-detail-body" id="duesDetailBody">
+                <div class="dues-detail-loading">Loading…</div>
+            </div>
+            <div class="dues-detail-acts" id="duesDetailActs" style="display:none;">
+                <button type="button" class="dues-reject-btn" id="duesRejectBtn">Reject</button>
+                <button type="button" class="dues-verify-btn" id="duesVerifyBtn">✓ Verify &amp; Apply</button>
             </div>
         </div>
     </div>
