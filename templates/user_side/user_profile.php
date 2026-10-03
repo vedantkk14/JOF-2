@@ -13,6 +13,62 @@ $saved     = isset($_GET['saved']) || $photo_deleted;
 $errors    = [];
 $notice    = '';
 
+/* ────────────────── PHOTO PHASES ────────────────── */
+// A "phase" is one upload session. A member keeps at most PHOTO_PHASE_LIMIT of them;
+// to upload more they have to delete a whole phase from Photo History first.
+const PHOTO_PHASE_LIMIT = 5;
+
+/**
+ * Photo history for one member, oldest -> newest: [$sessions, $by_view].
+ * Older saves copied the same file into several snapshot rows, so each file is only
+ * counted the first time it appears (and only if it still exists on disk).
+ */
+function profile_photo_sessions(mysqli $conn, int $member_id): array
+{
+    $sessions = [];
+    $by_view  = ['front_view_image' => [], 'side_view_image' => [], 'back_view_image' => []];
+    $ph = mysqli_prepare($conn, "SELECT id, front_view_image, side_view_image, back_view_image, recorded_at
+        FROM member_measurements
+        WHERE member_id = ?
+          AND (front_view_image IS NOT NULL OR side_view_image IS NOT NULL OR back_view_image IS NOT NULL)
+        ORDER BY recorded_at ASC, id ASC");
+    mysqli_stmt_bind_param($ph, 'i', $member_id);
+    mysqli_stmt_execute($ph);
+    $res = mysqli_stmt_get_result($ph);
+    $seen = [];
+    while ($row = mysqli_fetch_assoc($res)) {
+        $photos = [];
+        foreach (array_keys($by_view) as $col) {
+            $file = $row[$col] ?? '';
+            if ($file === '' || isset($seen[$file]) || !is_file(__DIR__ . '/../../uploads/progress_photos/' . basename($file))) {
+                continue;
+            }
+            $seen[$file] = true;
+            $photos[$col] = $file;
+            $by_view[$col][] = ['id' => (int) $row['id'], 'file' => $file, 'date' => $row['recorded_at']];
+        }
+        if ($photos) {
+            $sessions[] = ['id' => (int) $row['id'], 'date' => $row['recorded_at'], 'photos' => $photos];
+        }
+    }
+    return [$sessions, $by_view];
+}
+
+/** Remove one photo file: clear every snapshot row that points at it, then delete the file. */
+function profile_remove_photo_file(mysqli $conn, int $member_id, string $col, string $fname): void
+{
+    if (!in_array($col, ['front_view_image', 'side_view_image', 'back_view_image'], true) || $fname === '') {
+        return;
+    }
+    $u = mysqli_prepare($conn, "UPDATE member_measurements SET `$col` = NULL WHERE member_id = ? AND `$col` = ?");
+    mysqli_stmt_bind_param($u, 'is', $member_id, $fname);
+    mysqli_stmt_execute($u);
+    $path = __DIR__ . '/../../uploads/progress_photos/' . basename($fname);
+    if (is_file($path)) {
+        @unlink($path);
+    }
+}
+
 /* ────────────────── DELETE ONE PROGRESS PHOTO (manual only) ────────────────── */
 // Posted only by the standalone #photoDelForm, which lives OUTSIDE the profile
 // form — a delete can never ride along with a normal "Save Profile".
@@ -24,7 +80,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
         $del_rid = (int) $del_rid;
         $allowed_cols = ['front_view_image', 'side_view_image', 'back_view_image'];
 
-        if ($del_mid && $del_rid && in_array($del_col, $allowed_cols, true)) {
+        if ($del_mid && isset($_POST['del_phase'])) {
+            // Remove a whole phase (every photo of one upload session)
+            $phase_id = (int) $_POST['del_phase'];
+            [$phase_sessions] = profile_photo_sessions($conn, $del_mid);
+            foreach ($phase_sessions as $ps) {
+                if ($ps['id'] === $phase_id) {
+                    foreach ($ps['photos'] as $pcol => $pfile) {
+                        profile_remove_photo_file($conn, $del_mid, $pcol, $pfile);
+                    }
+                }
+            }
+        } elseif ($del_mid && $del_rid && in_array($del_col, $allowed_cols, true)) {
             $s = mysqli_prepare($conn, "SELECT `$del_col` AS fname FROM member_measurements WHERE id = ? AND member_id = ?");
             mysqli_stmt_bind_param($s, 'ii', $del_rid, $del_mid);
             mysqli_stmt_execute($s);
@@ -176,6 +243,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $back  = $save_photo('back_view');
             $has_photo = $front || $side || $back;
 
+            // At most PHOTO_PHASE_LIMIT phases: refuse the upload (and discard the files) when full
+            if ($has_photo) {
+                [$existing_phases] = profile_photo_sessions($conn, $mid);
+                if (count($existing_phases) >= PHOTO_PHASE_LIMIT) {
+                    foreach ([$front, $side, $back] as $extra) {
+                        if ($extra) {
+                            @unlink($upload_dir . $extra);
+                        }
+                    }
+                    $front = $side = $back = null;
+                    $has_photo = false;
+                    $notice = 'You can keep up to ' . PHOTO_PHASE_LIMIT . ' photo phases. Delete a phase from Photo History to upload new photos.';
+                }
+            }
+
             // ── measurements + photos ──
             // A save that changes the measurements or uploads photos writes a NEW snapshot
             // row. Existing rows are never updated, so every earlier photo stays in the
@@ -275,33 +357,12 @@ $notice = $notice ?: ($_GET['notice'] ?? '');
 $photo_sessions = [];
 $photo_by_view  = ['front_view_image' => [], 'side_view_image' => [], 'back_view_image' => []];
 if (!empty($profile['member_id'])) {
-    $ph = mysqli_prepare($conn, "SELECT id, front_view_image, side_view_image, back_view_image, recorded_at
-        FROM member_measurements
-        WHERE member_id = ?
-          AND (front_view_image IS NOT NULL OR side_view_image IS NOT NULL OR back_view_image IS NOT NULL)
-        ORDER BY recorded_at ASC, id ASC");
-    mysqli_stmt_bind_param($ph, 'i', $profile['member_id']);
-    mysqli_stmt_execute($ph);
-    $ph_res = mysqli_stmt_get_result($ph);
-    $seen_files = [];
-    while ($ph_row = mysqli_fetch_assoc($ph_res)) {
-        $session_photos = [];
-        foreach (array_keys($photo_by_view) as $col) {
-            $file = $ph_row[$col] ?? '';
-            if ($file === '' || isset($seen_files[$file]) || !is_file(__DIR__ . '/../../uploads/progress_photos/' . basename($file))) {
-                continue;
-            }
-            $seen_files[$file] = true;
-            $session_photos[$col] = $file;
-            $photo_by_view[$col][] = ['id' => (int) $ph_row['id'], 'file' => $file, 'date' => $ph_row['recorded_at']];
-        }
-        if ($session_photos) {
-            $photo_sessions[] = ['id' => (int) $ph_row['id'], 'date' => $ph_row['recorded_at'], 'photos' => $session_photos];
-        }
-    }
+    [$photo_sessions, $photo_by_view] = profile_photo_sessions($conn, (int) $profile['member_id']);
 }
 $latest_photo = array_map(fn(array $list) => $list ? $list[count($list) - 1] : null, $photo_by_view);
 $photo_total  = array_sum(array_map('count', $photo_by_view));
+$photo_phases = count($photo_sessions);
+$photo_full   = $photo_phases >= PHOTO_PHASE_LIMIT;
 
 // section completeness (for checklist + per-section pills)
 $sec_done = [
@@ -681,8 +742,11 @@ require __DIR__ . '/_shell_top.php';
             padding: 2px 9px; border-radius: 20px;
         }
 
-        .ba-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .ba-cell { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 3 / 4; background: var(--bg); }
+        .ba-pair { display: flex; gap: 14px; align-items: flex-start; }
+        .ba-pair > .ba-cell { flex: 0 0 140px; }
+        .ba-progress { flex: 1; min-width: 0; display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; border-left: 1px dashed var(--border); padding-left: 14px; }
+        .ba-progress .ba-cell { flex: 0 0 140px; }
+        .ba-cell { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 3 / 4; background: var(--bg); }
         .ba-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .ba-tag {
             position: absolute; left: 8px; bottom: 8px; font-size: 10px; font-weight: 800; letter-spacing: .03em;
@@ -716,6 +780,13 @@ require __DIR__ . '/_shell_top.php';
             display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;
             font-size: 12.5px; color: var(--ink-soft);
         }
+        .ph-del-phase {
+            margin-left: auto; border: 1px solid var(--border); background: #fff; color: var(--red);
+            font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 8px; cursor: pointer;
+        }
+        .ph-del-phase:hover { background: var(--red-tint); border-color: var(--red); }
+        .photo-slot:has(input:disabled) { opacity: .55; cursor: not-allowed; }
+        .photo-slot input:disabled { cursor: not-allowed; }
         .ph-session-head b { font-size: 13.5px; color: var(--ink); }
         .ph-latest {
             font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
@@ -870,6 +941,7 @@ require __DIR__ . '/_shell_top.php';
             .pf-sum-avatar { width: 46px; height: 46px; font-size: 17px; }
         }
     </style>
+    <link rel="stylesheet" href="_sidebar_theme.css?v=<?= @filemtime(__DIR__ . '/_sidebar_theme.css') ?>">
 
             <?php if ($notice): ?>
                 <div class="msg info"><?= htmlspecialchars($notice, ENT_QUOTES, 'UTF-8') ?></div>
@@ -1161,7 +1233,7 @@ require __DIR__ . '/_shell_top.php';
                                     $cur = $latest_photo[$col]['file'] ?? ''; ?>
                                     <div class="photo-cell">
                                         <label class="photo-slot">
-                                            <input type="file" name="<?= $field ?>" accept="image/*">
+                                            <input type="file" name="<?= $field ?>" accept="image/*"<?= $photo_full ? ' disabled' : '' ?>>
                                             <?php if ($cur): ?>
                                                 <img src="<?= $photo_dir . htmlspecialchars($cur, ENT_QUOTES) ?>"
                                                     alt="<?= $cap ?>">
@@ -1169,7 +1241,7 @@ require __DIR__ . '/_shell_top.php';
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                                                         <path d="M12 5v14M5 12h14" />
-                                                    </svg>Add new
+                                                    </svg><?= $photo_full ? 'Limit reached' : 'Add new' ?>
                                                 </span>
                                             <?php else: ?>
                                                 <span class="ph">
@@ -1190,7 +1262,14 @@ require __DIR__ . '/_shell_top.php';
                                     </div>
                                 <?php endforeach; ?>
                             </div>
-                            <p class="photo-note">New photos are added to your history &mdash; your earlier photos are always kept.</p>
+                            <p class="photo-note">
+                                <b><?= $photo_phases ?> of <?= PHOTO_PHASE_LIMIT ?> photo phases used.</b>
+                                <?php if ($photo_full): ?>
+                                    You've reached the limit &mdash; delete a phase from Photo History below to upload new photos.
+                                <?php else: ?>
+                                    Each upload is saved as a new phase; your earlier phases are kept.
+                                <?php endif; ?>
+                            </p>
 
                             <?php
                             $view_labels = ['front_view_image' => 'Front View', 'side_view_image' => 'Side View', 'back_view_image' => 'Back View'];
@@ -1203,8 +1282,8 @@ require __DIR__ . '/_shell_top.php';
                             <?php if ($has_any_compare): ?>
                                 <div class="ba-wrap">
                                     <h3 class="ba-title">Before &amp; After</h3>
-                                    <p class="ba-sub">Your earliest photo next to your most recent one, for each angle
-                                        you've uploaded at least twice.</p>
+                                    <p class="ba-sub">Your first photo on the left, and every photo you've added since on the right,
+                                        for each angle you've uploaded at least twice.</p>
                                     <?php foreach ($view_labels as $col => $label):
                                         $list = $photo_by_view[$col];
                                         if (count($list) < 2) {
@@ -1227,13 +1306,18 @@ require __DIR__ . '/_shell_top.php';
                                                     <span class="ba-tag before">BEFORE ·
                                                         <?= date('d M Y', strtotime($before['date'])) ?></span>
                                                 </div>
-                                                <div class="ba-cell">
-                                                    <img src="<?= $photo_dir . htmlspecialchars($after['file'], ENT_QUOTES) ?>"
-                                                        alt="After" loading="lazy"
-                                                        data-lightbox="<?= $photo_dir . htmlspecialchars($after['file'], ENT_QUOTES) ?>"
-                                                        data-caption="<?= $label ?> · After · <?= date('d M Y', strtotime($after['date'])) ?>">
-                                                    <span class="ba-tag after">AFTER ·
-                                                        <?= date('d M Y', strtotime($after['date'])) ?></span>
+                                                <div class="ba-progress" aria-label="<?= $label ?> photos since your first">
+                                                    <?php $later = array_slice($list, 1);
+                                                    foreach ($later as $i => $ph):
+                                                        $is_latest = ($i === count($later) - 1); ?>
+                                                        <div class="ba-cell">
+                                                            <img src="<?= $photo_dir . htmlspecialchars($ph['file'], ENT_QUOTES) ?>"
+                                                                alt="<?= $is_latest ? 'After' : 'Progress' ?>" loading="lazy"
+                                                                data-lightbox="<?= $photo_dir . htmlspecialchars($ph['file'], ENT_QUOTES) ?>"
+                                                                data-caption="<?= $label ?> · <?= date('d M Y', strtotime($ph['date'])) ?>">
+                                                            <span class="ba-tag<?= $is_latest ? ' after' : '' ?>"><?= $is_latest ? 'AFTER · ' : '' ?><?= date('d M Y', strtotime($ph['date'])) ?></span>
+                                                        </div>
+                                                    <?php endforeach; ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -1257,9 +1341,12 @@ require __DIR__ . '/_shell_top.php';
                                             <div class="ph-session">
                                                 <span class="ph-session-dot"></span>
                                                 <div class="ph-session-head">
-                                                    <b><?= date('d M Y', strtotime($sess['date'])) ?></b>
+                                                    <b>Phase <?= $photo_phases - $si ?> &middot; <?= date('d M Y', strtotime($sess['date'])) ?></b>
                                                     <span><?= $n_photos ?> photo<?= $n_photos === 1 ? '' : 's' ?></span>
                                                     <?php if ($si === 0): ?><span class="ph-latest">Latest</span><?php endif; ?>
+                                                    <button type="submit" form="photoDelForm" name="del_phase"
+                                                        value="<?= (int) $sess['id'] ?>" class="ph-del-phase"
+                                                        onclick="return confirm('Delete this whole phase (all its photos)? This can\'t be undone.');">Delete phase</button>
                                                 </div>
                                                 <div class="ph-session-grid">
                                                     <?php foreach ($view_labels as $col => $label):

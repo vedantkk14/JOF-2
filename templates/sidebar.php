@@ -18,9 +18,16 @@ $icon_path = $is_reports_dir ? '../../icons/' : '../icons/';
 $report_path = $is_reports_dir ? '' : 'reports/';
 ?>
 
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="<?php echo $is_reports_dir ? '../../static/' : '../static/'; ?>admin_sidebar.css?v=<?php echo @filemtime(__DIR__ . '/../static/admin_sidebar.css'); ?>">
+
 <aside class="sidebar">
     <div class="logo-area">
-        <img src="<?php echo $icon_path; ?>logo-light(1).png" alt="JOF Logo" class="brand-logo">
+        <div class="brand-tile"><img src="<?php echo $icon_path; ?>logo-dark(1).png" alt="JOF logo"></div>
+        <div class="brand-meta">
+            <div class="brand-title">JOF India</div>
+            <div class="brand-caption"><?php echo (($_SESSION['user_role'] ?? '') === 'trainer') ? 'Trainer Panel' : 'Admin Panel'; ?></div>
+        </div>
     </div>
 
     <div class="nav-label">MENU</div>

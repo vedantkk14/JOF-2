@@ -6,8 +6,17 @@ $user = get_session_user();
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../auth/workout_helper.php';
 require_once __DIR__ . '/../../auth/diet_plan_schema.php';
+require_once __DIR__ . '/../../auth/daily_goals_schema.php';
 
 $uid = (int) $user['id'];
+
+// Daily goals: lifetime counts for the banner, and every day with goals for the calendar.
+// Only today's list is editable in the UI; past days are shown read-only.
+$goals_stats = daily_goals_stats($conn, $uid);
+$goals_js = ['today' => date('Y-m-d'), 'days' => []];
+foreach (daily_goals_history($conn, $uid, 400) as $__gd) {
+    $goals_js['days'][$__gd['date']] = $__gd['goals'];
+}
 
 // Current assigned diet plan (latest), for the dashboard card
 $current_diet_plan = null;
@@ -675,12 +684,22 @@ if ($profile_incomplete) {
 
         .welcome-stats {
             display: flex;
-            gap: 26px;
             flex-shrink: 0;
         }
 
         .welcome-stat {
             text-align: center;
+            padding: 0 30px;
+        }
+
+        .welcome-stat + .welcome-stat {
+            border-left: 1px solid rgba(255, 255, 255, .28);
+        }
+
+        .welcome-stat .num .of {
+            font-size: 15px;
+            font-weight: 600;
+            opacity: .75;
         }
 
         .welcome-stat .num {
@@ -1345,6 +1364,338 @@ if ($profile_incomplete) {
             }
         }
 
+        /* Streak keeps its natural height instead of stretching to the goals card */
+        #streakCard {
+            align-self: start;
+        }
+
+        /* ===== Daily goals card ===== */
+        .goals-card {
+            padding: 28px 28px 30px;
+        }
+        .goals-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .goals-title {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+        }
+        .goals-sub {
+            margin: 3px 0 0;
+            font-size: 13px;
+            color: #718096;
+        }
+        .goals-add-btn {
+            flex: 0 0 auto;
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            border: 0;
+            background: var(--coral);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: background .15s, transform .15s;
+        }
+        .goals-add-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+        .goals-add-btn:hover {
+            background: var(--coral-dark);
+        }
+        .goals-add-btn svg {
+            transition: transform .15s;
+        }
+        .goals-add-btn.open svg {
+            transform: rotate(45deg);
+        }
+        .goals-add-btn[hidden] {
+            display: none;
+        }
+
+        /* One-line week calendar, newest day on the left */
+        .goals-week {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 26px;
+        }
+        .goals-days {
+            flex: 1;
+            min-width: 0;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .goals-day {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            min-width: 0;
+            padding: 12px 2px;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            background: #fff;
+            color: inherit;
+            cursor: pointer;
+            font: inherit;
+            transition: border-color .15s, background .15s;
+        }
+        .goals-day:hover {
+            border-color: #B7C9F2;
+        }
+        .goals-day-label {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 10px;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0;
+        }
+        .goals-day-num {
+            white-space: nowrap;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .goals-day-stat {
+            font-size: 11px;
+            color: #A0AEC0;
+            min-height: 14px;
+        }
+        .goals-day.has-all .goals-day-stat {
+            color: #1F8A5B;
+            font-weight: 600;
+        }
+        .goals-day.selected {
+            background: var(--coral);
+            border-color: var(--coral);
+            color: #fff;
+        }
+        .goals-day.selected .goals-day-label,
+        .goals-day.selected .goals-day-stat {
+            color: rgba(255, 255, 255, .85);
+        }
+        .goals-nav {
+            flex: 0 0 auto;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid #E2E8F0;
+            background: #fff;
+            color: #4A5568;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+        .goals-nav svg {
+            width: 14px;
+            height: 14px;
+        }
+        .goals-nav:disabled {
+            opacity: .35;
+            cursor: default;
+        }
+
+        .goals-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-direction: column;
+            align-items: stretch;
+            margin-top: 28px;
+            padding-top: 22px;
+            border-top: 1px solid #EDF2F7;
+        }
+        .goals-date {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .goals-progress {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            gap: 10px;
+        }
+        .goals-bar {
+            flex: 1;
+            min-width: 0;
+            height: 6px;
+            border-radius: 99px;
+            background: #EDF2F7;
+            overflow: hidden;
+        }
+        .goals-bar span {
+            display: block;
+            height: 100%;
+            width: 0;
+            border-radius: 99px;
+            background: #22A06B;
+            transition: width .3s ease;
+        }
+        .goals-count {
+            font-size: 13px;
+            color: #4A5568;
+            white-space: nowrap;
+        }
+
+        .goals-add-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 22px;
+        }
+        .goals-add-row[hidden] {
+            display: none;
+        }
+        .goals-add-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .goals-add-row textarea {
+            width: 100%;
+            min-height: 84px;
+            resize: vertical;
+            padding: 10px 14px;
+            line-height: 1.45;
+            border: 1px solid #CBD5E0;
+            border-radius: 10px;
+            font: inherit;
+            font-size: 14px;
+            background: #fff;
+            color: inherit;
+        }
+        .goals-add-row textarea:focus {
+            outline: none;
+            border-color: var(--coral);
+            box-shadow: 0 0 0 3px rgba(255, 107, 69, .18);
+        }
+        .goals-submit {
+            align-self: flex-end;
+            width: auto;
+            padding: 7px 18px;
+            border: 0;
+            border-radius: 9px;
+            background: var(--coral);
+            color: #fff;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .goals-submit:hover {
+            background: var(--coral-dark);
+        }
+        .goals-submit[disabled] {
+            opacity: .6;
+            cursor: default;
+        }
+
+        .goals-list {
+            list-style: none;
+            margin: 20px 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 0 4px 0 0;
+        }
+        .goal-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 15px 16px;
+            border: 1px solid #EDF2F7;
+            border-radius: 12px;
+            background: #fff;
+            font-size: 14px;
+        }
+        .goal-row:hover .goal-del {
+            opacity: 1;
+        }
+        .goal-check {
+            flex: 0 0 22px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #CBD5E0;
+            background: #fff;
+            color: transparent;
+            padding: 0;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+        .goal-check svg {
+            width: 12px;
+            height: 12px;
+        }
+        .goal-check[aria-checked="true"] {
+            background: #22A06B;
+            border-color: #22A06B;
+            color: #fff;
+        }
+        .goal-check:disabled {
+            cursor: default;
+        }
+        .goal-text {
+            flex: 1;
+            min-width: 0;
+            white-space: pre-line;
+            overflow-wrap: anywhere;
+        }
+        .goal-row.done .goal-text {
+            color: #718096;
+            text-decoration: line-through;
+        }
+        .goal-del {
+            flex: 0 0 auto;
+            border: 0;
+            background: transparent;
+            color: #A0AEC0;
+            font-size: 18px;
+            line-height: 1;
+            padding: 2px 6px;
+            cursor: pointer;
+            opacity: .45;
+        }
+        .goal-del:hover {
+            color: #E53E3E;
+            opacity: 1;
+        }
+        .goal-del[hidden] {
+            display: none;
+        }
+        .goals-empty {
+            margin-top: 14px;
+            padding: 22px;
+            border: 1px dashed #CBD5E0;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 14px;
+            color: #718096;
+        }
+
+        @media (max-width: 640px) {
+            .goals-card {
+                padding: 20px 16px 22px;
+            }
+            .goals-nav {
+                width: 26px;
+                height: 26px;
+            }
+        }
+
         /* ===== Workout streak card ===== */
         .streak-top {
             display: flex;
@@ -1681,6 +2032,7 @@ if ($profile_incomplete) {
             }
         }
     </style>
+    <link rel="stylesheet" href="_sidebar_theme.css?v=3">
 </head>
 
 <body>
@@ -1844,20 +2196,23 @@ if ($profile_incomplete) {
                     </div>
                     <a class="pw-btn" href="user_payments.php" style="background:var(--red);">View Invoices</a>
                 </div>
-            <?php elseif ($unpaid_dues['has_upcoming']): ?>
+            <?php endif; ?>
+
+            <?php if ($unpaid_dues['has_upcoming'] ?? false):
+                // Shown independently of the overdue notice above, so a member with one plan
+                // overdue and another coming due sees both. Shortened when the red one is also up.
+                $days_to_due = (int) floor((strtotime($unpaid_dues['upcoming_due']) - strtotime('today')) / 86400);
+                $due_phrase  = $days_to_due <= 0 ? 'today' : ('in ' . $days_to_due . ' day' . ($days_to_due === 1 ? '' : 's'));
+            ?>
                 <div class="profile-warning" style="background:var(--amber-tint);border-color:#F0D9A6;" role="alert">
                     <div class="pw-icon" style="color:#B87814;">₹</div>
                     <div class="pw-text" style="color:#7A5417;">
                         <b style="color:#5C3F10;">
-                            Your next payment of ₹<?= number_format($unpaid_dues['upcoming_total']) ?> is due soon.
+                            Next payment of ₹<?= number_format($unpaid_dues['upcoming_total']) ?> due <?= $due_phrase ?>
                         </b>
-                        <?php
-                            $days_to_due = (int) floor((strtotime($unpaid_dues['upcoming_due']) - strtotime('today')) / 86400);
-                        ?>
-                        Due <?= $days_to_due <= 0 ? 'today' : ('in ' . $days_to_due . ' day' . ($days_to_due === 1 ? '' : 's')) ?>
-                        (<?= htmlspecialchars(date('d M Y', strtotime($unpaid_dues['upcoming_due']))) ?>). Pay now to avoid falling behind.
+                        (<?= htmlspecialchars(date('d M Y', strtotime($unpaid_dues['upcoming_due']))) ?>)<?= $unpaid_dues['has_overdue'] ? '.' : '. Pay now to avoid falling behind.' ?>
                     </div>
-                    <a class="pw-btn" href="user_payments.php">View Invoices</a>
+                    <a class="pw-btn" href="user_payments.php" style="background:#B87814;">View Invoices</a>
                 </div>
             <?php endif; ?>
 
@@ -1923,8 +2278,8 @@ if ($profile_incomplete) {
                         <div class="lbl">Workouts done</div>
                     </div>
                     <div class="welcome-stat">
-                        <div class="num" id="wsBest"><?= (int) $streak['longest_streak'] ?></div>
-                        <div class="lbl">Best streak</div>
+                        <div class="num"><span id="wsGoalsDone"><?= (int) $goals_stats['achieved'] ?></span><span class="of">/<span id="wsGoalsSet"><?= (int) $goals_stats['total'] ?></span></span></div>
+                        <div class="lbl">Goals achieved</div>
                     </div>
                 </div>
             </div>
@@ -1947,9 +2302,8 @@ if ($profile_incomplete) {
                         </div>
                         <div style="display:flex; align-items:center; gap:6px;">
                             <?php if ($pending_plan_request): ?>
-                                <span class="status-pill" style="background:#EEF2FF; color:#4338CA;" title="<?= $pending_plan_request['plan_name'] !== '' ? htmlspecialchars($pending_plan_request['plan_name']) : 'New plan requested' ?> — awaiting your trainer's verification">+ New Plan Pending</span>
-                            <?php endif; ?>
-                            <?php if ($membership_pause): ?>
+                                <span class="status-pill" style="background:#EEF2FF; color:#4338CA;"><span class="dot" style="background:#4338CA;"></span>Pending Setup</span>
+                            <?php elseif ($membership_pause): ?>
                                 <span class="status-pill amber"><span class="dot"></span>Paused</span>
                             <?php elseif ($membership_extension && ($membership_status === 'active' || $membership_status === 'expiring')): ?>
                                 <span class="status-pill" style="background:#E0F2FE; color:#0369A1;"><span class="dot" style="background:#0EA5E9;"></span>Extended</span>
@@ -1964,12 +2318,74 @@ if ($profile_incomplete) {
                             <?php endif; ?>
                         </div>
                     </div>
-                    <?php if ($current_plan_name !== ''): ?>
+
+                    <?php if ($pending_plan_request): ?>
+                        <?php /* STATE 1: Pending Setup - new plan requested, awaiting admin confirmation */ ?>
+                        <div class="big-line" style="color:#4338CA;">
+                            <?= $pending_plan_request['plan_name'] !== '' ? htmlspecialchars($pending_plan_request['plan_name']) : 'New Plan' ?>
+                        </div>
+                        <div class="sub-line" style="display:flex;align-items:center;gap:6px;">
+                            <svg viewBox="0 0 20 20" fill="none" stroke="#4338CA" stroke-width="1.6" width="14" height="14" style="flex-shrink:0;"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l2.5 2.5" stroke-linecap="round"/></svg>
+                            Awaiting admin confirmation
+                        </div>
+                        <div class="divider"></div>
+                        <div class="kv-row" style="font-size:12px;color:var(--muted);">
+                            <span>Requested on</span>
+                            <b><?= htmlspecialchars(date('d M Y', strtotime($latest_payment_any['created_at']))) ?></b>
+                        </div>
+                        <?php if ($current_plan_name !== ''): ?>
+                            <div class="divider" style="margin-top:10px;"></div>
+                            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px;">Previous Plan</div>
+                            <div class="kv-row" style="font-size:12px;">
+                                <span><?= htmlspecialchars($current_plan_name) ?></span>
+                                <?php if ($membership_info['valid_until']): ?>
+                                    <b style="color:<?= $membership_status === 'expired' ? 'var(--red)' : 'inherit' ?>;">
+                                        <?= $membership_status === 'expired' ? 'Expired ' : 'Until ' ?>
+                                        <?= htmlspecialchars(date('d M Y', strtotime($membership_info['valid_until']))) ?>
+                                    </b>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                        <div class="btn-row">
+                            <button class="btn btn-ghost" onclick="location.href='user_payments.php'">View Invoices</button>
+                        </div>
+
+                    <?php elseif ($membership_status === 'expired'): ?>
+                        <?php /* STATE 2: Expired, no pending renewal - show "Plan Expired" as hero */ ?>
+                        <div class="big-line" style="color:var(--red);">Plan Expired</div>
+                        <div class="sub-line" style="display:flex;align-items:center;gap:6px;">
+                            <svg viewBox="0 0 20 20" fill="none" stroke="var(--red)" stroke-width="1.6" width="14" height="14" style="flex-shrink:0;"><circle cx="10" cy="10" r="8"/><path d="M10 6v4" stroke-linecap="round"/><circle cx="10" cy="14" r=".5" fill="var(--red)" stroke="none"/></svg>
+                            <?php if ($membership_info['valid_until']): ?>
+                                Expired on <?= htmlspecialchars(date('d M Y', strtotime($membership_info['valid_until']))) ?>
+                                &middot; <?= abs($membership_days_remaining) ?> day<?= abs($membership_days_remaining) !== 1 ? 's' : '' ?> ago
+                            <?php else: ?>
+                                Your membership has ended.
+                            <?php endif; ?>
+                        </div>
+                        <?php if ($current_plan_name !== ''): ?>
+                            <div class="divider"></div>
+                            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px;">Previous Plan</div>
+                            <div class="kv-row" style="font-size:13px;">
+                                <span><?= htmlspecialchars($current_plan_name) ?></span>
+                                <?php if (!empty($latest_payment['start_date'])): ?>
+                                    <b style="color:var(--muted);font-weight:500;"><?= htmlspecialchars(date('d M Y', strtotime($latest_payment['start_date']))) ?></b>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ($membership_extension): ?>
+                                <div class="kv-row" style="font-size:12px;"><span>Extended on</span><b><?= htmlspecialchars(date('d M Y', strtotime($membership_extension['created_at']))) ?></b></div>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                        <div class="btn-row">
+                            <button class="btn btn-primary" onclick="location.href='user_membership.php'">Renew Membership</button>
+                        </div>
+
+                    <?php elseif ($current_plan_name !== ''): ?>
+                        <?php /* STATE 3: Active / Expiring / Paused / Extended - original behaviour */ ?>
                         <div class="big-line"><?= htmlspecialchars($current_plan_name) ?></div>
                         <div class="sub-line">
                             <?= $membership_info['valid_until']
                                 ? 'Valid until ' . htmlspecialchars(date('d M Y', strtotime($membership_info['valid_until'])))
-                                    . ($membership_extension ? ' · includes your extension' : '')
+                                    . ($membership_extension ? ' &middot; includes your extension' : '')
                                 : 'No expiry on record' ?>
                         </div>
                         <div class="divider"></div>
@@ -1989,7 +2405,9 @@ if ($profile_incomplete) {
                         <div class="btn-row">
                             <button class="btn btn-primary" onclick="location.href='user_membership.php'">View Membership</button>
                         </div>
+
                     <?php else: ?>
+                        <?php /* STATE 4: No plan at all */ ?>
                         <div class="big-line">No plan yet</div>
                         <div class="sub-line">Talk to your trainer to get started.</div>
                         <div class="btn-row">
@@ -2034,48 +2452,6 @@ if ($profile_incomplete) {
                         <div class="sub-line" style="margin-top:6px;">No upcoming PT sessions scheduled.</div>
                         <div class="btn-row">
                             <button class="btn btn-ghost" onclick="location.href='user_membership.php'">Explore PT Plans</button>
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-                <!-- Diet Plan -->
-                <div class="card" data-tour="diet-card">
-                    <div class="card-head">
-                        <div class="card-title">
-                            <div class="card-icon" style="background:#EAF2FF; color:#3B6FE0;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M4 3h12l4 4v14H4z" />
-                                    <path d="M9 8h6M9 12h6M9 16h4" />
-                                </svg>
-                            </div>
-                            Current Diet Plan
-                        </div>
-                    </div>
-                    <?php if ($current_diet_plan):
-                        $__dp_parts = explode(' - ', $current_diet_plan['plan_name']);
-                        $__dp_phase = $__dp_parts[1] ?? $current_diet_plan['plan_name'];
-                    ?>
-                        <span class="plan-tag"><?= htmlspecialchars($__dp_phase) ?> · <?= htmlspecialchars($current_diet_plan['goal']) ?></span>
-                        <div class="meal-list">
-                            <?php if ($current_diet_meals): ?>
-                                <?php foreach ($current_diet_meals as $__meal): ?>
-                                    <div class="meal-row">
-                                        <span class="meal-name"><?= htmlspecialchars($__meal['label']) ?></span>
-                                        <span class="meal-time"><?= $__meal['time'] !== '' ? htmlspecialchars($__meal['time']) : '—' ?></span>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <div class="sub-line">See the full plan for meal-by-meal details.</div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="btn-row">
-                            <button class="btn btn-primary" onclick="location.href='user_diet_plans.php?open_plan=<?= (int) $current_diet_plan['id'] ?>'">View Full Plan</button>
-                        </div>
-                    <?php else: ?>
-                        <div class="sub-line" style="margin-top:6px;">No diet plan assigned yet — check back soon.</div>
-                        <div class="btn-row">
-                            <button class="btn btn-ghost" onclick="location.href='user_diet_plans.php'">View Diet Plans</button>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -2204,6 +2580,45 @@ if ($profile_incomplete) {
                                 since last</small></div>
                     </div>
                 </div>
+
+                <!-- Daily goals -->
+                <section class="card goals-card" id="goalsCard" data-csrf="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
+                    <header class="goals-head">
+                        <div>
+                            <h3 class="goals-title">Daily Goals</h3>
+                            <p class="goals-sub" id="goalsSub">Plan your day and tick off what you get done.</p>
+                        </div>
+                        <button type="button" class="goals-add-btn" id="goalsAddToggle" aria-label="Add a goal" title="Add a goal">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                        </button>
+                    </header>
+
+                    <div class="goals-week">
+                        <button type="button" class="goals-nav" id="goalsPrev" aria-label="Earlier days" title="Earlier days">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+                        </button>
+                        <div class="goals-days" id="goalsDays"></div>
+                        <button type="button" class="goals-nav" id="goalsNext" aria-label="Later days" title="Later days">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="goals-summary">
+                        <div class="goals-date" id="goalsDate"></div>
+                        <div class="goals-progress">
+                            <div class="goals-bar"><span id="goalsBar"></span></div>
+                            <span class="goals-count" id="goalsCount"></span>
+                        </div>
+                    </div>
+
+                    <form class="goals-add-row" id="goalAddForm" hidden autocomplete="off">
+                        <textarea id="goalInput" maxlength="255" rows="3" placeholder="Write your goal for today… (Enter to add, Shift+Enter for a new line)" aria-label="New goal"></textarea>
+                        <button type="submit" class="goals-submit" id="goalAddBtn">Add</button>
+                    </form>
+
+                    <ul class="goals-list" id="goalList"></ul>
+                    <div class="goals-empty" id="goalEmpty" hidden></div>
+                </section>
 
             </div>
 
@@ -2382,6 +2797,205 @@ if ($profile_incomplete) {
             setInterval(pollMsgBadge, 10000);
         })();
 
+
+        // ══════════════════════════════════════════════════
+        //  DAILY GOALS
+        // ══════════════════════════════════════════════════
+        (function () {
+            const card = document.getElementById('goalsCard');
+            if (!card) return;
+
+            // Goals per day, keyed by Y-m-d. Only today's list is editable.
+            const GOALS = <?= json_encode($goals_js, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+            const CSRF = card.dataset.csrf;
+            const TODAY = GOALS.today;
+            const DAYS_BACK = 60;
+
+            const daysEl = document.getElementById('goalsDays');
+            const dateEl = document.getElementById('goalsDate');
+            const subEl = document.getElementById('goalsSub');
+            const barEl = document.getElementById('goalsBar');
+            const countEl = document.getElementById('goalsCount');
+            const listEl = document.getElementById('goalList');
+            const emptyEl = document.getElementById('goalEmpty');
+            const addToggle = document.getElementById('goalsAddToggle');
+            const addForm = document.getElementById('goalAddForm');
+            const input = document.getElementById('goalInput');
+            const addBtn = document.getElementById('goalAddBtn');
+            const prevBtn = document.getElementById('goalsPrev');
+            const nextBtn = document.getElementById('goalsNext');
+
+            let selected = TODAY;
+            let center = TODAY; // middle tile of the 3-day strip
+            let busy = false;
+
+            const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+            function parse(ymd) {
+                const [y, m, d] = ymd.split('-').map(Number);
+                return new Date(y, m - 1, d);
+            }
+            function shift(ymd, n) {
+                const d = parse(ymd);
+                d.setDate(d.getDate() + n);
+                return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+            }
+            function longDate(ymd) {
+                return parse(ymd).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+            }
+            function goalsOn(ymd) {
+                return GOALS.days[ymd] || [];
+            }
+            function normalise(list) {
+                return list.map(g => ({ id: Number(g.id), title: g.title, achieved: g.achieved !== undefined ? !!g.achieved : Number(g.is_achieved) === 1 }));
+            }
+
+            function renderWeek() {
+                let html = '';
+                for (let i = -1; i <= 1; i++) {
+                    const ymd = shift(center, i);
+                    const offset = Math.round((parse(TODAY) - parse(ymd)) / 86400000);
+                    const label = offset === 0 ? 'Today' : offset === 1 ? 'Yesterday' : offset === -1 ? 'Tomorrow'
+                        : parse(ymd).toLocaleDateString('en-IN', { weekday: 'short' });
+                    const goals = goalsOn(ymd);
+                    const done = goals.filter(g => g.achieved).length;
+                    const allDone = goals.length > 0 && done === goals.length;
+                    const stat = goals.length ? `${done}/${goals.length}` : '–';
+                    html += `<button type="button" class="goals-day ${ymd === selected ? 'selected' : ''} ${allDone ? 'has-all' : ''}" data-date="${ymd}">` +
+                        `<span class="goals-day-label">${label}</span>` +
+                        `<span class="goals-day-num">${parse(ymd).getDate()} ${parse(ymd).toLocaleDateString('en-IN', { month: 'short' })}</span>` +
+                        `<span class="goals-day-stat">${stat}</span></button>`;
+                }
+                daysEl.innerHTML = html;
+                prevBtn.disabled = Math.round((parse(TODAY) - parse(center)) / 86400000) >= DAYS_BACK;
+                nextBtn.disabled = center === TODAY;
+            }
+
+            function renderDay() {
+                const isToday = selected === TODAY;
+                const goals = goalsOn(selected);
+                const done = goals.filter(g => g.achieved).length;
+                const pct = goals.length ? Math.round((done / goals.length) * 100) : 0;
+
+                dateEl.textContent = (isToday ? 'Today · ' : '') + longDate(selected);
+                subEl.textContent = isToday ? 'Plan your day and tick off what you get done.' : "Only today's goals can be changed.";
+                barEl.style.width = pct + '%';
+                countEl.textContent = goals.length ? `${done} of ${goals.length} achieved` : 'No goals';
+
+                addToggle.hidden = !isToday;
+                if (!isToday) {
+                    addForm.hidden = true;
+                    addToggle.classList.remove('open');
+                }
+
+                listEl.innerHTML = goals.map(g =>
+                    `<li class="goal-row ${g.achieved ? 'done' : ''}" data-id="${g.id}">` +
+                    `<button type="button" class="goal-check" role="checkbox" aria-checked="${g.achieved}" ${isToday ? '' : 'disabled'}` +
+                    ` aria-label="${g.achieved ? 'Mark as not achieved' : 'Mark as achieved'}">` +
+                    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></button>` +
+                    `<span class="goal-text">${esc(g.title)}</span>` +
+                    `<button type="button" class="goal-del" aria-label="Delete goal" title="Delete goal" ${isToday ? '' : 'hidden'}>×</button></li>`
+                ).join('');
+
+                emptyEl.hidden = goals.length > 0;
+                emptyEl.textContent = isToday
+                    ? 'Nothing planned yet. Tap + to add your first goal.'
+                    : (selected > TODAY ? 'You can add goals for this day when it arrives.' : 'No goals were set on this day.');
+            }
+
+            function renderAll() {
+                renderWeek();
+                renderDay();
+            }
+
+            function applyStats(stats) {
+                const set = document.getElementById('wsGoalsSet');
+                const achieved = document.getElementById('wsGoalsDone');
+                if (set) set.textContent = stats.total;
+                if (achieved) achieved.textContent = stats.achieved;
+            }
+
+            function send(fields) {
+                if (busy) return Promise.resolve(null);
+                busy = true;
+                const body = new URLSearchParams({ _csrf_token: CSRF, ...fields });
+                return fetch('../../handlers/daily_goals.php', { method: 'POST', body })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.success) {
+                            GOALS.days[TODAY] = normalise(d.today);
+                            applyStats(d.stats);
+                            renderAll();
+                        } else {
+                            showToast('Could not save', d.message || 'Please try again.');
+                        }
+                        return d;
+                    })
+                    .catch(() => { showToast('Offline', 'Could not reach the server.'); return null; })
+                    .finally(() => { busy = false; });
+            }
+
+            daysEl.addEventListener('click', e => {
+                const btn = e.target.closest('.goals-day');
+                if (!btn) return;
+                selected = btn.dataset.date;
+                renderAll();
+            });
+
+            prevBtn.addEventListener('click', () => {
+                center = shift(center, -3);
+                renderWeek();
+            });
+            nextBtn.addEventListener('click', () => {
+                const next = shift(center, 3);
+                center = next > TODAY ? TODAY : next;
+                renderWeek();
+            });
+
+            addToggle.addEventListener('click', () => {
+                addForm.hidden = !addForm.hidden;
+                addToggle.classList.toggle('open', !addForm.hidden);
+                if (!addForm.hidden) input.focus();
+            });
+
+            addForm.addEventListener('submit', e => {
+                e.preventDefault();
+                const title = input.value.trim();
+                if (!title) {
+                    input.focus();
+                    return;
+                }
+                addBtn.disabled = true;
+                send({ action: 'add', title }).then(d => {
+                    addBtn.disabled = false;
+                    if (d && d.success) {
+                        input.value = '';
+                        input.focus();
+                    }
+                });
+            });
+
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    addForm.requestSubmit();
+                }
+            });
+
+            listEl.addEventListener('click', e => {
+                if (selected !== TODAY) return;
+                const row = e.target.closest('.goal-row');
+                if (!row) return;
+                const id = row.dataset.id;
+                if (e.target.closest('.goal-check')) {
+                    send({ action: 'toggle', id });
+                } else if (e.target.closest('.goal-del')) {
+                    send({ action: 'delete', id });
+                }
+            });
+
+            renderAll();
+        })();
 
         // ══════════════════════════════════════════════════
         //  WORKOUT STREAK

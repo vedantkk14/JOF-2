@@ -7,7 +7,7 @@
 if (!function_exists('membership_pauses_ensure_schema')) {
     /**
      * Creates membership_pauses if it is missing and adds the `kind` column
-     * ('pause' | 'extension') on installs that predate it, so no page fatals
+    * ('pause' | 'extension' | 'expiration') on installs that predate it, so no page fatals
      * on an unknown table/column.
      */
     function membership_pauses_ensure_schema(mysqli $conn): void
@@ -55,9 +55,8 @@ if (!function_exists('membership_status_info')) {
      * duration_unit) whenever that plan can be found in the catalog. The stored
      * end_date is only used as a fallback when the plan can't be matched.
      *
-     * Pauses and extensions logged in membership_pauses against this payment are
-     * then applied on top: a pause adds its days, an extension moves the expiry
-     * out to the date it granted.
+    * Pauses, extensions, and explicit expirations logged in membership_pauses
+    * against this payment are then applied in order.
      *
      * @param mysqli     $conn
      * @param array|null $latest_payment  Latest row from member_payments (or null)
@@ -116,7 +115,9 @@ if (!function_exists('membership_status_info')) {
             $astmt->execute();
             $ares = $astmt->get_result();
             while ($adj = $ares->fetch_assoc()) {
-                if ($adj['kind'] === 'extension') {
+                if ($adj['kind'] === 'expiration') {
+                    $valid_until = $adj['end_date_after'];
+                } elseif ($adj['kind'] === 'extension') {
                     if ($adj['end_date_after'] > $valid_until) {
                         $valid_until = $adj['end_date_after'];
                     }

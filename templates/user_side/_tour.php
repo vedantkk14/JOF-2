@@ -260,9 +260,9 @@ $tour_csrf = generate_csrf_token();
                 text: 'Your current plan, when it expires and how many days are left.'
             },
             {
-                page: 'user_dashboard', el: 'diet-card', place: 'left',
-                title: "Today's diet plan",
-                text: 'A summary of your current plan. Open it in full from here.'
+                page: 'user_dashboard', el: 'goals-card', place: 'left',
+                title: "Today's goals",
+                text: 'Add your goals for the day, tick them off as you achieve them, and look back at earlier days.'
             },
             {
                 page: 'user_dashboard', el: 'streak-card', place: 'top',

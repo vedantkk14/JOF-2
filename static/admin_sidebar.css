@@ -1,0 +1,90 @@
+/* === ADMIN SIDEBAR THEME (dark slate + orange accents, matches the member portal) ===
+   `.sidebar.sidebar` ties with the page-scoped overrides above and wins by coming last. */
+.sidebar.sidebar {
+    background: linear-gradient(180deg, #161C26 0%, #0E1319 100%);
+    border-right: 1px solid rgba(242, 92, 42, 0.55);
+}
+
+.sidebar .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 34px;
+    padding-left: 4px;
+}
+
+.sidebar .brand-tile {
+    width: 64px;
+    height: 48px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.55);
+}
+
+.sidebar .brand-tile img {
+    width: 54px;
+    height: 40px;
+    object-fit: contain;
+    display: block;
+}
+
+.sidebar .brand-title {
+    font-family: 'Sora', 'Poppins', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: #fff;
+}
+
+.sidebar .brand-caption {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #8B97A8;
+}
+
+/* Slightly wider admin sidebar (every page's content offset follows this variable) */
+:root {
+    --sidebar-width: 285px;
+}
+
+.sidebar.sidebar {
+    padding-left: 22px;
+    padding-right: 22px;
+}
+
+.sidebar .nav-label {
+    color: #6B7788;
+}
+
+.sidebar .nav-link {
+    color: #8B97A8;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+
+.sidebar .nav-link.active {
+    background: rgba(242, 92, 42, 0.14);
+    color: #FF8A65;
+    box-shadow: inset 3px 0 0 var(--primary);
+}
+
+.sidebar .sidebar-submenu {
+    background-color: rgba(255, 255, 255, 0.035);
+}
+
+.sidebar .sidebar-submenu a {
+    color: #7D8999;
+}
+
+.sidebar .sidebar-submenu a:hover,
+.sidebar .sidebar-submenu a.active {
+    color: #FF8A65;
+    background: rgba(255, 255, 255, 0.05);
+}

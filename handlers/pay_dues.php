@@ -75,9 +75,15 @@ if ($amount <= 0 || !is_finite($amount)) {
     echo json_encode(['success' => false, 'error' => 'Enter how much you\'re paying.']);
     exit;
 }
-// Round to paise and cap at the balance — a member can't "overpay" a stale balance
-// figure past what's actually left (the server's balance is the source of truth).
-$amount = min(round($amount, 2), $balance);
+// Round to paise. Refuse anything above what's actually left — the server's balance is
+// the source of truth, and silently recording a different amount than the member entered
+// would put wrong numbers in front of the admin. Client-side max stops this in the form;
+// this is the backstop for anything that bypasses it.
+$amount = round($amount, 2);
+if ($amount > $balance) {
+    echo json_encode(['success' => false, 'error' => 'That\'s more than the ₹' . number_format($balance, 0) . ' left on this plan. Enter a smaller amount.']);
+    exit;
+}
 
 $transaction_id = trim($_POST['transaction_id'] ?? '');
 $payer_name     = trim($_POST['payer_name'] ?? '');

@@ -3,6 +3,8 @@
 require_once __DIR__ . '/../auth/auth_check.php';
 require_role(['admin', 'trainer']);
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/diet_templates_schema.php';
+ensure_diet_templates_schema($conn);
 
 $error = "";
 $success = "";

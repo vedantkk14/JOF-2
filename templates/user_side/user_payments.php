@@ -405,9 +405,9 @@ require __DIR__ . '/_shell_top.php';
                             ?>
                                 <div class="installment-breakdown">
                                     <div class="installment-breakdown-head">Installment 1 <b><?= fmt_money($first_installment) ?></b> <span class="installment-when">· <?= fmt_date($p['start_date']) ?></span></div>
-                                    <?php foreach ($due_history as $i => $d): ?>
+                                    <?php $n = 1; foreach ($due_history as $d): ?>
                                         <div class="installment-breakdown-row">
-                                            <span>Installment <?= $i + 2 ?></span>
+                                            <span><?= $d['status'] === 'rejected' ? 'Rejected attempt' : 'Installment ' . (++$n) ?></span>
                                             <b><?= fmt_money($d['amount']) ?></b>
                                             <?php if ($d['status'] === 'verified'): ?>
                                                 <span class="status-pill green" style="padding:2px 8px;font-size:10.5px;">Paid <?= fmt_date($d['verified_at']) ?></span>
@@ -424,7 +424,31 @@ require __DIR__ . '/_shell_top.php';
                                 $pending_due = due_payment_pending_for($conn, (int) $p['payment_id']);
                                 $paid_installments = count(array_filter($due_history, fn($d) => $d['status'] !== 'rejected')) + 1;
                                 $remaining_slots = max(1, $installments_total - $paid_installments);
+
+                                // The admin's schedule for the installments still to come. Once a partial
+                                // payment is verified, next_due_date moves to the next row, so anything from
+                                // next_due_date onward is what's still outstanding on the schedule.
+                                $upcoming = [];
+                                if ($installments_total > 1) {
+                                    foreach (plan_schedule($conn, (int) $p['payment_id']) as $s) {
+                                        if (empty($p['next_due_date']) || $s['due_date'] >= $p['next_due_date']) {
+                                            $upcoming[] = $s;
+                                        }
+                                    }
+                                }
                             ?>
+                                <?php if ($upcoming): ?>
+                                    <div class="installment-breakdown installment-upcoming">
+                                        <div class="installment-breakdown-head">Still to pay <b><?= fmt_money($balance_pending) ?></b> in <?= count($upcoming) ?> installment<?= count($upcoming) === 1 ? '' : 's' ?></div>
+                                        <?php foreach ($upcoming as $i => $s): ?>
+                                            <div class="installment-breakdown-row">
+                                                <span>Installment <?= $installments_total - count($upcoming) + $i + 1 ?></span>
+                                                <span class="installment-when"><?= fmt_date($s['due_date']) ?></span>
+                                                <b><?= fmt_money($s['expected_amount']) ?></b>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
                                 <?php if ($pending_due): ?>
                                     <div class="dues-pending-note">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>

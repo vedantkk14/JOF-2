@@ -510,6 +510,7 @@ function shell_nav_active($key, $active) { return $key === $active ? ' active' :
             .page-title { font-size: 16px; }
         }
     </style>
+    <link rel="stylesheet" href="_sidebar_theme.css?v=3">
 </head>
 
 <body>

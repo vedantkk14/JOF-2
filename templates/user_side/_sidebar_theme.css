@@ -1,0 +1,106 @@
+/* Member-portal sidebar theme — shared by _shell_top.php and user_dashboard.php.
+   Loaded after each page's inline <style>, so it overrides the base sidebar rules.
+   Dark slate rail with orange accents. */
+
+.sidebar {
+    background: linear-gradient(180deg, #161C26 0%, #0E1319 100%);
+    border-right: 1px solid rgba(255, 107, 71, .55);
+    color: #fff;
+}
+
+/* Desktop: the sidebar is fixed to the viewport; only the page content scrolls */
+@media (min-width: 861px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        height: 100vh;
+        overflow-y: auto;
+        scrollbar-width: none;
+    }
+
+    .sidebar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .main {
+        margin-left: var(--sidebar-w);
+        transition: margin-left .28s ease;
+    }
+
+    .shell.collapsed .main {
+        margin-left: var(--sidebar-w-collapsed);
+    }
+}
+
+/* Brand — larger logo tile */
+.brand {
+    gap: 12px;
+}
+
+.brand-mark {
+    width: 64px;
+    height: 48px;
+    border: 0;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .55);
+}
+
+.brand-mark img {
+    width: 54px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.shell.collapsed .brand-mark {
+    width: 52px;
+    height: 42px;
+}
+
+.shell.collapsed .brand-mark img {
+    width: 44px;
+    height: 34px;
+}
+
+.brand-name {
+    color: #fff;
+}
+
+.brand-sub {
+    color: #8B97A8;
+}
+
+/* Navigation */
+.nav-item {
+    color: #8B97A8;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, .06);
+    color: #fff;
+}
+
+.nav-item.active {
+    background: rgba(255, 107, 71, .14);
+    color: #FF8A65;
+    box-shadow: inset 3px 0 0 var(--coral);
+}
+
+.nav-bottom {
+    border-top: 1px solid rgba(255, 255, 255, .09);
+}
+
+/* Collapse / close toggle */
+.rail-toggle {
+    background: rgba(255, 255, 255, .06);
+    border-color: rgba(255, 255, 255, .12);
+    color: #A9B4C2;
+}
+
+.rail-toggle:hover {
+    background: rgba(255, 107, 71, .18);
+    color: #FF8A65;
+    border-color: rgba(255, 107, 71, .5);
+}
