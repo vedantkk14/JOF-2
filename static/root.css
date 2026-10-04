@@ -27778,3 +27778,77 @@ body.page-payment_installments.collapsed .main-content {
 .nav-link:hover .nav-arrow {
     opacity: 1 !important;
 }
+
+/* === payment_details.php form: even fields, icons inside the box ===
+   Scoped to this page so metrics.php (which shares .page-metrics) is untouched. */
+.page-payment_details .input-wrapper {
+    position: relative;
+    display: block;
+}
+
+/* Only fields that actually have an icon get the icon-sized left padding;
+   the rest sat indented with an empty gap. */
+.page-payment_details .form-input {
+    padding-left: 16px;
+}
+
+.page-payment_details .input-wrapper:has(.input-icon) .form-input {
+    padding-left: 45px;
+}
+
+.page-payment_details .input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    opacity: .6;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* A replaced <svg> keeps the icon's size instead of collapsing or stretching */
+.page-payment_details .input-icon.replaced-svg {
+    width: 16px;
+    height: 16px;
+}
+
+.page-payment_details textarea.form-input {
+    padding-top: 12px;
+    line-height: 1.5;
+}
+
+/* Date fields: keep the native picker clear of the icon */
+.page-payment_details input[type="date"].form-input {
+    padding-right: 12px;
+}
+
+.page-payment_details .inst-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 5px;
+}
+
+.page-payment_details .inst-block .form-input {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+/* payment_details.php: every icon in the form is the same neutral grey.
+   The icons carry text-primary / text-success / text-danger etc. and one inline
+   orange colour, so this overrides them all, scoped to this page only. */
+.page-payment_details .input-icon,
+.page-payment_details .input-icon.text-primary,
+.page-payment_details .input-icon.text-purple,
+.page-payment_details .input-icon.text-success,
+.page-payment_details .input-icon.text-danger,
+.page-payment_details .input-icon.text-muted,
+.page-payment_details h4 svg,
+.page-payment_details h4 .replaced-svg {
+    color: #9CA3AF !important;
+}

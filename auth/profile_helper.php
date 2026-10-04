@@ -34,11 +34,18 @@ function ensure_member_user_link(mysqli $conn): void
     $done = true;
 }
 
-/** members.id linked to this portal user, or null. */
+/**
+ * members.id linked to this portal user, or null. A person entered twice shares one
+ * login, so prefer their non-recycled record, then the one with payments, then the newest.
+ */
 function get_user_member_id(mysqli $conn, int $user_id): ?int
 {
     ensure_member_user_link($conn);
-    $stmt = mysqli_prepare($conn, "SELECT id FROM members WHERE user_id = ? ORDER BY id LIMIT 1");
+    $stmt = mysqli_prepare($conn, "SELECT m.id FROM members m WHERE m.user_id = ?
+         ORDER BY (IFNULL(m.status, '') = 'recycled') ASC,
+                  (SELECT COUNT(*) FROM member_payments p WHERE p.member_id = m.id) DESC,
+                  m.id DESC
+         LIMIT 1");
     mysqli_stmt_bind_param($stmt, 'i', $user_id);
     mysqli_stmt_execute($stmt);
     $row = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));

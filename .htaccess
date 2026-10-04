@@ -1,0 +1,4 @@
+# Never serve secrets, logs or notes over the web
+<FilesMatch "^(\.env.*|.*\.log|error_log\.txt|DEMO-TUNNEL\.txt)$">
+    Require all denied
+</FilesMatch>

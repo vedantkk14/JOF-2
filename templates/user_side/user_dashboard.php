@@ -26,12 +26,12 @@ $mstmt2->bind_param('i', $uid);
 $mstmt2->execute();
 $mrow2 = $mstmt2->get_result()->fetch_assoc();
 if ($mrow2) {
-    $dpstmt = $conn->prepare("SELECT dp.* FROM diet_plans dp
+    $dpstmt = $conn->prepare("SELECT DISTINCT dp.* FROM diet_plans dp
                                JOIN diet_plan_assignments dpa ON dpa.plan_id = dp.id
-                               WHERE dpa.member_id = ?
+                               WHERE dpa.member_id IN (SELECT id FROM members WHERE user_id = ?)
                                ORDER BY dp.created_at DESC LIMIT 1");
     $current_member_id = (int) $mrow2['id'];
-    $dpstmt->bind_param('i', $current_member_id);
+    $dpstmt->bind_param('i', $uid);
     $dpstmt->execute();
     $current_diet_plan = $dpstmt->get_result()->fetch_assoc();
     if ($current_diet_plan) {
@@ -2268,7 +2268,7 @@ if ($profile_incomplete) {
                         <?= (int) $streak['this_week'] ?> day<?= $streak['this_week'] == 1 ? '' : 's' ?> in the last week.
                     </p>
                 </div>
-                <div class="welcome-stats">
+                <div class="welcome-stats" data-tour="welcome-stats">
                     <div class="welcome-stat">
                         <div class="num" id="wsStreak"><?= (int) $streak['current_streak'] ?></div>
                         <div class="lbl">Day streak</div>
@@ -2457,7 +2457,7 @@ if ($profile_incomplete) {
                 </div>
 
                 <!-- Payment status -->
-                <div class="card">
+                <div class="card" data-tour="payment-card">
                     <div class="card-head">
                         <div class="card-title">
                             <div class="card-icon" style="background:var(--amber-tint); color:#B87814;">
@@ -2582,7 +2582,7 @@ if ($profile_incomplete) {
                 </div>
 
                 <!-- Daily goals -->
-                <section class="card goals-card" id="goalsCard" data-csrf="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
+                <section class="card goals-card" id="goalsCard" data-tour="goals-card" data-csrf="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
                     <header class="goals-head">
                         <div>
                             <h3 class="goals-title">Daily Goals</h3>

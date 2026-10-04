@@ -378,12 +378,14 @@ $active_tab = (($_GET['tab'] ?? '') === 'templates') ? 'templates' : 'plans';
                                 </div>
 
                                 <?php $assigned_n = $assigned_counts[(int) $row['id']] ?? 0; ?>
+                                <?php if ($assigned_n > 0): ?>
                                 <p class="desc" style="font-size:12px; margin-top:8px;">
                                     <span style="display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px;
-                                                 background:<?= $assigned_n > 0 ? '#DCFCE7' : '#F1F5F9' ?>; color:<?= $assigned_n > 0 ? '#166534' : '#64748B' ?>; font-weight:600;">
+                                                 background:#DCFCE7; color:#166534; font-weight:600;">
                                         Assigned to <?= $assigned_n ?> member<?= $assigned_n === 1 ? '' : 's' ?>
                                     </span>
                                 </p>
+                                <?php endif; ?>
                             </div>
 
                             <div class="diet-card-footer">

@@ -80,13 +80,31 @@ if ($user_role === 'councillor') {
     $user_role = 'counsellor';
 }
 
+// ── Password check ───────────────────────────────────────────────
+// Normal accounts store a password_hash(). Members migrated from the old system were
+// given their phone number as a plain-text temporary password; accept that once, and
+// replace it with a proper hash straight away so it never stays in plain text.
+$pw_ok = false;
+if ($user) {
+    $stored = (string) $user['password'];
+    if (password_verify($password, $stored)) {
+        $pw_ok = true;
+    } elseif ($stored !== '' && password_get_info($stored)['algo'] === null && hash_equals($stored, $password)) {
+        $pw_ok = true;
+        $rehash = password_hash($password, PASSWORD_DEFAULT);
+        $up = mysqli_prepare($conn, "UPDATE user_data SET password = ? WHERE id = ?");
+        mysqli_stmt_bind_param($up, 'si', $rehash, $user['id']);
+        mysqli_stmt_execute($up);
+    }
+}
+
 // ── Suspended account check ──────────────────────────────────────
-if ($user && password_verify($password, $user['password']) && (int) $user['is_active'] !== 1) {
+if ($pw_ok && (int) $user['is_active'] !== 1) {
     echo json_encode(['success' => false, 'message' => 'Your account has been suspended. Please contact an administrator.', 'csrf_token' => $new_csrf]);
     exit;
 }
 
-if ($user && password_verify($password, $user['password']) && in_array($user_role, $valid_roles, true)) {
+if ($pw_ok && in_array($user_role, $valid_roles, true)) {
     // Success — clear this account's failed attempts + consume the CSRF token
     login_record_success($conn, $email);
     unset($_SESSION['_csrf_token']);

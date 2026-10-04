@@ -526,6 +526,7 @@ require __DIR__ . '/_shell_top.php';
             </div>
 
             <form id="subscribeForm">
+            <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(generate_csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="plan_id" id="modalPlanId" value="">
                 <div class="pm-form-grid">
                     <div class="pm-fld">

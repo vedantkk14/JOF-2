@@ -11,9 +11,9 @@
  *   Preferred : create a file called ".env" in the project root
  *               (c:\xampp\htdocs\jof-phase_2\.env) containing:
  *
- *                 SMTP_USERNAME=youraddress@gmail.com
+ *                 SMTP_USERNAME=info@jofindia.com
  *                 SMTP_PASSWORD=your16charAppPassword
- *                 SMTP_FROM_EMAIL=youraddress@gmail.com
+ *                 SMTP_FROM_EMAIL=info@jofindia.com
  *
  *               (.env is git-ignored, so the secret stays out of the repo)
  *
@@ -50,9 +50,9 @@ if (!defined('JOF_MAIL_CONFIG_LOADED')) {
     define('SMTP_HOST',       getenv('SMTP_HOST')        ?: 'smtp.gmail.com');
     define('SMTP_PORT',       (int) (getenv('SMTP_PORT') ?: 587));
     define('SMTP_SECURE',     getenv('SMTP_SECURE')      ?: 'tls');   // 'tls' = STARTTLS/587, 'ssl' = SMTPS/465
-    define('SMTP_USERNAME',   getenv('SMTP_USERNAME')    ?: 'iglmembershipid@gmail.com');
-    define('SMTP_PASSWORD',   getenv('SMTP_PASSWORD')    ?: 'hclvlxtfmfxnywwm'); // Gmail App Password — REPLACE ME
-    define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL')  ?: 'iglmembershipid@gmail.com');
+    define('SMTP_USERNAME',   getenv('SMTP_USERNAME')    ?: 'info@jofindia.com');
+    define('SMTP_PASSWORD',   getenv('SMTP_PASSWORD')    ?: '');  // Gmail App Password — set in .env, never in code
+    define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL')  ?: 'info@jofindia.com');
     define('SMTP_FROM_NAME',  getenv('SMTP_FROM_NAME')   ?: 'JOF INDIA');
 }
 

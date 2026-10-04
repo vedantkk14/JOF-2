@@ -223,7 +223,7 @@ $email_html = "
     <!-- Footer -->
     <tr>
         <td style='background:#111827;padding:28px;text-align:center;'>
-            <p style='margin:0 0 8px;font-size:16px;color:#fff;font-weight:700;'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vrishabhchadchan1@gmail.com</p>
+            <p style='margin:0 0 8px;font-size:16px;color:#fff;font-weight:700;'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ info@jofindia.com</p>
             <p style='margin:4px 0;font-size:12px;color:#6B7280;'>© 2026 JOF INDIA. All rights reserved.</p>
             <p style='margin:4px 0;font-size:12px;color:#6B7280;'> Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra</p>
         </td>

@@ -18,11 +18,13 @@ $member_id = $member ? (int) $member['id'] : 0;
 
 $plans = [];
 if ($member_id) {
-    $pstmt = $conn->prepare("SELECT dp.* FROM diet_plans dp
+    // A person can have more than one member record (migrated duplicates); their plans
+    // may sit on any of them, so match every record linked to this login.
+    $pstmt = $conn->prepare("SELECT DISTINCT dp.* FROM diet_plans dp
                               JOIN diet_plan_assignments dpa ON dpa.plan_id = dp.id
-                              WHERE dpa.member_id = ?
+                              WHERE dpa.member_id IN (SELECT id FROM members WHERE user_id = ?)
                               ORDER BY dp.created_at DESC");
-    $pstmt->bind_param('i', $member_id);
+    $pstmt->bind_param('i', $uid);
     $pstmt->execute();
     $res = $pstmt->get_result();
     while ($row = $res->fetch_assoc()) {
@@ -145,15 +147,27 @@ require __DIR__ . '/_shell_top.php';
         .head-btn:hover { border-color: var(--coral); color: var(--coral-dark); }
         .head-btn img { width: 14px; height: 14px; }
         .week-switcher {
-            display: flex; align-items: center; gap: 8px; padding: 9px 14px 9px 12px; border-radius: 10px;
-            border: 1px solid #FDBA8C; background: var(--coral-tint);
+            position: relative; display: inline-flex; align-items: center;
+            border-radius: 10px; border: 1px solid #FDBA8C; background: #fff;
+            min-width: 220px; transition: border-color .15s, box-shadow .15s;
         }
-        .week-switcher img { width: 14px; height: 14px; }
+        .week-switcher:hover { border-color: var(--coral); }
+        .week-switcher:focus-within { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(255, 107, 71, .18); }
+        .week-switcher .ws-icon {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            width: 14px; height: 14px; pointer-events: none;
+        }
+        .week-switcher .ws-chevron {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            width: 12px; height: 12px; pointer-events: none; opacity: .7;
+        }
         #weekSelect {
-            font-family: inherit; font-size: 13px; font-weight: 700; color: var(--coral-dark);
-            border: none; background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none;
+            font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
+            width: 100%; padding: 10px 34px 10px 36px; border: none; border-radius: 10px;
+            background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none;
         }
         #weekSelect:focus { outline: none; }
+        #weekSelect option { color: var(--ink); font-weight: 600; }
 
         /* ===== Stat cards (Goal / Trainer / Calories / Duration) ===== */
         .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
@@ -300,10 +314,11 @@ require __DIR__ . '/_shell_top.php';
                         Download Plan
                     </a>
                     <?php if (count($plans_js) > 1): ?>
-                        <div class="week-switcher">
-                            <img src="../../icons/layer-group-solid-full.svg" alt="">
-                            <select id="weekSelect"></select>
-                        </div>
+                        <label class="week-switcher" data-tour="week-switch">
+                            <img class="ws-icon" src="../../icons/layer-group-solid-full.svg" alt="">
+                            <select id="weekSelect" aria-label="Choose week"></select>
+                            <svg class="ws-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                        </label>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
@@ -399,7 +414,7 @@ require __DIR__ . '/_shell_top.php';
                 <div class="plan-side">
                     <div class="content-panel chat-panel" data-tour="diet-chat">
                         <div class="panel-header"><h3>💬 Ask About This Plan</h3></div>
-                        <div class="chat-tabs">
+                        <div class="chat-tabs" data-tour="chat-tabs">
                             <div class="fitjo-hint" id="fitjoHint"><span class="dot"></span>Try our AI chatbot!</div>
                             <button type="button" class="chat-tab active" id="tabTrainerBtn">👤 Ask Trainer</button>
                             <button type="button" class="chat-tab" id="tabBotBtn">🤖 FitJo</button>

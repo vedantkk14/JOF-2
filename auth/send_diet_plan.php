@@ -223,7 +223,7 @@ function generateDietPlanPDF($current_plan_id)
             $pdf->SetY($logoBottomY);
         }
         $pdf->SetX(15);
-        $addressHtml = '<span style="font-size:9px; color:#555;">Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra<br>vrishabhchadchan1@gmail.com</span>';
+        $addressHtml = '<span style="font-size:9px; color:#555;">Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra<br>info@jofindia.com</span>';
         $pdf->writeHTML($addressHtml, true, false, true, false, '');
 
         // ---- Rest of the page content ----
@@ -356,7 +356,7 @@ function sendDietPlanEmail($member_email, $member_name, $pdf_content, $plan_name
     <!-- Footer -->
     <tr>
         <td style='background:#000000;padding:28px;text-align:center;'>
-            <p style='margin:0 0 8px;font-size:16px;color:#fff;font-weight:700;'>&#128222; +91 779-848-7209 &nbsp;|&nbsp; &#9993;&#65039; vrishabhchadchan1@gmail.com</p>
+            <p style='margin:0 0 8px;font-size:16px;color:#fff;font-weight:700;'>&#128222; +91 779-848-7209 &nbsp;|&nbsp; &#9993;&#65039; info@jofindia.com</p>
             <p style='margin:4px 0;font-size:12px;color:#6B7280;'>&copy; 2026 JOF INDIA. All rights reserved.</p>
             <p style='margin:4px 0;font-size:12px;color:#6B7280;'>Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra</p>
         </td>

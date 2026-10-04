@@ -288,34 +288,57 @@ $today_sessions_count = isset($pt_sessions_grouped[date('Y-m-d')]) ? count($pt_s
             z-index: 10000; align-items: center; justify-content: center;
         }
         .dues-modal-overlay.open, .dues-detail-overlay.open { display: flex; }
+        .dues-modal-overlay.open .dues-list-modal, .dues-detail-overlay.open .dues-detail-modal {
+            animation: duesModalIn 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        @keyframes duesModalIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
         .dues-list-modal, .dues-detail-modal {
-            background: #fff; border-radius: 16px; width: 460px; max-width: 95vw; max-height: 82vh;
-            display: flex; flex-direction: column; box-shadow: 0 25px 65px rgba(0, 0, 0, 0.15);
+            background: #fff; border-radius: 16px; width: 460px; max-width: calc(100vw - 32px); max-height: 82vh;
+            display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 65px rgba(0, 0, 0, 0.15);
         }
         .dues-modal-head {
-            display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid #F1F5F9;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            padding: 16px 20px; border-bottom: 1px solid #F1F5F9; flex-shrink: 0;
         }
-        .dues-modal-head b { font-size: 15px; font-weight: 700; color: #1E293B; display: flex; align-items: center; gap: 9px; }
-        .dues-modal-close { background: #F1F5F9; border: none; width: 28px; height: 28px; border-radius: 8px; color: #64748B; cursor: pointer; font-size: 13px; }
+        .dues-modal-head b { font-size: 15px; font-weight: 700; color: #1E293B; display: flex; align-items: center; gap: 10px; }
+        .dues-modal-close {
+            background: #F1F5F9; border: none; width: 30px; height: 30px; border-radius: 8px; color: #64748B;
+            cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
         .dues-modal-close:hover { background: #E2E8F0; }
-        .dues-list-body { overflow-y: auto; flex: 1; padding: 6px 0; }
+        .dues-list-body { overflow-y: auto; flex: 1 1 auto; min-height: 0; padding: 4px 0; }
         .dues-list-empty { padding: 44px 20px; text-align: center; color: #94A3B8; font-size: 13px; }
         .dues-item {
-            display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; padding: 13px 22px;
-            border: none; background: #fff; cursor: pointer; border-bottom: 1px solid #F8FAFC; font-family: inherit;
+            display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; column-gap: 14px;
+            width: 100%; box-sizing: border-box; text-align: left; padding: 14px 22px; margin: 0;
+            border: none; border-bottom: 1px solid #F1F5F9; background: #fff; cursor: pointer; font-family: inherit; color: inherit;
+            transition: background 0.15s ease;
         }
-        .dues-item:hover { background: #F8FAFC; }
+        .dues-item:last-child { border-bottom: none; }
+        .dues-item:hover, .dues-item:focus-visible { background: #F8FAFC; outline: none; }
         .dues-item-avatar {
-            width: 38px; height: 38px; border-radius: 10px; background: #D1FAE5; color: #047857;
-            display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0;
+            grid-column: 1; grid-row: 1 / span 2;
+            width: 40px; height: 40px; border-radius: 10px; background: #D1FAE5; color: #047857;
+            display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
         }
-        .dues-item-main { flex: 1; min-width: 0; }
-        .dues-item-name { font-weight: 700; font-size: 13.5px; color: #1E293B; }
-        .dues-item-sub { font-size: 12px; color: #64748B; margin-top: 2px; }
-        .dues-item-amt { font-weight: 800; font-size: 14px; color: #047857; font-family: 'Sora', sans-serif; flex-shrink: 0; }
+        .dues-item-main { grid-column: 2; grid-row: 1 / span 2; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+        .dues-item-name {
+            font-weight: 700; font-size: 13.5px; color: #1E293B;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .dues-item-sub {
+            font-size: 12px; color: #64748B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .dues-item-amt {
+            grid-column: 3; grid-row: 1 / span 2; text-align: right; white-space: nowrap;
+            font-weight: 800; font-size: 14px; color: #047857; font-family: 'Sora', sans-serif;
+        }
 
         /* Dues modal 2 — one submission's full detail */
-        .dues-detail-body { padding: 20px 22px; overflow-y: auto; }
+        .dues-detail-body { padding: 20px 22px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
         .dues-detail-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #F8FAFC; font-size: 13px; }
         .dues-detail-row span { color: #64748B; }
         .dues-detail-row b { color: #1E293B; font-weight: 600; }

@@ -13,6 +13,14 @@ if (!$user || $user['role'] !== 'user') {
     exit;
 }
 
+// CSRF — same non-rotating check as pay_dues.php (the page reuses one token per load)
+$submitted = $_POST['_csrf_token'] ?? '';
+$stored    = $_SESSION['_csrf_token'] ?? '';
+if (!$stored || !hash_equals($stored, $submitted)) {
+    echo json_encode(['success' => false, 'error' => 'Security token expired. Please refresh the page.']);
+    exit;
+}
+
 $uid = (int) $user['id'];
 $member_id = get_user_member_id($conn, $uid);
 if (!$member_id) {

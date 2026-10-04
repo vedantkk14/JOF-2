@@ -455,7 +455,7 @@ require __DIR__ . '/_shell_top.php';
                                         Payment of <?= fmt_money($pending_due['amount']) ?> submitted — awaiting verification
                                     </div>
                                 <?php else: ?>
-                                    <button type="button" class="pay-dues-btn" data-payment-id="<?= (int) $p['payment_id'] ?>"
+                                    <button type="button" class="pay-dues-btn" data-tour="pay-dues" data-payment-id="<?= (int) $p['payment_id'] ?>"
                                         data-plan="<?= e($plan_label) ?>" data-balance="<?= (int) round($balance_pending) ?>"
                                         data-installments-left="<?= $installments_total > 1 ? $remaining_slots : 0 ?>"
                                         onclick="openDuesModal(this)">

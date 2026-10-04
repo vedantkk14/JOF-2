@@ -255,48 +255,87 @@ $tour_csrf = generate_csrf_token();
                 text: 'Replies from your trainer show up here, with a dot when something is new.'
             },
             {
+                page: 'user_dashboard', el: 'welcome-stats', place: 'bottom',
+                title: 'Your progress at a glance',
+                text: 'Your workout streak, how many workouts you have logged, and how many of your daily goals you have achieved.'
+            },
+            {
                 page: 'user_dashboard', el: 'membership-card', place: 'right',
                 title: 'Your membership',
                 text: 'Your current plan, when it expires and how many days are left.'
             },
             {
-                page: 'user_dashboard', el: 'goals-card', place: 'left',
-                title: "Today's goals",
-                text: 'Add your goals for the day, tick them off as you achieve them, and look back at earlier days.'
+                page: 'user_dashboard', el: 'payment-card', place: 'left',
+                title: 'Payment status',
+                text: 'Anything still owing on your plan, your last payment and the next due date.'
             },
             {
                 page: 'user_dashboard', el: 'streak-card', place: 'top',
                 title: 'Workout streak',
-                text: 'Tap a day to log your workout and keep your streak going.',
+                text: 'Tap a day to log your workout and keep your streak going. Tap a logged day again to add a note.',
+                meta: 'Tip: log it the same day so the streak keeps counting.'
+            },
+            {
+                page: 'user_dashboard', el: 'goals-card', place: 'left',
+                title: 'Daily goals',
+                text: 'Set your goals for the day with the + button, then tick each one off as you achieve it.'
+            },
+            {
+                page: 'user_dashboard', el: 'goals-card', place: 'left',
+                title: 'Look back at any day',
+                text: 'The three dates at the top switch days, and the arrows step further back so you can see how earlier days went.',
                 nextPage: 'user_profile.php'
             },
             {
                 page: 'user_profile', el: 'profile-form', place: 'top',
                 title: 'Keep your profile current',
                 text: 'Your details, health info and measurements. Your trainer builds your plan from these, so keep them up to date and save.',
+                meta: 'The red dot in the menu means something is still missing.'
+            },
+            {
+                page: 'user_profile', el: 'profile-photos', place: 'top',
+                title: 'Progress photos',
+                text: 'Upload front, side and back photos to track your physique. Your first photo sits beside every later one so you can see the change.',
+                meta: 'You can keep up to 5 photo phases — delete one to add more.',
                 nextPage: 'user_membership.php'
             },
             {
                 page: 'user_membership', el: 'membership-plans', place: 'top',
                 title: 'Plans and renewals',
                 text: 'Your current plan sits at the top. Browse the plans below to subscribe or renew.',
+                meta: 'Renewal opens in the last 10 days of your plan.',
                 nextPage: 'user_diet_plans.php'
             },
             {
                 page: 'user_diet_plans', el: 'diet-head', place: 'bottom',
                 title: 'Your diet plan',
-                text: 'Switch between phases here, and download the plan as a PDF.'
+                text: 'Everything your trainer has set for you: meals, calories and the goal for this phase.'
+            },
+            {
+                page: 'user_diet_plans', el: 'week-switch', place: 'bottom',
+                title: 'Switch between weeks',
+                text: 'Every phase your trainer has written for you is in this list. Pick any one to read it, or download it as a PDF.'
+            },
+            {
+                page: 'user_diet_plans', el: 'chat-tabs', place: 'top',
+                title: 'Two ways to ask',
+                text: 'Ask Trainer sends a question to your trainer. FitJo is an AI assistant that answers about your own plan straight away.'
             },
             {
                 page: 'user_diet_plans', el: 'diet-chat', place: 'top',
-                title: 'Ask your trainer',
-                text: 'Questions about your plan go here. Replies arrive in your messages.',
+                title: 'Ask about this plan',
+                text: 'Questions about your plan go here. Replies from your trainer arrive in your messages.',
                 nextPage: 'user_payments.php'
             },
             {
                 page: 'user_payments', el: 'payments', place: 'bottom',
                 title: 'Payments and invoices',
                 text: 'What you have paid, anything still due, and invoices to download.'
+            },
+            {
+                page: 'user_payments', el: 'pay-dues', place: 'top',
+                title: 'Pay what is due',
+                text: 'Pay a pending balance here: scan the QR, then send the amount, the transaction ID and a screenshot. Your trainer verifies it and your balance updates.'
             },
             {
                 page: 'user_payments', center: true, emoji: '🎉',

@@ -3,3 +3,12 @@
 config.php
 
 DEMO-TUNNEL.txt
+
+# Member uploads (personal data) — keep the folders, not the files
+uploads/*/*
+!uploads/*/.gitkeep
+!uploads/*/.htaccess
+
+# Logs
+*.log
+error_log.txt

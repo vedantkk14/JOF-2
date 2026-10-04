@@ -1213,7 +1213,7 @@ require __DIR__ . '/_shell_top.php';
                         </section>
 
                         <!-- Photos -->
-                        <section class="pf-card" id="sec-photos">
+                        <section class="pf-card" id="sec-photos" data-tour="profile-photos">
                             <div class="pf-card-head">
                                 <div class="no">5</div>
                                 <div>

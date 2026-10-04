@@ -381,7 +381,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 </head>
 
-<body class="page-metrics">
+<body class="page-metrics page-payment_details">
 
     <?php if ($show_success_modal): ?>
         <div class="modal-overlay active">
@@ -468,7 +468,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <?php endif; ?>
                     </div>
                     <div class="input-group"><label>Start Date</label>
-                        <div class="input-wrapper"><input type="date" name="start_date" class="form-input"
+                        <div class="input-wrapper"><img src="../icons/calendar-days-solid-full.svg"
+                                class="fa-solid fa-calendar-days input-icon text-purple"><input type="date" name="start_date" class="form-input"
                                 value="<?php echo date('Y-m-d'); ?>" required></div>
                     </div>
 
@@ -564,7 +565,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div class="input-group" id="next_due_date_container" style="display:none;"><label>Next Due
                             Date</label>
                         <div class="input-wrapper"><input type="date" name="next_due_date" id="next_due_date"
-                                class="form-input"></div>
+                                class="form-input"><img src="../icons/calendar-days-solid-full.svg"
+                                class="fa-solid fa-calendar-days input-icon text-purple"></div>
                     </div>
 
                     <div id="dynamic_installments" class="full-width"
@@ -573,8 +575,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     <div class="input-group full-width"><label>Remarks / Notes</label>
                         <div class="input-wrapper"><textarea name="remarks" class="form-input" rows="2"
-                                placeholder="e.g. Payment promised on..."
-                                style="padding-left: 16px; height: auto;"></textarea></div>
+                                placeholder="e.g. Payment promised on..." style="height:auto;"></textarea></div>
                     </div>
                 </div>
             </div>
@@ -651,16 +652,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 return;
             }
 
-            let html = '<h4 style="margin-bottom:5px; color:#1f2937; font-size:14px;"><img src="../icons/calendar-days-solid-full.svg" class="fa-solid fa-calendar-days" style="color:#F25C2A; margin-right:5px; width: 14px; vertical-align: middle;"> Upcoming Installment Dates & Amounts</h4><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; background:#f9fafb; padding:15px; border-radius:12px; border:1px dashed #d1d5db;">';
+            let html = '<h4 style="margin-bottom:5px; color:#1f2937; font-size:14px;"><img src="../icons/calendar-days-solid-full.svg" class="fa-solid fa-calendar-days" style="color:#9CA3AF; margin-right:5px; width: 14px; vertical-align: middle;"> Upcoming Installment Dates & Amounts</h4><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; background:#f9fafb; padding:15px; border-radius:12px; border:1px dashed #d1d5db;">';
             for (let i = 2; i <= count; i++) {
                 html += `
                     <div class="inst-block" style="background:#fff; padding:12px; border-radius:8px; border:1px solid #e5e7eb; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
-                        <label style="font-size:12px; font-weight:600; color:#4b5563; margin-bottom:5px; display:block;">Inst. ${i} Due Date</label>
-                        <input type="date" name="inst_date[]" class="form-input" style="margin-bottom:10px; border-color:#d1d5db;" required>
-                        <label style="font-size:12px; font-weight:600; color:#4b5563; margin-bottom:5px; display:block;">Amount (₹)</label>
-                        <div style="position:relative;">
-                            <img src="../icons/indian-rupee-sign-solid-full.svg" class="fa-solid fa-indian-rupee-sign" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#9ca3af; font-size:12px; width: 10px;">
-                            <input type="number" name="inst_amount[]" class="form-input highlight-input" value="${defaultAmount}" style="padding-left:26px;" required placeholder="0">
+                        <label class="inst-label">Inst. ${i} Due Date</label>
+                        <div class="input-wrapper" style="margin-bottom:10px;">
+                            <img src="../icons/calendar-days-solid-full.svg" class="fa-solid fa-calendar-days input-icon text-purple">
+                            <input type="date" name="inst_date[]" class="form-input" required>
+                        </div>
+                        <label class="inst-label">Amount (₹)</label>
+                        <div class="input-wrapper">
+                            <img src="../icons/indian-rupee-sign-solid-full.svg" class="fa-solid fa-indian-rupee-sign input-icon text-success">
+                            <input type="number" name="inst_amount[]" class="form-input highlight-input" value="${defaultAmount}" required placeholder="0">
                         </div>
                     </div>
                 `;
@@ -720,6 +724,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         }
                         if (typeof imgClass !== 'undefined' && imgClass !== '') {
                             svg.setAttribute('class', imgClass + ' replaced-svg');
+                        }
+                        // Carry the img's inline style across — icons positioned inline
+                        // (e.g. the ₹ inside the installment boxes) otherwise lose their
+                        // absolute placement and drop out above the field.
+                        var imgStyle = img.getAttribute('style');
+                        if (imgStyle) {
+                            svg.setAttribute('style', imgStyle);
                         }
 
                         svg.removeAttribute('xmlns:a');

@@ -27,7 +27,7 @@ function sendEnquiryEmail($full_name, $email)
         jof_configure_mailer($mail, ['secure' => 'ssl', 'port' => 465]);
 
         // Email Settings
-        $mail->addReplyTo('iglmembershipid@gmail.com', 'JOF INDIA Support');
+        $mail->addReplyTo('info@jofindia.com', 'JOF INDIA Support');
         $mail->addAddress($email, $full_name);
         $mail->isHTML(true);
         $mail->Subject = 'Thank You for Reaching Out to JOF INDIA!';
@@ -104,7 +104,7 @@ function sendEnquiryEmail($full_name, $email)
                             </tr>
                             <tr>
                                 <td class='footer'>
-                                    <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ vrishabhchadchan1@gmail.com</p>
+                                    <p class='footer-contact'>📞 +91 779-848-7209 &nbsp;|&nbsp; ✉️ info@jofindia.com</p>
                                     <p class='footer-text'>© " . date("Y") . " JOF INDIA. All rights reserved.</p>
                                     <p class='footer-text'>Aurelia, Pancard Road, Baner, Pune-411045, Maharashtra</p>
                                 </td>

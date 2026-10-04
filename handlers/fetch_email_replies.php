@@ -15,11 +15,12 @@ if (!isset($_SESSION['user_id'])) {
 session_write_close();
 
 require '../config.php';
+require_once '../auth/mail_config.php';
 
-// ── IMAP Config ──────────────────────────────────────────────────────────────
+// ── IMAP Config (same mailbox and App Password as outgoing mail, from .env) ──
 $imap_host = '{imap.gmail.com:993/imap/ssl}INBOX';
-$imap_user = 'vrishabhchadchan1@gmail.com';
-$imap_pass = 'qmhbeaswhyhsjbao';
+$imap_user = SMTP_USERNAME;
+$imap_pass = SMTP_PASSWORD;
 
 if (!function_exists('imap_open')) {
     echo json_encode(['status' => 'warning', 'message' => 'PHP IMAP extension not enabled.', 'new' => 0]);
@@ -73,7 +74,7 @@ if ($emails) {
         $fromName = ($fromObj && isset($fromObj->personal)) ? imap_utf8($fromObj->personal) : $fromEmail;
 
         // Skip emails sent by your own system
-        if (strpos($fromEmail, 'vrishabhchadchan1@gmail.com') !== false || strpos($fromEmail, 'no-reply') !== false) {
+        if (strpos($fromEmail, 'info@jofindia.com') !== false || strpos($fromEmail, 'no-reply') !== false) {
             continue;
         }
 
