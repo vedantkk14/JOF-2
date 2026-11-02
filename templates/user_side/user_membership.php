@@ -427,10 +427,10 @@ require __DIR__ . '/_shell_top.php';
     </div>
 
     <?php if (empty($browsable_plans)): ?>
-        <div class="empty-card">No membership plans have been published yet — check back soon.</div>
+        <div class="empty-card" data-tour="membership-purchase">No membership plans have been published yet — check back soon.</div>
     <?php else: ?>
-        <div class="plans-grid">
-            <?php foreach ($browsable_plans as $p):
+        <div class="plans-grid" data-tour="membership-purchase">
+            <?php foreach ($browsable_plans as $idx => $p):
                 $is_same_plan = $current_plan_name !== '' && strcasecmp(trim($p['plan_name']), $current_plan_name) === 0;
                 // A plan only blocks its own re-subscribe while it's genuinely in force. Once it's
                 // expired it's just the member's most recent plan — they can renew into it like any other.
@@ -438,7 +438,7 @@ require __DIR__ . '/_shell_top.php';
                 $is_previous = $is_same_plan && $expiry_status === 'expired';
                 $features = membershipFeatures($p);
             ?>
-                <div class="member-plan-card <?= $is_current ? 'is-current' : '' ?> <?= $is_previous ? 'is-previous' : '' ?>">
+                <div class="member-plan-card <?= $is_current ? 'is-current' : '' ?> <?= $is_previous ? 'is-previous' : '' ?>" <?= $idx === 0 ? 'data-tour="membership-purchase-card"' : '' ?>>
                     <div class="plan-strip"></div>
                     <?php if ($is_current): ?><span class="current-badge">Your Plan</span><?php endif; ?>
                     <?php if ($is_previous): ?><span class="current-badge previous-badge">Your Previous Plan</span><?php endif; ?>

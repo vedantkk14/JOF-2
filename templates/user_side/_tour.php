@@ -242,7 +242,7 @@ $tour_csrf = generate_csrf_token();
                 page: 'user_dashboard', center: true, emoji: '👋',
                 title: 'Welcome to your member portal',
                 text: 'A short walkthrough of where everything lives: your membership, diet plan, payments and messages.',
-                meta: '10 steps · about a minute'
+                meta: '18 steps · about 2 minutes'
             },
             {
                 page: 'user_dashboard', el: 'nav', place: 'right', mobileEl: 'menu-btn',
@@ -303,7 +303,13 @@ $tour_csrf = generate_csrf_token();
                 page: 'user_membership', el: 'membership-plans', place: 'top',
                 title: 'Plans and renewals',
                 text: 'Your current plan sits at the top. Browse the plans below to subscribe or renew.',
-                meta: 'Renewal opens in the last 10 days of your plan.',
+                meta: 'Renewal opens in the last 10 days of your plan.'
+            },
+            {
+                page: 'user_membership', el: 'membership-purchase', place: 'top', mobileEl: 'membership-purchase-card',
+                title: 'Purchase a plan & make payment',
+                text: 'Choose any plan below and click Subscribe. Click "Scan & Pay" to view the QR code — you can download or take a screenshot of the QR code to make your UPI payment. After paying, enter your transaction details, upload your payment receipt, and submit to activate your plan.',
+                meta: 'Your trainer will verify your receipt and activate your membership.',
                 nextPage: 'user_diet_plans.php'
             },
             {
@@ -354,7 +360,11 @@ $tour_csrf = generate_csrf_token();
         const isMobile = () => window.matchMedia('(max-width: 860px)').matches;
         const find = step => {
             const key = (isMobile() && step.mobileEl) ? step.mobileEl : step.el;
-            return key ? document.querySelector('[data-tour="' + key + '"]') : null;
+            let el = key ? document.querySelector('[data-tour="' + key + '"]') : null;
+            if (!el && isMobile() && step.mobileEl && step.el) {
+                el = document.querySelector('[data-tour="' + step.el + '"]');
+            }
+            return el;
         };
 
         function save(step) {
@@ -440,7 +450,10 @@ $tour_csrf = generate_csrf_token();
                 (first || step.last ? '' : '<button type="button" class="tour-btn tour-back">Back</button>') +
                 '<button type="button" class="tour-btn tour-next">' +
                 (step.last ? 'Go to dashboard' : first ? 'Start tour' : 'Next') + '</button></div>';
-            if (step.meta) pop.querySelector('.tour-meta').textContent = step.meta;
+            if (step.meta) {
+                const metaText = first ? `${n} steps · about 2 minutes` : step.meta;
+                pop.querySelector('.tour-meta').textContent = metaText;
+            }
             pop.querySelector('h4').textContent = step.title;
             pop.querySelector('p').textContent = step.text;
 
