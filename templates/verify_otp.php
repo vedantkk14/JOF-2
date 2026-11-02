@@ -33,7 +33,7 @@ $csrf_token = $_SESSION['_csrf_token'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" size="16x16" href="../icons/favicon-dark-logo.png" type="image/png">
     <title>JOF Fitness | Verify OTP</title>
-    <link rel="stylesheet" href="../static/root.css">
+    <link rel="stylesheet" href="../static/root.css?v=<?= time(); ?>">
     <style>
         /* Style for the single OTP input box */
         .otp-input-single {

@@ -44,17 +44,62 @@ if (isset($_SESSION['status_msg'])) {
     <meta charset="UTF-8">
     <link rel="icon" size="16x16" href="../icons/favicon-dark-logo.png" type="image/png">
     <title>JOF Fitness | Reset Password</title>
-    <link rel="stylesheet" href="../static/root.css">
-    
+    <link rel="stylesheet" href="../static/root.css?v=<?= time(); ?>">
+    <style>
+        /* Reset-password form: keep the lock and eye icons inside each field */
+        .page-login_page .input-group {
+            position: relative;
+            border: 0;
+            margin-bottom: 20px;
+        }
+        .page-login_page .input-group::before,
+        .page-login_page .input-group::after {
+            content: none;
+            display: none;
+        }
+        .page-login_page .input-wrapper {
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+        .page-login_page .form-input {
+            display: block;
+            box-sizing: border-box;
+            height: 48px;
+            padding: 0 46px;
+            margin: 0;
+        }
+        .page-login_page .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            pointer-events: none;
+            opacity: 0.45;
+        }
+        .page-login_page .form-input:focus + .input-icon {
+            opacity: 1;
+        }
+        .page-login_page .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            margin: 0;
+        }
+    </style>
 </head>
 <body class="page-login_page">
 
     <div class="auth-container">
         <div class="visual-side">
-            <div>
-                <img src="../icons/logo-light(1).png" alt="JOF Logo" style="width: 150px; margin-bottom: 20px;">
-                <p style="font-size: 16px; opacity: 0.9;">Reset your password to regain access.</p>
-            </div>
+            <img src="../icons/logo-light(1).png" alt="JOF Logo" class="brand-logo-img">
+            <p class="brand-quote">
+                Reset your password to regain access.
+            </p>
         </div>
 
         <div class="form-side">

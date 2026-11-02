@@ -25,7 +25,7 @@ $csrf_token = $_SESSION['_csrf_token'];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JOF Fitness | Forgot Password</title>
-    <link rel="stylesheet" href="../static/root.css">
+    <link rel="stylesheet" href="../static/root.css?v=<?= time(); ?>">
     
 </head>
 <body class="page-login_page">

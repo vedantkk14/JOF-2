@@ -147,7 +147,7 @@ $assigned_count = (int) ($acstmt->get_result()->fetch_assoc()['c'] ?? 0);
     <link rel="icon" size="16x16" href="../icons/favicon-dark-logo.png" type="image/png">
     <title><?= htmlspecialchars($plan['plan_name']) ?> | JOF Fitness</title>
     <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"> -->
-    <link rel="stylesheet" href="../static/root.css">
+    <link rel="stylesheet" href="../static/root.css?v=<?= time(); ?>">
 
 </head>
 
@@ -289,12 +289,18 @@ $assigned_count = (int) ($acstmt->get_result()->fetch_assoc()['c'] ?? 0);
                 <div class="panel-header">
                     <h2>Resources & Recommended Products</h2>
                 </div>
-                <div style="display:flex; flex-wrap:wrap; gap:10px; padding:6px 0;">
+                <div class="resource-list">
                     <?php foreach ($resources as $r): ?>
-                        <a href="<?= htmlspecialchars($r['link'] ?? '#') ?>" target="_blank" rel="noopener"
-                            style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; padding:10px 16px;
-                                   border-radius:10px; background:#FFF3EC; color:#C2410C; font-weight:600; font-size:13px; border:1px solid #FDBA8C;">
-                            🛒 <?= htmlspecialchars($r['name'] ?? 'Resource') ?>
+                        <?php
+                            $r_name = trim($r['name'] ?? 'Resource');
+                            $r_link = trim($r['link'] ?? '');
+                            if ($r_link !== '' && $r_link !== '#' && !preg_match('~^https?://~i', $r_link)) {
+                                $r_link = 'https://' . $r_link;
+                            }
+                        ?>
+                        <a href="<?= htmlspecialchars($r_link !== '' ? $r_link : '#') ?>" 
+                           target="_blank" rel="noopener" class="resource-btn">
+                            🛒 <?= htmlspecialchars($r_name) ?>
                         </a>
                     <?php endforeach; ?>
                 </div>

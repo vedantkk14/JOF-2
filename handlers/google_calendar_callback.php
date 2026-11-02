@@ -62,4 +62,21 @@ if (empty($tokens['refresh_token']) && !google_calendar_is_connected($conn, (int
 
 google_calendar_store_tokens($conn, (int) $_SESSION['user_id'], $tokens);
 
+// The member may already have a diet plan assigned from before they
+// connected their calendar — sync it now instead of waiting for the next
+// time the admin (re-)assigns a plan, which may never happen again.
+$uid = (int) $_SESSION['user_id'];
+$pstmt = $conn->prepare(
+    "SELECT dpa.plan_id, dpa.member_id FROM diet_plan_assignments dpa
+     JOIN diet_plans dp ON dp.id = dpa.plan_id
+     WHERE dpa.member_id IN (SELECT id FROM members WHERE user_id = ?)
+     ORDER BY dp.created_at DESC LIMIT 1"
+);
+$pstmt->bind_param('i', $uid);
+$pstmt->execute();
+$assignment = $pstmt->get_result()->fetch_assoc();
+if ($assignment) {
+    sync_member_diet_calendar($conn, (int) $assignment['plan_id'], (int) $assignment['member_id']);
+}
+
 _calendar_redirect_with_status($return_to, 'connected');

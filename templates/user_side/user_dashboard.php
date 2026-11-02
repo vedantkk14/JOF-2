@@ -136,6 +136,7 @@ if ($profile_incomplete) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" sizes="96x96" href="../../icons/favicon-dark-logo.png" type="image/png">
     <title>JOF India — My Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link

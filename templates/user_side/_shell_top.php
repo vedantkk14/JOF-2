@@ -34,6 +34,7 @@ function shell_nav_active($key, $active) { return $key === $active ? ' active' :
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" sizes="96x96" href="../../icons/favicon-dark-logo.png" type="image/png">
     <title><?= htmlspecialchars($PAGE_TITLE) ?> — JOF India</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link

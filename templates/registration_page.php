@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" size="16x16" href="../icons/favicon-dark-logo.png" type="image/png">
     <title>JOF INDIA | Register</title>
-    <link rel="stylesheet" href="../static/root.css?v=<?= @filemtime(__DIR__ . '/../static/root.css') ?>">
+    <link rel="stylesheet" href="../static/root.css?v=<?= time(); ?>">
 </head>
 
 <body class="page-login_page">

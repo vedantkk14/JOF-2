@@ -46,7 +46,7 @@ require_once __DIR__ . '/auth/google_config.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" size="16x16" href="icons/favicon-dark-logo.png" type="image/png">
+    <link rel="icon" sizes="96x96" href="icons/favicon-dark-logo.png" type="image/png">
     <title>JOF INDIA | Login</title>
     <meta name="description"
         content="Sign in to the JOF India CRM admin panel to manage members, payments, and fitness plans.">
